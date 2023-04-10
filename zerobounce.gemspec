@@ -7,12 +7,12 @@ require 'zerobounce/version'
 Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.name          = 'zerobounce'
   spec.version       = Zerobounce::VERSION
-  spec.authors       = ['Aaron Frase']
-  spec.email         = ['afrase91@gmail.com']
+  spec.authors       = ['Zero Bounce']
+  spec.email         = ['wrappers@zerobounce.net']
 
   spec.summary       = 'A Ruby client for Zerobounce.net.'
   spec.description   = 'A Ruby client for Zerobounce.net.'
-  spec.homepage      = 'https://github.com/afrase/zerobounce'
+  spec.homepage      = 'https://zerobounce.net'
   spec.license       = 'MIT'
 
   spec.files = `git ls-files -z`.split("\x0").reject do |f|
