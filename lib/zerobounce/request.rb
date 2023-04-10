@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
-require 'faraday'
+require 'rest-client'
+
+# todo: this should be response middleware
+require 'json'
 
 module Zerobounce
   # Sends the HTTP request.
@@ -51,7 +54,12 @@ module Zerobounce
     # @option params [String] :apikey
     # @return [Integer] A value of -1 can mean the API is invalid.
     def credits(params={})
-      get('getcredits', params).body[:Credits].to_i
+      response = get('getcredits', params)
+      response_body = response.body
+      response_body_json = JSON.parse(response_body)
+      credits = response_body_json[:Credits]
+      credits_i = credits.to_i
+      return credits_i
     end
 
     private
@@ -70,12 +78,9 @@ module Zerobounce
     # @param [String] path
     # @return [Zerobounce::Response]
     def get(path, params)
-      conn.get(path, get_params(params))
-    end
-
-    # @return [Faraday::Connection]
-    def conn
-      @conn ||= Faraday.new("#{host}/v2", headers: headers, &middleware)
+      # conn.get(path, get_params(params))
+      url = "#{host}/v2/#{path}"
+      RestClient.get(url, {params: get_params(params)})
     end
   end
 end

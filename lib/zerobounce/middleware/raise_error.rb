@@ -6,9 +6,7 @@ module Zerobounce
   # Faraday middleware.
   module Middleware
     # Raises an error if the response wasn't successful.
-    #
-    # @author Aaron Frase
-    class RaiseError < Faraday::Response::Middleware
+    class RaiseError 
       # Check for errors after the response has finished.
       #
       # @param [Hash] env
