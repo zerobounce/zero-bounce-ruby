@@ -55,6 +55,7 @@ the version, push git commits and tags, and push the `.gem` file to
 
 ### Run tests
 ```bash
+rspec --init
 bundle exec rspec
 ```
 
