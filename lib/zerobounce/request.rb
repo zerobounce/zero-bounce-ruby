@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'faraday'
-require 'zerobounce/request/v1_request'
 require 'zerobounce/request/v2_request'
 
 module Zerobounce
@@ -36,12 +35,7 @@ module Zerobounce
       @host = params[:host] || Zerobounce.config.host
       @api_version = params[:api_version] || Zerobounce.config.api_version
 
-      case api_version
-      when 'v2'
-        extend(V2Request)
-      else
-        extend(V1Request)
-      end
+      extend(V2Request)
     end
 
     # Get the number of remaining credits on the account.

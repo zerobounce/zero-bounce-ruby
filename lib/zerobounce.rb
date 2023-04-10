@@ -44,6 +44,7 @@ module Zerobounce
     # @option params [Proc] :middleware Use different middleware for this request.
     # @return [Zerobounce::Response]
     def validate(params)
+      # todo:
       Request.new(params).validate(params)
     end
 
@@ -56,6 +57,7 @@ module Zerobounce
     # @option params [Proc] :middleware Use different middleware for this request.
     # @return [Integer]
     def credits(params={})
+      # todo:
       Request.new(params).credits(params)
     end
 
@@ -65,6 +67,7 @@ module Zerobounce
     # @param [Hash] params
     # @return [Boolean]
     def valid?(email, params={})
+      # todo:
       validate(params.merge(email: email)).valid?
     end
 
@@ -74,7 +77,50 @@ module Zerobounce
     # @param [Hash] params
     # @return [Boolean]
     def invalid?(email, params={})
+      # todo: 
       validate(params.merge(email: email)).invalid?
     end
+
+
+    def api_usage()
+      # todo:
+    end
+
+    def validate_batch()
+      # todo: 
+    end
+
+    def validate_file_send()
+      # todo:
+    end
+
+    def validate_file_check()
+      # todo:
+    end
+
+    def validate_file_get()
+      # todo:
+    end
+
+    def validate_file_delete()
+      # todo:
+    end
+
+    def scoring_file_send()
+      # todo:
+    end
+
+    def scoring_file_get()
+      # todo:
+    end
+
+    def scoring_file_check()
+      # todo:
+    end
+
+    def scoring_file_delete()
+      # todo:
+    end
+
   end
 end

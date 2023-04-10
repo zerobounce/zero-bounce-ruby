@@ -25,11 +25,11 @@ RSpec.describe Zerobounce do
   end
 
   describe '.validate' do
-    let(:request) { instance_spy(Zerobounce::Request::V1Request) }
+    let(:request) { instance_spy(Zerobounce::Request::V2Request) }
 
     before do
       allow(request).to receive(:validate)
-      allow(request).to receive(:validate_with_ip)
+#      allow(request).to receive(:validate_with_ip)
       allow(Zerobounce::Request).to receive(:new).and_return(request)
     end
 
@@ -44,7 +44,7 @@ RSpec.describe Zerobounce do
 
     before do
       allow(response).to receive(:valid?).and_return(true)
-      req = instance_double(Zerobounce::Request::V1Request)
+      req = instance_double(Zerobounce::Request::V2Request)
       allow(Zerobounce::Request).to receive(:new).and_return(req)
       allow(req).to receive(:validate).and_return(response)
     end
@@ -60,7 +60,7 @@ RSpec.describe Zerobounce do
 
     before do
       allow(response).to receive(:invalid?).and_return(false)
-      req = instance_double(Zerobounce::Request::V1Request)
+      req = instance_double(Zerobounce::Request::V2Request)
       allow(Zerobounce::Request).to receive(:new).and_return(req)
       allow(req).to receive(:validate).and_return(response)
     end
