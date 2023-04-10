@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'faraday'
-require 'zerobounce/request/v2_request'
 
 module Zerobounce
   # Sends the HTTP request.
@@ -22,6 +21,8 @@ module Zerobounce
     attr_reader :middleware
     attr_reader :api_version
 
+    VALID_GET_PARAMS = %i[api_key ip_address email].freeze
+
     # Set instance variables and extends the correct Zerobounce::Request
     #
     # @param [Hash] params
@@ -34,8 +35,17 @@ module Zerobounce
       @headers = params[:headers] || Zerobounce.config.headers
       @host = params[:host] || Zerobounce.config.host
       @api_version = params[:api_version] || Zerobounce.config.api_version
+    end
 
-      extend(V2Request)
+    # Validate the email address.
+    #
+    # @param [Hash] params
+    # @option params [String] :email
+    # @option params [String] :ip_address
+    # @option params [String] :api_key
+    # @return [Zerobounce::Response]
+    def validate(params)
+      Response.new(get('validate', params), self)
     end
 
     # Get the number of remaining credits on the account.
@@ -48,6 +58,14 @@ module Zerobounce
     end
 
     private
+
+    # @param [Hash] params
+    # @return [Hash]
+    def get_params(params)
+      params[:ip_address] ||= '' # ip_address must be in query string
+      params[:api_key] = params.delete(:apikey) if params.key?(:apikey) # normalize api_key param
+      { api_key: Zerobounce.config.apikey }.merge(params.select { |k, _| VALID_GET_PARAMS.include?(k) })
+    end
 
     # Sends a GET request.
     #
