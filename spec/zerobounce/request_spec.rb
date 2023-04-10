@@ -46,8 +46,6 @@ RSpec.describe Zerobounce::Request do
   end
 
   describe 'API V2' do
-    before { Zerobounce.config.api_version = 'v2' }
-
     describe '#validate' do
       before do
         Zerobounce.config.middleware = proc do |f|

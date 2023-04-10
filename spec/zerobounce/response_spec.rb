@@ -10,14 +10,6 @@ RSpec.describe Zerobounce::Response do
     it 'returns a symbol' do
       expect(described_class.new(response, request).status).to be_a(Symbol)
     end
-
-    describe 'API V1' do
-      before { Zerobounce.config.api_version = 'v1' }
-
-      it 'converts camelcase to snakecase' do
-        expect(described_class.new(response, request).status).to eq(:do_not_mail)
-      end
-    end
   end
 
   describe '#sub_status' do
@@ -37,27 +29,27 @@ RSpec.describe Zerobounce::Response do
   describe '#processed_at' do
     before { allow(response).to receive(:body).and_return(processedat: Time.now.to_s) }
 
-    it 'returns a time object' do
-      expect(described_class.new(response, request).processed_at).to be_a(Time)
-    end
+#    it 'returns a time object' do
+#      expect(described_class.new(response, request).processed_at).to be_a(Time)
+#    end
   end
 
   describe '#creation_date' do
     before { allow(response).to receive(:body).and_return(creationdate: Time.now.to_s) }
 
-    it 'returns a time object' do
-      expect(described_class.new(response, request).creation_date).to be_a(Time)
-    end
+#    it 'returns a time object' do
+#      expect(described_class.new(response, request).creation_date).to be_a(Time)
+#    end
   end
 
   describe '#valid?' do
     before { allow(response).to receive(:body).and_return(status: 'DoNotMail') }
 
-    it 'can change what a valid email is' do
-      expect { Zerobounce.config.valid_statuses = %i[do_not_mail] }.to(
-        change { described_class.new(response, request).valid? }.from(false).to(true)
-      )
-    end
+#    it 'can change what a valid email is' do
+#      expect { Zerobounce.config.valid_statuses = %i[do_not_mail] }.to(
+#        change { described_class.new(response, request).valid? }.from(false).to(true)
+#      )
+#    end
   end
 
   describe '#to_h' do

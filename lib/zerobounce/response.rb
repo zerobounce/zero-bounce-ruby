@@ -25,12 +25,7 @@ module Zerobounce
       @request = request
       @body = response.body
 
-      case request.api_version
-      when 'v2'
-        extend(V2Response)
-      else
-        extend(V1Response)
-      end
+      extend(V2Response)
     end
 
     # The email address you are validating.

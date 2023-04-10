@@ -19,7 +19,6 @@ module Zerobounce
     attr_reader :host
     attr_reader :headers
     attr_reader :middleware
-    attr_reader :api_version
 
     VALID_GET_PARAMS = %i[api_key ip_address email].freeze
 
@@ -29,12 +28,10 @@ module Zerobounce
     # @option params [String] :middleware default: {Configuration#middleware} {include:#middleware}
     # @option params [String] :headers default: {Configuration#headers} {include:#headers}
     # @option params [String] :host default: {Configuration#host} {include:#host}
-    # @option params [String] :api_version default: {Configuration#api_version} {include:#api_version}
     def initialize(params={})
       @middleware = params[:middleware] || Zerobounce.config.middleware
       @headers = params[:headers] || Zerobounce.config.headers
       @host = params[:host] || Zerobounce.config.host
-      @api_version = params[:api_version] || Zerobounce.config.api_version
     end
 
     # Validate the email address.
@@ -78,7 +75,7 @@ module Zerobounce
 
     # @return [Faraday::Connection]
     def conn
-      @conn ||= Faraday.new("#{host}/#{api_version}", headers: headers, &middleware)
+      @conn ||= Faraday.new("#{host}/v2", headers: headers, &middleware)
     end
   end
 end
