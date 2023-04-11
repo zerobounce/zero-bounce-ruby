@@ -38,7 +38,8 @@ module Zerobounce
     # @option params [String] :ip_address
     # @option params [String] :api_key
     # @return [Zerobounce::Response]
-    def validate(params)
+    def validate(email, ip_address="")
+      params = {email: email, ip_address: ip_address}
       Response.new(get('validate', params), self)
     end
 
@@ -47,8 +48,8 @@ module Zerobounce
     # @param [Hash] params
     # @option params [String] :apikey
     # @return [Integer] A value of -1 can mean the API is invalid.
-    def credits(params={})
-      response = get('getcredits', params)
+    def credits()
+      response = get('getcredits', {})
       response_body = response.body
       response_body_json = JSON.parse(response_body)
       credits = response_body_json[:Credits]
@@ -72,7 +73,7 @@ module Zerobounce
     # @param [Hash] params
     # @param [String] path
     # @return [Zerobounce::Response]
-    def get(path, params)
+    def get(path, params, content_type='application/json')
       # conn.get(path, get_params(params))
       url = "#{host}/v2/#{path}"
       RestClient.get(url, {params: get_params(params)})

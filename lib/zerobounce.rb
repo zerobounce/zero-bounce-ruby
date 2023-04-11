@@ -56,7 +56,7 @@ module Zerobounce
     # @return [Integer]
     def credits(params={})
       # todo:
-      Request.new(params).credits(params)
+      Request.new(params).credits()
     end
 
     # Convenience method for checking if an email address is valid.
