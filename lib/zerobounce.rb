@@ -44,7 +44,7 @@ module Zerobounce
     # @return [Zerobounce::Response]
     def validate(params)
       # todo:
-      Request.new(params).validate(params)
+      Request.new().validate(params)
     end
 
     # Get the number of remaining credits on the account.
@@ -55,8 +55,7 @@ module Zerobounce
     # @option params [String] :headers Use different headers for this request.
     # @return [Integer]
     def credits(params={})
-      # todo:
-      Request.new(params).credits()
+      Request.new().credits()
     end
 
     # Convenience method for checking if an email address is valid.
@@ -64,9 +63,9 @@ module Zerobounce
     # @param [String] email
     # @param [Hash] params
     # @return [Boolean]
-    def valid?(email, params={})
+    def valid?(email)
       # todo:
-      validate(params.merge(email: email)).valid?
+      validate(email: email).valid?
     end
 
     # Convenience method for checking if an email address is invalid.
@@ -74,9 +73,9 @@ module Zerobounce
     # @param [String] email
     # @param [Hash] params
     # @return [Boolean]
-    def invalid?(email, params={})
+    def invalid?(email)
       # todo: 
-      validate(params.merge(email: email)).invalid?
+      validate(email: email).invalid?
     end
 
 
