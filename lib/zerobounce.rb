@@ -41,7 +41,6 @@ module Zerobounce
     # @option params [String] :apikey Use a different API key for this request.
     # @option params [String] :host Use a different host for this request.
     # @option params [String] :headers Use different headers for this request.
-    # @option params [Proc] :middleware Use different middleware for this request.
     # @return [Zerobounce::Response]
     def validate(params)
       # todo:
@@ -54,7 +53,6 @@ module Zerobounce
     # @option params [String] :apikey Use a different API key for this request.
     # @option params [String] :host Use a different host for this request.
     # @option params [String] :headers Use different headers for this request.
-    # @option params [Proc] :middleware Use different middleware for this request.
     # @return [Integer]
     def credits(params={})
       # todo:
