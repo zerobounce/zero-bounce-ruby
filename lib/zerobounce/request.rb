@@ -9,34 +9,15 @@ module Zerobounce
   
   # Sends the HTTP request.
   class Request
-    # Validate the email address.
-    #
-    # @option params [String] :email
-    # @option params [String] :ip_address
-    # @return [Zerobounce::Response]
-    def validate(email, ip_address="")
-      params = {email: email, ip_address: ip_address}
-      get('validate', params)
-    end
 
-    # Get the number of remaining credits on the account.
-    #
-    # @return [Integer] A value of -1 can mean the API Key is invalid.
-    def credits()
-      json = get('getcredits', {})
-      credits = json[:Credits]
-      credits_i = credits.to_i
-      return credits_i
-    end
-
-    private
+    # private
 
     # Sends a GET request.
     #
     # @param [Hash] params
     # @param [String] path
     # @return [Zerobounce::Response]
-    def get(path, params, content_type='application/json')
+    def self.get(path, params, content_type='application/json')
       # todo: check params with param definitions
       # todo: check api key
       # todo: use multiple hosts (api, bulk api)

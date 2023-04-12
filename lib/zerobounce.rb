@@ -45,9 +45,9 @@ module Zerobounce
     # @option params [String] :host Use a different host for this request.
     # @option params [String] :headers Use different headers for this request.
     # @return [Zerobounce::Response]
-    def validate(params)
-      # todo:
-      Request.new().validate(params)
+    def validate(email, ip_address=nil)
+      params = {email: email, ip_address: ip_address}
+      Request.get('validate', params)
     end
 
     # Get the number of remaining credits on the account.
@@ -58,7 +58,10 @@ module Zerobounce
     # @option params [String] :headers Use different headers for this request.
     # @return [Integer]
     def credits(params={})
-      Request.new().credits()
+      json = Request.get('getcredits', {})
+      credits = json[:Credits]
+      credits_i = credits.to_i
+      return credits_i
     end
 
     # Convenience method for checking if an email address is valid.
@@ -66,20 +69,20 @@ module Zerobounce
     # @param [String] email
     # @param [Hash] params
     # @return [Boolean]
-    def valid?(email)
-      # todo:
-      validate(email: email).valid?
-    end
+    # def valid?(email)
+    #   # todo:
+    #   validate(email: email).valid?
+    # end
 
     # Convenience method for checking if an email address is invalid.
     #
     # @param [String] email
     # @param [Hash] params
     # @return [Boolean]
-    def invalid?(email)
-      # todo: 
-      validate(email: email).invalid?
-    end
+    # def invalid?(email)
+    #   # todo: 
+    #   validate(email: email).invalid?
+    # end
 
 
     def api_usage()
