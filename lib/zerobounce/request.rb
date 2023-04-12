@@ -6,27 +6,9 @@ require 'rest-client'
 require 'json'
 
 module Zerobounce
+  
   # Sends the HTTP request.
-  #
-  # @attr_reader [String] host
-  #   The host to send the request to.
-  #
-  # @attr_reader [Hash] headers
-  #   The headers used for the request.
   class Request
-    attr_reader :host
-    attr_reader :headers
-
-    # Set instance variables and extends the correct Zerobounce::Request
-    #
-    # @param [Hash] params
-    # @option params [String] :headers default: {Configuration#headers} {include:#headers}
-    # @option params [String] :host default: {Configuration#host} {include:#host}
-    def initialize()
-      @headers = Zerobounce.config.headers
-      @host = Zerobounce.config.host
-    end
-
     # Validate the email address.
     #
     # @option params [String] :email
@@ -59,7 +41,7 @@ module Zerobounce
       # todo: check api key
       # todo: use multiple hosts (api, bulk api)
       params[:api_key] = Zerobounce.config.apikey
-      url = "#{host}/v2/#{path}"
+      url = "#{Zerobounce::API_ROOT_URL}/#{path}"
       response = RestClient.get(url, {params: params})
       if content_type == 'application/json'
         response_body = response.body

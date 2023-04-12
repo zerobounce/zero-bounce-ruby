@@ -9,7 +9,10 @@ require 'zerobounce/configuration'
 
 # Validate an email address with Zerobounce.net
 module Zerobounce
-  # @author Aaron Frase
+  
+  API_ROOT_URL      = 'https://api.zerobounce.net/v2'
+  BULK_API_ROOT_URL = 'https://bulkapi.zerobounce.net/v2'
+
   class << self
     attr_writer :configuration
 
