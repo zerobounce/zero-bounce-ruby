@@ -6,7 +6,6 @@ require 'date'
 require 'zerobounce/error'
 require 'zerobounce/version'
 require 'zerobounce/request'
-require 'zerobounce/response'
 require 'zerobounce/configuration'
 
 # Validate an email address with Zerobounce.net

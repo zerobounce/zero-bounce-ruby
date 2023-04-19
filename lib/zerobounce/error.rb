@@ -2,6 +2,8 @@
 
 require 'json'
 
+# todo:
+
 module Zerobounce
   # The base Zerobounce error.
   #
