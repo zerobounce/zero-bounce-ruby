@@ -190,7 +190,7 @@ module Zerobounce
         })
       end
       params = {email_batch: email_batch}
-      # result = Request.post('validatebatch')
+      result = Request.bulk_post('validatebatch', params)
       return result[:email_batch]
     end
 
@@ -229,7 +229,7 @@ module Zerobounce
         has_header_row: has_header_row,
       }
       params[:return_url] = return_url if return_url
-      # Request.post('sendfile')
+      Request.bulk_post('sendfile', params, 'multipart/form-data', filepath)
     end
 
     # Get validate file status
@@ -250,7 +250,7 @@ module Zerobounce
     def validate_file_check(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.get('filestatus', params)
+      Request.bulk_get('filestatus', params)
     end
 
     # Get validate results file 
@@ -261,7 +261,7 @@ module Zerobounce
     def validate_file_get(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.get('getfile', params)
+      Request.bulk_get('getfile', params)
     end
 
     # Delete validate file 
@@ -278,7 +278,7 @@ module Zerobounce
     def validate_file_delete(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.get('deletefile', params)
+      Request.bulk_get('deletefile', params)
     end
 
     # Score CSV file
@@ -313,7 +313,7 @@ module Zerobounce
     def scoring_file_get(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.get('scoring/getfile', params)
+      Request.bulk_get('scoring/getfile', params)
     end
 
     # Get validate file status
@@ -333,7 +333,7 @@ module Zerobounce
     def scoring_file_check(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.get('scoring/filestatus', params)
+      Request.bulk_get('scoring/filestatus', params)
     end
 
     # Delete validate file 
@@ -350,7 +350,7 @@ module Zerobounce
     def scoring_file_delete(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.get('scoring/deletefile', params)
+      Request.bulk_get('scoring/deletefile', params)
     end
 
   end
