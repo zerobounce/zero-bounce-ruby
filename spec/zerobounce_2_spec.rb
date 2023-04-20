@@ -1,8 +1,30 @@
 
 RSpec.describe Zerobounce do
+
+	let (:valid_api_key) { 'd1c0448d296846c9b227a5dc3fa8c605' }
+	let (:invalid_api_key) { [*('a'..'z'),*('0'..'9')].sample(32).join }
+
+	it 'has a version number' do 
+		expect(described_class::VERSION).not_to be_nil
+	end
 	
 	describe '.configure' do
+		it 'yields the configuration' do
+			expect { |b| described_class.configure(&b) }.to \
+				yield_with_args(described_class::Configuration)
+		end
+		it 'sets the api key in configure block' do
+     		described_class.configure {|config| config.apikey = valid_api_key}
+    		expect(described_class.configuration.apikey).to eq(valid_api_key)
+    	end
 	end
+
+	describe '.configuration' do
+    	it 'returns the same configuration instance' do
+      		expect(described_class.configuration).to \
+      			equal(described_class.configuration)
+    	end
+  	end
 
 	describe '.validate' do
 		context 'given no API key' do
