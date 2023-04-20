@@ -109,16 +109,41 @@ RSpec.describe Zerobounce do
 	end
 
 	describe '.api_usage' do
+		context 'wrong number of parameters' do
+			it 'should raise ArgumentError' do
+				expect{ described_class.api_usage }.to raise_error(ArgumentError)
+				expect{ described_class.api_usage(Date.today) }.to \
+					raise_error(ArgumentError)
+				expect{ described_class.api_usage(Date.today, 'b') }.to \
+					raise_error(ArgumentError)
+			end
+		end
 		context 'given no API key' do
 			it 'should raise an API key error' do 
+				expect{ described_class.api_usage(Date.today, Date.today)}.to \
+					raise_error(StandardError, /API key must be assigned/)
 			end
 		end
 		context 'given incorrect API key' do
+			before do 
+				described_class.config.apikey = invalid_api_key
+			end
 			it 'should raise an API key error' do
+				expect{ described_class.api_usage(Date.today, Date.today) }.to \
+					raise_error(RuntimeError, /Invalid API key/)
 			end
 		end
 		context 'given correct API key' do 
+			before do 
+				described_class.config.apikey = valid_api_key
+			end
 			it 'should return API usage statistics' do 
+				result = described_class.api_usage(Date.today, Date.today)
+				expect(result).to be_a_kind_of(Hash)
+					expect(result).to include(
+						'total', 'status_valid', 'status_invalid', 'status_catch_all',
+						'status_do_not_mail', 'status_spamtrap', 'status_unknown'
+					)
 			end
 		end
 	end

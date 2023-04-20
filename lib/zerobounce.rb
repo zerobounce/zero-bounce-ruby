@@ -140,8 +140,12 @@ module Zerobounce
     #   "end_date": "12/12/2023"
     # }
     def api_usage(start_date, end_date)
-      start_date_f = start_date.strftime('%Y-%m-%d')
-      end_date_f = end_date.strftime('%Y-%m-%d')
+      begin
+        start_date_f = start_date.strftime('%Y-%m-%d')
+        end_date_f = end_date.strftime('%Y-%m-%d')
+      rescue NoMethodError => e
+        raise ArgumentError.new('strftime method not found for provided arguments')
+      end
       params = {start_date: start_date_f, end_date: end_date_f}
       Request.get('getapiusage', params)
     end

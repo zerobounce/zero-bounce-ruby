@@ -38,6 +38,8 @@ module Zerobounce
         response_body = response.body
         response_body_json = JSON.parse(response_body) 
 
+        # puts response_body_json if response_body_json.key?('error')
+
         raise (response_body_json['error']) if response_body_json.key?('error')
 
         return response_body_json
