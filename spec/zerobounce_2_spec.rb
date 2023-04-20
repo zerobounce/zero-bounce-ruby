@@ -4,6 +4,10 @@ RSpec.describe Zerobounce do
 	let (:valid_api_key) { 'd1c0448d296846c9b227a5dc3fa8c605' }
 	let (:invalid_api_key) { [*('a'..'z'),*('0'..'9')].sample(32).join }
 
+	it 'should generate different keys' do
+		expect(valid_api_key).not_to equal(invalid_api_key)
+	end
+
 	it 'has a version number' do 
 		expect(described_class::VERSION).not_to be_nil
 	end
@@ -16,6 +20,9 @@ RSpec.describe Zerobounce do
 		it 'sets the api key in configure block' do
      		described_class.configure {|config| config.apikey = valid_api_key}
     		expect(described_class.configuration.apikey).to eq(valid_api_key)
+
+    		described_class.configure {|config| config.apikey = invalid_api_key}
+    		expect(described_class.configuration.apikey).to eq(invalid_api_key)
     	end
 	end
 
@@ -29,26 +36,47 @@ RSpec.describe Zerobounce do
 	describe '.validate' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 
+				expect{ described_class.validate('valid@example.com') }.to \
+					raise_error(StandardError, /API key must be assigned/)
 			end
 		end
 		context 'given incorrect API key' do
+			before do
+				described_class.config.apikey = invalid_api_key
+			end
 			it 'should raise an API key error' do
+				expect{ described_class.validate('valid@example.com') }.to \
+					raise_error(StandardError, 
+						/Invalid API key or your account ran out of credits/)
 			end
 		end
 		context 'given correct API key' do 
+			before do
+				described_class.config.apikey = valid_api_key
+			end
 			context 'given no email address' do 
 				it 'should raise an error' do 
+					expect{ described_class.validate() }.to \
+						raise_error(ArgumentError)
 				end
 			end
-			context 'given an email address' do
+			context 'given a valid email address' do
 				it 'should return a valid result' do
+					result = described_class.validate('valid@example.com')
+					expect(result).to be_a_kind_of(Hash)
+					expect(result).to include(
+						'address', 'status', 'sub_status', 'domain_age_days', 
+						'smtp_provider', 'mx_found', 'mx_record'
+					)
 				end 
-				context 'given an incorrect IP address' do
-					it 'should' do
-					end
-				end
-				context 'given a correct IP address' do 
-					it 'should return a valid result' do 
+				context 'given an IP address' do
+					it 'should return a valid result' do # todo: this works with any address
+						result = described_class.validate('valid@example.com', '127.0.0.1')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(
+							'address', 'status', 'sub_status', 'domain_age_days', 
+							'smtp_provider', 'mx_found', 'mx_record'
+						)	
 					end
 				end
 			end
@@ -58,14 +86,24 @@ RSpec.describe Zerobounce do
 	describe '.credits' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 
+				expect{ described_class.credits }.to \
+					raise_error(StandardError, /API key must be assigned/)
 			end
 		end
 		context 'given incorrect API key' do
+			before do
+				described_class.config.apikey = invalid_api_key
+			end
 			it 'should return -1 credits' do
+				expect(described_class.credits).to equal(-1)
 			end
 		end
 		context 'given correct API key' do 
+			before do
+				described_class.config.apikey = valid_api_key
+			end
 			it 'should return the correct number of credits' do 
+				expect(described_class.credits).to satisfy { |n| n > -1 }
 			end
 		end
 	end

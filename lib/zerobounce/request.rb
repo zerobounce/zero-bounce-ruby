@@ -28,13 +28,18 @@ module Zerobounce
       # todo: check params with param definitions
       # todo: check api key
       # todo: use multiple hosts (api, bulk api)
-      # content_type = application/json
+      
+      raise ("API key must be assigned") if not Zerobounce.config.apikey
+
       params[:api_key] = Zerobounce.config.apikey
       url = "#{root}/#{path}"
       response = RestClient.get(url, {params: params})
       if content_type == 'application/json'
         response_body = response.body
         response_body_json = JSON.parse(response_body) 
+
+        raise (response_body_json['error']) if response_body_json.key?('error')
+
         return response_body_json
       end
       return response

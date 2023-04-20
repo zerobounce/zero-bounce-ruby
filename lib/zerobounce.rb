@@ -74,7 +74,7 @@ module Zerobounce
     # @return [Integer] amount of credits left
     def credits()
       json = Request.get('getcredits', {})
-      credits = json[:Credits]
+      credits = json['Credits']
       credits_i = credits.to_i
       return credits_i
     end
