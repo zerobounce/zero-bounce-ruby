@@ -148,21 +148,38 @@ RSpec.describe Zerobounce do
 		end
 	end
 
+	let (:emails) {[
+		'disposable@example.com',
+		'invalid@example.com',
+		'valid@example.com',
+		'toxic@example.com',
+		'donotmail@example.com',
+		'spamtrap@example.com'
+	]}
 	describe '.validate_batch' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 
+				expect{ described_class.validate_batch(emails) }.to \
+					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
 		context 'given incorrect API key' do
+			before do
+				described_class.config.apikey = invalid_api_key
+			end
 			it 'should raise an API key error' do
+				# results = described_class.validate_batch(emails)
+				# puts(results)
 			end
 		end
 		context 'given correct API key' do 
-			context 'given incorrect input (no email_address)' do 
+			context 'given incorrect input (no emails)' do 
 
 			end
 			context 'given correct input' do 
 				it 'should return valid results' do
+					# results = described_class.validate_batch(emails)
+					# puts(results)
 				end
 			end
 		end
