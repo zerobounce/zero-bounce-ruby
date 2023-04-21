@@ -156,6 +156,7 @@ RSpec.describe Zerobounce do
 		'donotmail@example.com',
 		'spamtrap@example.com'
 	]}
+
 	describe '.validate_batch' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 
@@ -168,60 +169,117 @@ RSpec.describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				# results = described_class.validate_batch(emails)
-				# puts(results)
+				expect{ described_class.validate_batch(emails) }.to \
+					raise_error(RuntimeError, 
+						/Invalid API Key or your account ran out of credits/)
 			end
 		end
 		context 'given correct API key' do 
 			context 'given incorrect input (no emails)' do 
-
+				it 'should raise an ArgumentError' do
+					expect{ described_class.validate_batch }.to \
+						raise_error(ArgumentError)
+				end
+			end
+			context 'given incorrect input (emails not array of strings)' do 
+				it 'should raise an ArgumentError' do
+					expect{ described_class.validate_batch('valid@example.com') }.to \
+						raise_error(ArgumentError)
+					expect{ described_class.validate_batch([1, 2, 3]) }.to \
+						raise_error(ArgumentError)
+				end
 			end
 			context 'given correct input' do 
+				before do 
+					described_class.config.apikey = valid_api_key
+				end
 				it 'should return valid results' do
-					# results = described_class.validate_batch(emails)
-					# puts(results)
+					results = described_class.validate_batch(emails)
+					expect(results.length).to be(6)
+					results.each do |result|
+						expect(result).to include(
+							'address', 'status', 'sub_status', 'domain_age_days', 
+							'smtp_provider', 'mx_found', 'mx_record'
+						)
+					end
 				end
 			end
 		end
 	end
 
+
+	let(:validate_file_path){File.join(Dir.pwd, 'files', 'validation.csv')}	
 	describe '.validate_file_send' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 
+				expect{ described_class.validate_file_send(validate_file_path) }.to \
+					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
 		context 'given incorrect API key' do
+			before do
+				described_class.config.apikey = invalid_api_key
+			end
 			it 'should raise an API key error' do
+				expect{ described_class.validate_file_send(validate_file_path) }.to \
+					raise_error(RestClient::Unauthorized)
 			end
 		end
 		context 'given correct API key' do 
+			before do
+				described_class.config.apikey = valid_api_key
+			end
 			context 'given incorrect file format' do
+				# todo:
 			end
 			context 'given correct file format' do 
+				it 'should return a correct upload result' do
+					results = described_class.validate_file_send(validate_file_path)
+					expect(results).to be_a_kind_of(Hash)
+					expect(results['success']).to be(true)
+					expect(results['message']).to eql('File Accepted')
+					expect(results['file_id']).to be_a_kind_of(String)
+					expect(results['file_name']).to eql('validation.csv')
+				end
 			end
 		end
 	end
 
+	let (:file_id){'5f468a35-83da-4236-b6c5-1d0551a3ce73'}
 	describe '.validate_file_check' do 
 		context 'given no API key' do
 			it 'should raise an API key error' do 
+				expect{ described_class.validate_file_check(file_id) }.to \
+					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
 		context 'given incorrect API key' do
+			before do
+				described_class.config.apikey = invalid_api_key
+			end
 			it 'should raise an API key error' do
+				expect{ described_class.validate_file_check(file_id) }.to \
+					raise_error(RestClient::Unauthorized)
 			end
 		end
 		context 'given correct API key' do 
+			before do 
+				described_class.config.apikey = valid_api_key
+			end
 			context 'given incorrect file id' do
 				it 'should return error message' do
-				end
-			end
-			context 'given deleted file id' do 
-				it 'should return errir message' do
+					results = described_class.validate_file_check('invalid-file-id')
+					expect(results['success']).to be(false)
+					expect(results['message']).to eql('File cannot be found.')
 				end
 			end
 			context 'given correct file id' do
 				it 'should return file processing progress' do
+					results = described_class.validate_file_check(file_id)
+					expect(results['success']).to be(true)
+					expect(results['file_id']).to be_a_kind_of(String)
+					expect(results['file_name']).to be_a_kind_of(String)
+					expect(results['error_reason']).to be(nil)
 				end
 			end
 		end
@@ -230,23 +288,37 @@ RSpec.describe Zerobounce do
 	describe '.validate_file_get' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 
+				expect{ described_class.validate_file_get(file_id) }.to \
+					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
 		context 'given incorrect API key' do
+			before do 
+				described_class.config.apikey = invalid_api_key
+			end
 			it 'should raise an API key error' do
+				expect{ described_class.validate_file_get(file_id) }.to \
+					raise_error(RestClient::Unauthorized)
 			end
 		end
 		context 'given correct API key' do 
+			before do 
+				described_class.config.apikey = valid_api_key
+			end
 			context 'given incorrect file id' do
 				it 'should return error message' do
-				end
-			end
-			context 'given deleted file id' do 
-				it 'should return error message' do
+					results = described_class.validate_file_get('invalid-file-id')
+					expect(results['success']).to be(false)
+					expect(results['message']).to eql('File cannot be found.')
 				end
 			end
 			context 'given correct file id' do
+				before do 
+					described_class.config.apikey = valid_api_key
+				end
 				it 'should download file contents' do 
+					results = described_class.validate_file_get(file_id)
+					expect(results.class).to be_a_kind_of(String)
 				end
 			end
 		end
@@ -255,23 +327,37 @@ RSpec.describe Zerobounce do
 	describe '.validate_file_delete' do 
 		context 'given no API key' do
 			it 'should raise an API key error' do 
+				expect{ described_class.validate_file_delete(file_id) }.to \
+					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
 		context 'given incorrect API key' do
+			before do 
+				described_class.config.apikey = invalid_api_key
+			end
 			it 'should raise an API key error' do
+				expect{ described_class.validate_file_delete(file_id) }.to \
+					raise_error(RestClient::Unauthorized)
 			end
 		end
 		context 'given correct API key' do 
+			before do 
+				described_class.config.apikey = valid_api_key
+			end
 			context 'given incorrect file id' do
 				it 'should return error message' do
-				end
-			end
-			context 'given deleted file id' do 
-				it 'should return error message' do
+					results = described_class.validate_file_delete('invalid-file-id')
+					expect(results['success']).to be(false)
+					expect(results['message']).to eql('File cannot be found.')
 				end
 			end
 			context 'given correct file id' do
 				it 'should return deleted response' do
+					results = described_class.validate_file_delete(file_id)
+					expect(results['success']).to be(true)
+					expect(results['message']).to eql('File Deleted')
+					expect(results['file_name']).to eql('validation.csv')
+					expect(results['file_id']).to be_a_kind_of(String)
 				end
 			end
 		end

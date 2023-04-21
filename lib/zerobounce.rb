@@ -184,7 +184,12 @@ module Zerobounce
     #   ...
     # ]
     def validate_batch(emails, ip_addresses=[])
-      # todo: 
+
+      raise ArgumentError.new if emails.class != Array
+      emails.each do |email|
+        raise ArgumentError if email.class != String
+      end
+
       email_batch = []
       emails.each_index do |i|
         email_batch.push({
@@ -193,8 +198,8 @@ module Zerobounce
         })
       end
       params = {email_batch: email_batch}
-      result = Request.bulk_post('validatebatch', params)
-      return result[:email_batch]
+      results = Request.bulk_post('validatebatch', params)
+      return results['email_batch']
     end
 
     # Validate CSV file
