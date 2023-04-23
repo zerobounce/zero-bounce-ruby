@@ -228,7 +228,6 @@ module Zerobounce
         has_header_row=true,
         return_url=nil
       )
-      # todo:
       params = {
         email_address_column: email_address_column,
         first_name_column: first_name_column,
@@ -309,8 +308,12 @@ module Zerobounce
         has_header_row=true,
         return_url=nil
       )
-      # todo:
-      # Request.post('scoring/sendfile')
+      params = {
+        email_address_column: email_address_column,
+        has_header_row: has_header_row,
+      }
+      params[:return_url] = return_url if return_url
+      Request.bulk_post('scoring/sendfile', params, 'multipart/form-data', filepath)
     end
 
     # Get validate results file 
