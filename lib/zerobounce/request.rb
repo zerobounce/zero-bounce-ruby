@@ -1,72 +1,100 @@
 # frozen_string_literal: true
 
-require 'faraday'
-require 'zerobounce/request/v1_request'
-require 'zerobounce/request/v2_request'
+# https://github.com/rest-client/rest-client
+require 'rest-client'
+
+require 'json'
 
 module Zerobounce
+  
   # Sends the HTTP request.
-  #
-  # @author Aaron Frase
-  #
-  # @attr_reader [String] host
-  #   The host to send the request to.
-  #
-  # @attr_reader [Hash] headers
-  #   The headers used for the request.
-  #
-  # @attr_reader [Proc] middleware
-  #   Faraday middleware used for the request.
   class Request
-    attr_reader :host
-    attr_reader :headers
-    attr_reader :middleware
-    attr_reader :api_version
 
-    # Set instance variables and extends the correct Zerobounce::Request
-    #
-    # @param [Hash] params
-    # @option params [String] :middleware default: {Configuration#middleware} {include:#middleware}
-    # @option params [String] :headers default: {Configuration#headers} {include:#headers}
-    # @option params [String] :host default: {Configuration#host} {include:#host}
-    # @option params [String] :api_version default: {Configuration#api_version} {include:#api_version}
-    def initialize(params={})
-      @middleware = params[:middleware] || Zerobounce.config.middleware
-      @headers = params[:headers] || Zerobounce.config.headers
-      @host = params[:host] || Zerobounce.config.host
-      @api_version = params[:api_version] || Zerobounce.config.api_version
+    def self.get(path, params, content_type='application/json')
+      response = self._get(Zerobounce::API_ROOT_URL, path, params, content_type)
+      if response.headers[:content_type] == 'application/json'
+        response_body = response.body
+        response_body_json = JSON.parse(response_body) 
 
-      case api_version
-      when 'v2'
-        extend(V2Request)
-      else
-        extend(V1Request)
+        raise (response_body_json['error']) if response_body_json.key?('error')
+        raise (response_body_json['errors'][0]['error']) \
+          if response_body_json.key?('errors') and \
+            response_body_json['errors'].length > 0
+
+        return response_body_json
+      else 
+        return response
       end
     end
 
-    # Get the number of remaining credits on the account.
-    #
-    # @param [Hash] params
-    # @option params [String] :apikey
-    # @return [Integer] A value of -1 can mean the API is invalid.
-    def credits(params={})
-      get('getcredits', params).body[:Credits].to_i
+    def self.bulk_get(path, params, content_type='application/json')
+      response = self._get(Zerobounce::BULK_API_ROOT_URL, path, params, content_type)
+      if response.headers[:content_type] == 'application/json'
+        response_body = response.body
+        response_body_json = JSON.parse(response_body)
+
+        raise (response_body_json['error']) if response_body_json.key?('error')
+        raise (response_body_json['errors'][0]['error']) \
+          if response_body_json.key?('errors') and \
+            response_body_json['errors'].length > 0
+
+        return response_body_json
+      else
+        return response.body
+      end
     end
 
-    private
+    def self.bulk_post(path, params, content_type='application/json', filepath=nil)
+      response = self._post(Zerobounce::BULK_API_ROOT_URL, path, params, \
+          content_type, filepath)
+      if response.headers[:content_type] == 'application/json'
+        response_body = response.body
+        response_body_json = JSON.parse(response_body) 
 
-    # Sends a GET request.
-    #
-    # @param [Hash] params
-    # @param [String] path
-    # @return [Zerobounce::Response]
-    def get(path, params)
-      conn.get(path, get_params(params))
+        raise (response_body_json['error']) if response_body_json.key?('error')
+        raise (response_body_json['errors'][0]['error']) \
+          if response_body_json.key?('errors') and \
+            response_body_json['errors'].length > 0
+
+        return response_body_json
+      end
+      return response.body
     end
 
-    # @return [Faraday::Connection]
-    def conn
-      @conn ||= Faraday.new("#{host}/#{api_version}", headers: headers, &middleware)
+    private 
+
+    def self._get(root, path, params, content_type='application/json')
+
+      raise ("API key must be assigned") if not Zerobounce.config.apikey
+
+      params[:api_key] = Zerobounce.config.apikey
+      url = "#{root}/#{path}"
+      RestClient.get(url, {params: params})
     end
+
+    def self._post(root, path, params, content_type='application/json', filepath=nil)
+
+      raise ("API key must be assigned") if not Zerobounce.config.apikey
+
+      params[:api_key] = Zerobounce.config.apikey
+      url = "#{root}/#{path}"
+
+      if filepath or content_type == 'multipart/form-data'
+        params[:file] = File.new(filepath, 'rb')
+        params[:multipart] = true
+        response = RestClient.post(url, params)
+
+      elsif content_type == 'application/json'
+        response = RestClient.post(url, params.to_json, \
+                      content_type: :json, accept: :json)
+
+      else
+        # this shouldn't happen
+        raise Error.new('Unknown content type specified in request.'\
+          ' Must be either multipart/form-data or application/json.')
+      end
+    end
+
   end
+
 end

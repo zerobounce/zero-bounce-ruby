@@ -7,12 +7,12 @@ require 'zerobounce/version'
 Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.name          = 'zerobounce'
   spec.version       = Zerobounce::VERSION
-  spec.authors       = ['Aaron Frase']
-  spec.email         = ['afrase91@gmail.com']
+  spec.authors       = ['Zero Bounce']
+  spec.email         = ['wrappers@zerobounce.net']
 
   spec.summary       = 'A Ruby client for Zerobounce.net.'
   spec.description   = 'A Ruby client for Zerobounce.net.'
-  spec.homepage      = 'https://github.com/afrase/zerobounce'
+  spec.homepage      = 'https://zerobounce.net'
   spec.license       = 'MIT'
 
   spec.files = `git ls-files -z`.split("\x0").reject do |f|
@@ -26,10 +26,9 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
 
   spec.required_ruby_version = '>= 2.5'
 
-  spec.add_dependency 'faraday', '>= 0.14', '< 2.0'
-  spec.add_dependency 'faraday_middleware', '~> 1.0'
+  spec.add_dependency 'rest-client', '~>2.1'
 
-  spec.add_development_dependency 'bundler', '~> 2.2.17'
+  spec.add_development_dependency 'bundler', '~> 2.4.6'
   spec.add_development_dependency 'pry', '~> 0.14.1'
   spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'rspec', '~> 3.0'

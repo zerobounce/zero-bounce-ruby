@@ -1,3 +1,6 @@
+# 0.3.0
+* Update ruby and bundler version
+
 # 0.2.0
 
 * Update faraday and faraday_middleware dependency requirements.
