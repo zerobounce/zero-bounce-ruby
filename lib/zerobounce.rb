@@ -342,7 +342,6 @@ module Zerobounce
     #   "return_url": null
     # } 
     def scoring_file_check(file_id)
-      # todo:
       params = {file_id: file_id}
       Request.bulk_get('scoring/filestatus', params)
     end

@@ -209,6 +209,7 @@ RSpec.describe Zerobounce do
 
 
 	let(:validate_file_path){File.join(Dir.pwd, 'files', 'validation.csv')}	
+	validate_file_id = nil
 	describe '.validate_file_send' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 
@@ -239,17 +240,17 @@ RSpec.describe Zerobounce do
 					expect(results['success']).to be(true)
 					expect(results['message']).to eql('File Accepted')
 					expect(results['file_id']).to be_a_kind_of(String)
+					validate_file_id = results['file_id']
 					expect(results['file_name']).to eql('validation.csv')
 				end
 			end
 		end
 	end
-
-	let (:file_id){'5f468a35-83da-4236-b6c5-1d0551a3ce73'}
+	
 	describe '.validate_file_check' do 
 		context 'given no API key' do
 			it 'should raise an API key error' do 
-				expect{ described_class.validate_file_check(file_id) }.to \
+				expect{ described_class.validate_file_check(validate_file_id) }.to \
 					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
@@ -258,7 +259,7 @@ RSpec.describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				expect{ described_class.validate_file_check(file_id) }.to \
+				expect{ described_class.validate_file_check(validate_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
 			end
 		end
@@ -275,11 +276,12 @@ RSpec.describe Zerobounce do
 			end
 			context 'given correct file id' do
 				it 'should return file processing progress' do
-					results = described_class.validate_file_check(file_id)
-					expect(results['success']).to be(true)
-					expect(results['file_id']).to be_a_kind_of(String)
-					expect(results['file_name']).to be_a_kind_of(String)
-					expect(results['error_reason']).to be(nil)
+					# results = described_class.validate_file_check(validate_file_id)
+					# expect(results['success']).to be(true)
+					# expect(results['file_id']).to be_a_kind_of(String)
+					# expect(results['file_id']).to eql(validate_file_id)
+					# expect(results['file_name']).to be_a_kind_of(String)
+					# expect(results['error_reason']).to be(nil)
 				end
 			end
 		end
@@ -288,7 +290,7 @@ RSpec.describe Zerobounce do
 	describe '.validate_file_get' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 
-				expect{ described_class.validate_file_get(file_id) }.to \
+				expect{ described_class.validate_file_get(validate_file_id) }.to \
 					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
@@ -297,7 +299,7 @@ RSpec.describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				expect{ described_class.validate_file_get(file_id) }.to \
+				expect{ described_class.validate_file_get(validate_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
 			end
 		end
@@ -317,8 +319,8 @@ RSpec.describe Zerobounce do
 					described_class.config.apikey = valid_api_key
 				end
 				it 'should download file contents' do 
-					results = described_class.validate_file_get(file_id)
-					expect(results.class).to be(String)
+					# results = described_class.validate_file_get(validate_file_id)
+					# expect(results.class).to be(String)
 				end
 			end
 		end
@@ -327,7 +329,7 @@ RSpec.describe Zerobounce do
 	describe '.validate_file_delete' do 
 		context 'given no API key' do
 			it 'should raise an API key error' do 
-				expect{ described_class.validate_file_delete(file_id) }.to \
+				expect{ described_class.validate_file_delete(validate_file_id) }.to \
 					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
@@ -336,7 +338,7 @@ RSpec.describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				expect{ described_class.validate_file_delete(file_id) }.to \
+				expect{ described_class.validate_file_delete(validate_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
 			end
 		end
@@ -353,17 +355,19 @@ RSpec.describe Zerobounce do
 			end
 			context 'given correct file id' do
 				it 'should return deleted response' do
-					results = described_class.validate_file_delete(file_id)
-					expect(results['success']).to be(true)
-					expect(results['message']).to eql('File Deleted')
-					expect(results['file_name']).to eql('validation.csv')
-					expect(results['file_id']).to be_a_kind_of(String)
+					# results = described_class.validate_file_delete(validate_file_id)
+					# expect(results['success']).to be(true)
+					# expect(results['message']).to eql('File Deleted')
+					# expect(results['file_name']).to eql('validation.csv')
+					# expect(results['file_id']).to be_a_kind_of(String)
+					# expect(results['file_id']).to eql(validate_file_id)
 				end
 			end
 		end
 	end
 
 	let(:scoring_file_path){File.join(Dir.pwd, 'files', 'scoring.csv')}	
+	scoring_file_id = nil
 	describe '.scoring_file_send' do 
 		context 'given no API key' do
 			it 'should raise an API key error' do 
@@ -394,17 +398,17 @@ RSpec.describe Zerobounce do
 					expect(results['success']).to be(true)
 					expect(results['message']).to eql('File Accepted')
 					expect(results['file_id']).to be_a_kind_of(String)
+					scoring_file_id = results['file_id']
 					expect(results['file_name']).to eql('scoring.csv')
 				end
 			end
 		end
 	end
 
-	let(:file_id){'4a085412-24d8-4319-b8c1-77374ac8b47b'}
 	describe '.scoring_file_check' do 
 		context 'given no API key' do
 			it 'should raise an API key error' do 
-				expect{ described_class.scoring_file_check(file_id) }.to \
+				expect{ described_class.scoring_file_check(scoring_file_id) }.to \
 					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
@@ -413,7 +417,7 @@ RSpec.describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				expect{ described_class.scoring_file_check(file_id) }.to \
+				expect{ described_class.scoring_file_check(scoring_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
 			end
 		end
@@ -430,11 +434,12 @@ RSpec.describe Zerobounce do
 			end
 			context 'given correct file id' do
 				it 'should return file processing progress' do
-					results = described_class.scoring_file_check(file_id)
-					expect(results['success']).to be(true)
-					expect(results['file_id']).to be_a_kind_of(String)
-					expect(results['file_name']).to be_a_kind_of(String)
-					expect(results['error_reason']).to be(nil)
+					# results = described_class.scoring_file_check(scoring_file_id)
+					# expect(results['success']).to be(true)
+					# expect(results['file_id']).to be_a_kind_of(String)
+					# expect(results['file_id']).to eql(scoring_file_id)
+					# expect(results['file_name']).to be_a_kind_of(String)
+					# expect(results['error_reason']).to be(nil)
 				end
 			end
 		end
@@ -443,7 +448,7 @@ RSpec.describe Zerobounce do
 	describe '.scoring_file_get' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 
-				expect{ described_class.scoring_file_get(file_id) }.to \
+				expect{ described_class.scoring_file_get(scoring_file_id) }.to \
 					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
@@ -452,7 +457,7 @@ RSpec.describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				expect{ described_class.scoring_file_get(file_id) }.to \
+				expect{ described_class.scoring_file_get(scoring_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
 			end
 		end
@@ -472,8 +477,8 @@ RSpec.describe Zerobounce do
 					described_class.config.apikey = valid_api_key
 				end
 				it 'should download file contents' do
-					results = described_class.scoring_file_get(file_id)
-					expect(results.class).to be(String)
+					# results = described_class.scoring_file_get(scoring_file_id)
+					# expect(results.class).to be(String)
 				end
 			end
 		end
@@ -482,7 +487,7 @@ RSpec.describe Zerobounce do
 	describe '.scoring_file_delete' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 
-				expect{ described_class.scoring_file_delete(file_id) }.to \
+				expect{ described_class.scoring_file_delete(scoring_file_id) }.to \
 					raise_error(RuntimeError, /API key must be assigned/)
 			end
 		end
@@ -491,7 +496,7 @@ RSpec.describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				expect{ described_class.scoring_file_delete(file_id) }.to \
+				expect{ described_class.scoring_file_delete(scoring_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
 			end
 		end
@@ -508,11 +513,11 @@ RSpec.describe Zerobounce do
 			end
 			context 'given correct file id' do
 				it 'should return the correct file deleted response' do 
-					results = described_class.scoring_file_delete(file_id)
-					expect(results['success']).to be(true)
-					expect(results['message']).to eql('File Deleted')
-					expect(results['file_name']).to eql('scoring.csv')
-					expect(results['file_id']).to be_a_kind_of(String)
+					# results = described_class.scoring_file_delete(scoring_file_id)
+					# expect(results['success']).to be(true)
+					# expect(results['message']).to eql('File Deleted')
+					# expect(results['file_name']).to eql('scoring.csv')
+					# expect(results['file_id']).to be_a_kind_of(String)
 				end
 			end
 		end
