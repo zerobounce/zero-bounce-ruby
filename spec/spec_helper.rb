@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'simplecov_env'
-SimpleCovEnv.start!
-
 require 'zerobounce'
 
 require_relative 'support/reset_config'

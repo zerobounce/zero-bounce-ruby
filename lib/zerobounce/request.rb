@@ -9,68 +9,92 @@ module Zerobounce
   
   # Sends the HTTP request.
   class Request
-    # Validate the email address.
-    #
-    # @option params [String] :email
-    # @option params [String] :ip_address
-    # @return [Zerobounce::Response]
-    def validate(email, ip_address="")
-      params = {email: email, ip_address: ip_address}
-      get('validate', params)
-    end
 
-    # Get the number of remaining credits on the account.
-    #
-    # @return [Integer] A value of -1 can mean the API Key is invalid.
-    def credits()
-      json = get('getcredits', {})
-      credits = json[:Credits]
-      credits_i = credits.to_i
-      return credits_i
-    end
-
-    private
-
-    # Sends a GET request.
-    #
-    # @param [Hash] params
-    # @param [String] path
-    # @return [Zerobounce::Response]
-    def get(path, params, content_type='application/json')
-      # todo: check params with param definitions
-      # todo: check api key
-      # todo: use multiple hosts (api, bulk api)
-      params[:api_key] = Zerobounce.config.apikey
-      url = "#{Zerobounce::API_ROOT_URL}/#{path}"
-      response = RestClient.get(url, {params: params})
-      if content_type == 'application/json'
+    def self.get(path, params, content_type='application/json')
+      response = self._get(Zerobounce::API_ROOT_URL, path, params, content_type)
+      if response.headers[:content_type] == 'application/json'
         response_body = response.body
         response_body_json = JSON.parse(response_body) 
+
+        raise (response_body_json['error']) if response_body_json.key?('error')
+        raise (response_body_json['errors'][0]['error']) \
+          if response_body_json.key?('errors') and \
+            response_body_json['errors'].length > 0
+
+        return response_body_json
+      else 
+        return response
+      end
+    end
+
+    def self.bulk_get(path, params, content_type='application/json')
+      response = self._get(Zerobounce::BULK_API_ROOT_URL, path, params, content_type)
+      if response.headers[:content_type] == 'application/json'
+        response_body = response.body
+        response_body_json = JSON.parse(response_body)
+
+        raise (response_body_json['error']) if response_body_json.key?('error')
+        raise (response_body_json['errors'][0]['error']) \
+          if response_body_json.key?('errors') and \
+            response_body_json['errors'].length > 0
+
+        return response_body_json
+      else
+        return response.body
+      end
+    end
+
+    def self.bulk_post(path, params, content_type='application/json', filepath=nil)
+      response = self._post(Zerobounce::BULK_API_ROOT_URL, path, params, \
+          content_type, filepath)
+      if response.headers[:content_type] == 'application/json'
+        response_body = response.body
+        response_body_json = JSON.parse(response_body) 
+
+        raise (response_body_json['error']) if response_body_json.key?('error')
+        raise (response_body_json['errors'][0]['error']) \
+          if response_body_json.key?('errors') and \
+            response_body_json['errors'].length > 0
+
         return response_body_json
       end
-      return response
+      return response.body
     end
 
-    def post_form(path, params, file=nil)
-      # RestClient.post '/data', :myfile => File.new("/path/to/image.jpg", 'rb')
-      # RestClient.post '/data', {:foo => 'bar', :multipart => true}
-=begin
-      RestClient.post( url,
-      {
-        :transfer => {
-          :path => '/foo/bar',
-          :owner => 'that_guy',
-          :group => 'those_guys'
-        },
-         :upload => {
-          :file => File.new(path, 'rb')
-        }
-      })
-=end
+    private 
+
+    def self._get(root, path, params, content_type='application/json')
+
+      raise ("API key must be assigned") if not Zerobounce.config.apikey
+
+      params[:api_key] = Zerobounce.config.apikey
+      url = "#{root}/#{path}"
+      RestClient.get(url, {params: params})
     end
 
-    def post_json(path, params)
-      # RestClient.post "http://example.com/resource", {'x' => 1}.to_json, {content_type: :json, accept: :json}
+    def self._post(root, path, params, content_type='application/json', filepath=nil)
+
+      raise ("API key must be assigned") if not Zerobounce.config.apikey
+
+      params[:api_key] = Zerobounce.config.apikey
+      url = "#{root}/#{path}"
+
+      if filepath or content_type == 'multipart/form-data'
+        params[:file] = File.new(filepath, 'rb')
+        params[:multipart] = true
+        response = RestClient.post(url, params)
+
+      elsif content_type == 'application/json'
+        response = RestClient.post(url, params.to_json, \
+                      content_type: :json, accept: :json)
+
+      else
+        # this shouldn't happen
+        raise Error.new('Unknown content type specified in request.'\
+          ' Must be either multipart/form-data or application/json.')
+      end
     end
+
   end
+
 end
