@@ -11,55 +11,44 @@ module Zerobounce
   # Sends the HTTP request.
   class BaseRequest
 
-    def self.get(path, params, content_type='application/json')
-      response = self._get(Zerobounce::API_ROOT_URL, path, params, content_type)
-      if response.headers[:content_type] == 'application/json'
-        response_body = response.body
-        response_body_json = JSON.parse(response_body) 
+    protected 
 
-        raise (response_body_json['error']) if response_body_json.key?('error')
-        raise (response_body_json['errors'][0]['error']) \
-          if response_body_json.key?('errors') and \
-            response_body_json['errors'].length > 0
+    def self._get(root, path, params, content_type='application/json')
 
-        return response_body_json
-      else 
-        return response
-      end
+      # puts path
+      # puts Zerobounce.config.apikey
+
+      raise ("API key must be assigned") if not Zerobounce.config.apikey
+
+      params[:api_key] = Zerobounce.config.apikey
+      url = "#{root}/#{path}"
+
+      response = RestClient.get(url, {params: params})
+      return response
     end
 
-    def self.bulk_get(path, params, content_type='application/json')
-      response = self._get(Zerobounce::BULK_API_ROOT_URL, path, params, content_type)
-      if response.headers[:content_type] == 'application/json'
-        response_body = response.body
-        response_body_json = JSON.parse(response_body)
+    def self._post(root, path, params, content_type='application/json', filepath=nil)
 
-        raise (response_body_json['error']) if response_body_json.key?('error')
-        raise (response_body_json['errors'][0]['error']) \
-          if response_body_json.key?('errors') and \
-            response_body_json['errors'].length > 0
+      raise ("API key must be assigned") if not Zerobounce.config.apikey
 
-        return response_body_json
+      params[:api_key] = Zerobounce.config.apikey
+      url = "#{root}/#{path}"
+      response = nil
+
+      if filepath or content_type == 'multipart/form-data'
+        params[:file] = File.new(filepath, 'rb')
+        params[:multipart] = true
+        response = RestClient.post(url, params)
+
+      elsif content_type == 'application/json'
+        response = RestClient.post(url, params.to_json, \
+                      content_type: :json, accept: :json)
       else
-        return response.body
+        # this shouldn't happen
+        raise Error.new('Unknown content type specified in request.'\
+          ' Must be either multipart/form-data or application/json.')
       end
-    end
-
-    def self.bulk_post(path, params, content_type='application/json', filepath=nil)
-      response = self._post(Zerobounce::BULK_API_ROOT_URL, path, params, \
-          content_type, filepath)
-      if response.headers[:content_type] == 'application/json'
-        response_body = response.body
-        response_body_json = JSON.parse(response_body) 
-
-        raise (response_body_json['error']) if response_body_json.key?('error')
-        raise (response_body_json['errors'][0]['error']) \
-          if response_body_json.key?('errors') and \
-            response_body_json['errors'].length > 0
-
-        return response_body_json
-      end
-      return response.body
+      return response
     end
 
   end
