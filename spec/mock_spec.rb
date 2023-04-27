@@ -2,7 +2,7 @@
 
 describe Zerobounce, :focus => ENV['TEST']=='unit' do
 
-	let (:valid_api_key) { '645ddcc7b6b046c8b6bb4298176684b3' }
+	let (:valid_api_key) { ENV['ZEROBOUNCE_API_KEY'] }
 	let (:invalid_api_key) { [*('a'..'z'),*('0'..'9')].sample(32).join }
 
         it 'should run mock tests' do
