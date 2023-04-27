@@ -11,6 +11,9 @@ module Zerobounce
 
     def self._get(root, path, params, content_type='application/json')
 
+      # puts path
+      # puts Zerobounce.config.apikey
+
       raise ("API key must be assigned") if not Zerobounce.config.apikey
 
       params[:api_key] = Zerobounce.config.apikey

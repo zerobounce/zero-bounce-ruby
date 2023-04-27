@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
-describe Zerobounce, :focus => true do
-# describe Zerobounce do
+describe Zerobounce, :focus => ENV['TEST']=='unit' do
 
-	let (:valid_api_key) { 'd1c0448d296846c9b227a5dc3fa8c605' }
+	let (:valid_api_key) { '645ddcc7b6b046c8b6bb4298176684b3' }
 	let (:invalid_api_key) { [*('a'..'z'),*('0'..'9')].sample(32).join }
+
+        it 'should run mock tests' do
+                puts 'running mock tests'
+        end
 
 	it 'should generate different keys' do
 		expect(valid_api_key).not_to equal(invalid_api_key)

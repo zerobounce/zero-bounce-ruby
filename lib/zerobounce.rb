@@ -6,6 +6,7 @@ require 'date'
 require 'zerobounce/error'
 require 'zerobounce/version'
 require 'zerobounce/request'
+require 'zerobounce/mock_request'
 require 'zerobounce/configuration'
 
 # Validate an email address with Zerobounce.net
@@ -16,6 +17,8 @@ module Zerobounce
 
   class << self
     attr_writer :configuration
+
+    @@request = ENV['TEST']=='unit' ? MockRequest : Request
 
     # Zerobounce configuration
     #
@@ -66,14 +69,14 @@ module Zerobounce
     # }
     def validate(email, ip_address=nil)
       params = {email: email, ip_address: ip_address}
-      Request.get('validate', params)
+      @@request.get('validate', params)
     end
 
     # Get the number of remaining credits on the account.
     #
     # @return [Integer] amount of credits left
     def credits()
-      json = Request.get('getcredits', {})
+      json = @@request.get('getcredits', {})
       credits = json['Credits']
       credits_i = credits.to_i
       return credits_i
@@ -147,7 +150,7 @@ module Zerobounce
         raise ArgumentError.new('strftime method not found for provided arguments')
       end
       params = {start_date: start_date_f, end_date: end_date_f}
-      Request.get('getapiusage', params)
+      @@request.get('getapiusage', params)
     end
 
     # Validate email batch
@@ -198,7 +201,7 @@ module Zerobounce
         })
       end
       params = {email_batch: email_batch}
-      results = Request.bulk_post('validatebatch', params)
+      results = @@request.bulk_post('validatebatch', params)
       return results['email_batch']
     end
 
@@ -236,7 +239,7 @@ module Zerobounce
         has_header_row: has_header_row,
       }
       params[:return_url] = return_url if return_url
-      Request.bulk_post('sendfile', params, 'multipart/form-data', filepath)
+      @@request.bulk_post('sendfile', params, 'multipart/form-data', filepath)
     end
 
     # Get validate file status
@@ -257,7 +260,7 @@ module Zerobounce
     def validate_file_check(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.bulk_get('filestatus', params)
+      @@request.bulk_get('filestatus', params)
     end
 
     # Get validate results file 
@@ -268,7 +271,7 @@ module Zerobounce
     def validate_file_get(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.bulk_get('getfile', params)
+      @@request.bulk_get('getfile', params)
     end
 
     # Delete validate file 
@@ -285,7 +288,7 @@ module Zerobounce
     def validate_file_delete(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.bulk_get('deletefile', params)
+      @@request.bulk_get('deletefile', params)
     end
 
     # Score CSV file
@@ -313,7 +316,7 @@ module Zerobounce
         has_header_row: has_header_row,
       }
       params[:return_url] = return_url if return_url
-      Request.bulk_post('scoring/sendfile', params, 'multipart/form-data', filepath)
+      @@request.bulk_post('scoring/sendfile', params, 'multipart/form-data', filepath)
     end
 
     # Get validate results file 
@@ -324,7 +327,7 @@ module Zerobounce
     def scoring_file_get(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.bulk_get('scoring/getfile', params)
+      @@request.bulk_get('scoring/getfile', params)
     end
 
     # Get validate file status
@@ -343,7 +346,7 @@ module Zerobounce
     # } 
     def scoring_file_check(file_id)
       params = {file_id: file_id}
-      Request.bulk_get('scoring/filestatus', params)
+      @@request.bulk_get('scoring/filestatus', params)
     end
 
     # Delete validate file 
@@ -360,7 +363,7 @@ module Zerobounce
     def scoring_file_delete(file_id)
       # todo:
       params = {file_id: file_id}
-      Request.bulk_get('scoring/deletefile', params)
+      @@request.bulk_get('scoring/deletefile', params)
     end
 
   end
