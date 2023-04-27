@@ -23,12 +23,14 @@ module Zerobounce
     attr_accessor :headers
     attr_accessor :apikey
     attr_accessor :valid_statuses
+    attr_accessor :mock
 
-    def initialize
+    def initialize(mock=false)
       self.host = 'https://api.zerobounce.net'
       self.apikey = ENV['ZEROBOUNCE_API_KEY']
       self.valid_statuses = %i[valid catch_all]
       self.headers = { user_agent: "ZerobounceRubyGem/#{Zerobounce::VERSION}" }
+      self.mock = mock
     end
   end
 end

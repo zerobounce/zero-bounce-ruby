@@ -1,0 +1,250 @@
+Run options: include {:focus=>true}
+......get url: 
+https://api.zerobounce.net/v2/validate
+get params: 
+{:email=>"valid@example.com", :ip_address=>nil, :api_key=>"l4jfh0t39knisuyacmp568x7bqvgr2ed"}
+
+get response: 
+{"error":"Invalid API key or your account ran out of credits"}
+
+..get url: 
+https://api.zerobounce.net/v2/validate
+get params: 
+{:email=>"valid@example.com", :ip_address=>nil, :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"address":"valid@example.com","status":"valid","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":null,"domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2023-04-26 18:14:07.256"}
+
+.get url: 
+https://api.zerobounce.net/v2/validate
+get params: 
+{:email=>"valid@example.com", :ip_address=>"127.0.0.1", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"address":"valid@example.com","status":"valid","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":null,"domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2023-04-26 18:14:06.497"}
+
+..get url: 
+https://api.zerobounce.net/v2/getcredits
+get params: 
+{:api_key=>"us8yxbpwv63gjtcl42ke5amf1zrhqoid"}
+
+get response: 
+{"Credits":"-1"}
+
+.get url: 
+https://api.zerobounce.net/v2/getcredits
+get params: 
+{:api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"Credits":"499626"}
+
+...get url: 
+https://api.zerobounce.net/v2/getapiusage
+get params: 
+{:start_date=>"2023-04-26", :end_date=>"2023-04-26", :api_key=>"pnotr3zefuxycvgh0qildwabm486952k"}
+
+get response: 
+{"error":"Invalid API key"}
+
+.get url: 
+https://api.zerobounce.net/v2/getapiusage
+get params: 
+{:start_date=>"2023-04-26", :end_date=>"2023-04-26", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"total":0,"status_valid":0,"status_invalid":0,"status_catch_all":0,"status_do_not_mail":0,"status_spamtrap":0,"status_unknown":0,"sub_status_toxic":0,"sub_status_disposable":0,"sub_status_role_based":0,"sub_status_possible_trap":0,"sub_status_global_suppression":0,"sub_status_timeout_exceeded":0,"sub_status_mail_server_temporary_error":0,"sub_status_mail_server_did_not_respond":0,"sub_status_greylisted":0,"sub_status_antispam_system":0,"sub_status_does_not_accept_mail":0,"sub_status_exception_occurred":0,"sub_status_failed_syntax_check":0,"sub_status_mailbox_not_found":0,"sub_status_unroutable_ip_address":0,"sub_status_possible_typo":0,"sub_status_no_dns_entries":0,"sub_status_role_based_catch_all":0,"sub_status_mailbox_quota_exceeded":0,"sub_status_forcible_disconnect":0,"sub_status_failed_smtp_connection":0,"sub_status_mx_forward":0,"sub_status_alternate":0,"sub_status_blocked":0,"sub_status_allowed":0,"start_date":"4/26/2023","end_date":"4/26/2023"}
+
+..post url: 
+https://bulkapi.zerobounce.net/v2/validatebatch
+
+post params: 
+{:email_batch=>[{:email_address=>"disposable@example.com", :ip_address=>nil}, {:email_address=>"invalid@example.com", :ip_address=>nil}, {:email_address=>"valid@example.com", :ip_address=>nil}, {:email_address=>"toxic@example.com", :ip_address=>nil}, {:email_address=>"donotmail@example.com", :ip_address=>nil}, {:email_address=>"spamtrap@example.com", :ip_address=>nil}], :api_key=>"we4iha2u1znf893vklsdbg7t5jq0crx6"}
+
+post response: 
+{"email_batch":[],"errors":[{"email_address":"all","error":"Invalid API Key or your account ran out of credits"}]}
+
+...post url: 
+https://bulkapi.zerobounce.net/v2/validatebatch
+
+post params: 
+{:email_batch=>[{:email_address=>"disposable@example.com", :ip_address=>nil}, {:email_address=>"invalid@example.com", :ip_address=>nil}, {:email_address=>"valid@example.com", :ip_address=>nil}, {:email_address=>"toxic@example.com", :ip_address=>nil}, {:email_address=>"donotmail@example.com", :ip_address=>nil}, {:email_address=>"spamtrap@example.com", :ip_address=>nil}], :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+post response: 
+{"email_batch":[{"address":"disposable@example.com","status":"do_not_mail","sub_status":"disposable","free_email":false,"did_you_mean":null,"account":null,"domain":null,"domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2023-04-26 18:14:09.668"},{"address":"invalid@example.com","status":"invalid","sub_status":"mailbox_not_found","free_email":false,"did_you_mean":null,"account":null,"domain":null,"domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2023-04-26 18:14:09.668"},{"address":"valid@example.com","status":"valid","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":null,"domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2023-04-26 18:14:09.668"},{"address":"toxic@example.com","status":"do_not_mail","sub_status":"toxic","free_email":false,"did_you_mean":null,"account":null,"domain":null,"domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2023-04-26 18:14:09.668"},{"address":"donotmail@example.com","status":"do_not_mail","sub_status":"role_based","free_email":false,"did_you_mean":null,"account":null,"domain":null,"domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2023-04-26 18:14:09.668"},{"address":"spamtrap@example.com","status":"spamtrap","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":null,"domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2023-04-26 18:14:09.668"}],"errors":[]}
+
+..post url: 
+https://bulkapi.zerobounce.net/v2/sendfile
+
+post params: 
+{:email_address_column=>1, :first_name_column=>2, :last_name_column=>3, :gender_column=>4, :has_header_row=>true, :api_key=>"iu7tg04ylzdnsfo1brp3wev5mk8xjhc6"}
+
+.post url: 
+https://bulkapi.zerobounce.net/v2/sendfile
+
+post params: 
+{:email_address_column=>1, :first_name_column=>2, :last_name_column=>3, :gender_column=>4, :has_header_row=>true, :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+post response: 
+{"success":true,"message":"File Accepted","file_name":"validation.csv","file_id":"c1c1f010-0f03-44b2-8535-c1c9eb4ae742"}
+
+..get url: 
+https://bulkapi.zerobounce.net/v2/filestatus
+get params: 
+{:file_id=>"c1c1f010-0f03-44b2-8535-c1c9eb4ae742", :api_key=>"rjna1ldqzi3xoes84gtk76ypf0uc9v25"}
+
+.get url: 
+https://bulkapi.zerobounce.net/v2/filestatus
+get params: 
+{:file_id=>"invalid-file-id", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"success":false,"message":"File cannot be found."}
+
+.get url: 
+https://bulkapi.zerobounce.net/v2/filestatus
+get params: 
+{:file_id=>"c1c1f010-0f03-44b2-8535-c1c9eb4ae742", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"success":true,"file_id":"c1c1f010-0f03-44b2-8535-c1c9eb4ae742","file_name":"validation.csv","upload_date":"2023-04-26T18:14:09Z","file_status":"Queued","complete_percentage":"0%","error_reason":null,"return_url":null}
+
+..get url: 
+https://bulkapi.zerobounce.net/v2/getfile
+get params: 
+{:file_id=>"c1c1f010-0f03-44b2-8535-c1c9eb4ae742", :api_key=>"fpuo21id6g3lv70erjwybkt8s9qm5c4h"}
+
+.get url: 
+https://bulkapi.zerobounce.net/v2/getfile
+get params: 
+{:file_id=>"invalid-file-id", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"success":false,"message":"File cannot be found."}
+
+...get url: 
+https://bulkapi.zerobounce.net/v2/deletefile
+get params: 
+{:file_id=>"c1c1f010-0f03-44b2-8535-c1c9eb4ae742", :api_key=>"ailv2bpthu61mowr40qjz9xfe5ckndys"}
+
+.get url: 
+https://bulkapi.zerobounce.net/v2/deletefile
+get params: 
+{:file_id=>"invalid-file-id", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"success":false,"message":"File cannot be found."}
+
+...post url: 
+https://bulkapi.zerobounce.net/v2/scoring/sendfile
+
+post params: 
+{:email_address_column=>1, :has_header_row=>true, :api_key=>"qig2u1jmcdy93xoae0p47tvrskzlnhb8"}
+
+.post url: 
+https://bulkapi.zerobounce.net/v2/scoring/sendfile
+
+post params: 
+{:email_address_column=>1, :has_header_row=>true, :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+post response: 
+{"success":true,"message":"File Accepted","file_name":"scoring.csv","file_id":"16d89af0-4c43-4425-8834-60c31f3fbb84"}
+
+..get url: 
+https://bulkapi.zerobounce.net/v2/scoring/filestatus
+get params: 
+{:file_id=>"16d89af0-4c43-4425-8834-60c31f3fbb84", :api_key=>"dznbj65ktmcauh0fw9gvoepi7y81x4qr"}
+
+.get url: 
+https://bulkapi.zerobounce.net/v2/scoring/filestatus
+get params: 
+{:file_id=>"invalid-file-id", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"success":false,"message":"file_id is invalid."}
+
+.get url: 
+https://bulkapi.zerobounce.net/v2/scoring/filestatus
+get params: 
+{:file_id=>"16d89af0-4c43-4425-8834-60c31f3fbb84", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"success":true,"file_id":"16d89af0-4c43-4425-8834-60c31f3fbb84","file_name":"scoring.csv","upload_date":"2023-04-26T18:14:11Z","file_status":"Complete","complete_percentage":"100% Complete.","return_url":null}
+
+..get url: 
+https://bulkapi.zerobounce.net/v2/scoring/getfile
+get params: 
+{:file_id=>"16d89af0-4c43-4425-8834-60c31f3fbb84", :api_key=>"ezg0kosvf6cqx7iw4y3bjdlpu89har52"}
+
+.get url: 
+https://bulkapi.zerobounce.net/v2/scoring/getfile
+get params: 
+{:file_id=>"invalid-file-id", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"success":false,"message":"file_id is invalid."}
+
+.get url: 
+https://bulkapi.zerobounce.net/v2/scoring/getfile
+get params: 
+{:file_id=>"16d89af0-4c43-4425-8834-60c31f3fbb84", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+"email","ZeroBounceQualityScore"
+"disposable@example.com","0"
+"invalid@example.com","10"
+"valid@example.com","10"
+"toxic@example.com","2"
+"donotmail@example.com","0"
+"spamtrap@example.com","0"
+"abuse@example.com","10"
+"unknown@example.com","10"
+"catch_all@example.com","10"
+"antispam_system@example.com","0"
+"does_not_accept_mail@example.com","0"
+"exception_occurred@example.com","0"
+"failed_smtp_connection@example.com","0"
+"failed_syntax_check@example.com","0"
+"forcible_disconnect@example.com","0"
+"global_suppression@example.com","0"
+"greylisted@example.com","0"
+"leading_period_removed@example.com","0"
+"mail_server_did_not_respond@example.com","0"
+"mail_server_temporary_error@example.com","0"
+"mailbox_quota_exceeded@example.com","0"
+"mailbox_not_found@example.com","0"
+"no_dns_entries@example.com","0"
+"possible_trap@example.com","0"
+"possible_typo@example.com","0"
+"role_based@example.com","0"
+"timeout_exceeded@example.com","0"
+"unroutable_ip_address@example.com","0"
+"free_email@example.com","0"
+"role_based_catch_all@example.com","0"
+
+..get url: 
+https://bulkapi.zerobounce.net/v2/scoring/deletefile
+get params: 
+{:file_id=>"16d89af0-4c43-4425-8834-60c31f3fbb84", :api_key=>"yniflmd28jae7vr60bogp4t531qx9swc"}
+
+.get url: 
+https://bulkapi.zerobounce.net/v2/scoring/deletefile
+get params: 
+{:file_id=>"invalid-file-id", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"success":false,"message":"file_id is invalid."}
+
+.get url: 
+https://bulkapi.zerobounce.net/v2/scoring/deletefile
+get params: 
+{:file_id=>"16d89af0-4c43-4425-8834-60c31f3fbb84", :api_key=>"d1c0448d296846c9b227a5dc3fa8c605"}
+
+get response: 
+{"success":true,"message":"File Deleted","file_name":"scoring.csv","file_id":"16d89af0-4c43-4425-8834-60c31f3fbb84"}
+
+.
+
+Finished in 7.04 seconds (files took 0.46029 seconds to load)
+52 examples, 0 failures
+

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-describe Zerobounce do
+describe Zerobounce, :focus => true do
+# describe Zerobounce do
 
 	let (:valid_api_key) { 'd1c0448d296846c9b227a5dc3fa8c605' }
 	let (:invalid_api_key) { [*('a'..'z'),*('0'..'9')].sample(32).join }
@@ -46,6 +47,7 @@ describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+
 				expect{ described_class.validate('valid@example.com') }.to \
 					raise_error(StandardError, 
 						/Invalid API key or your account ran out of credits/)
@@ -277,12 +279,12 @@ describe Zerobounce do
 			end
 			context 'given correct file id' do
 				it 'should return file processing progress' do
-					# results = described_class.validate_file_check(validate_file_id)
-					# expect(results['success']).to be(true)
-					# expect(results['file_id']).to be_a_kind_of(String)
-					# expect(results['file_id']).to eql(validate_file_id)
-					# expect(results['file_name']).to be_a_kind_of(String)
-					# expect(results['error_reason']).to be(nil)
+					results = described_class.validate_file_check(validate_file_id)
+					expect(results['success']).to be(true)
+					expect(results['file_id']).to be_a_kind_of(String)
+					expect(results['file_id']).to eql(validate_file_id)
+					expect(results['file_name']).to be_a_kind_of(String)
+					expect(results['error_reason']).to be(nil)
 				end
 			end
 		end
@@ -435,12 +437,12 @@ describe Zerobounce do
 			end
 			context 'given correct file id' do
 				it 'should return file processing progress' do
-					# results = described_class.scoring_file_check(scoring_file_id)
-					# expect(results['success']).to be(true)
-					# expect(results['file_id']).to be_a_kind_of(String)
-					# expect(results['file_id']).to eql(scoring_file_id)
-					# expect(results['file_name']).to be_a_kind_of(String)
-					# expect(results['error_reason']).to be(nil)
+					results = described_class.scoring_file_check(scoring_file_id)
+					expect(results['success']).to be(true)
+					expect(results['file_id']).to be_a_kind_of(String)
+					expect(results['file_id']).to eql(scoring_file_id)
+					expect(results['file_name']).to be_a_kind_of(String)
+					expect(results['error_reason']).to be(nil)
 				end
 			end
 		end
@@ -478,8 +480,8 @@ describe Zerobounce do
 					described_class.config.apikey = valid_api_key
 				end
 				it 'should download file contents' do
-					# results = described_class.scoring_file_get(scoring_file_id)
-					# expect(results.class).to be(String)
+					results = described_class.scoring_file_get(scoring_file_id)
+					expect(results.class).to be(String)
 				end
 			end
 		end
@@ -514,11 +516,11 @@ describe Zerobounce do
 			end
 			context 'given correct file id' do
 				it 'should return the correct file deleted response' do 
-					# results = described_class.scoring_file_delete(scoring_file_id)
-					# expect(results['success']).to be(true)
-					# expect(results['message']).to eql('File Deleted')
-					# expect(results['file_name']).to eql('scoring.csv')
-					# expect(results['file_id']).to be_a_kind_of(String)
+					results = described_class.scoring_file_delete(scoring_file_id)
+					expect(results['success']).to be(true)
+					expect(results['message']).to eql('File Deleted')
+					expect(results['file_name']).to eql('scoring.csv')
+					expect(results['file_id']).to be_a_kind_of(String)
 				end
 			end
 		end

@@ -5,7 +5,7 @@ require 'zerobounce/base_request'
 module Zerobounce
   
   # Sends the HTTP request.
-  class Request < BaseRequest
+  class MockRequest < BaseRequest
 
     protected 
 
