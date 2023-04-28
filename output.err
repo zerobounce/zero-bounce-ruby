@@ -1,0 +1,737 @@
+Run options: include {:focus=>true}
+running mock tests
+.......F.FF.FF..FF.F..F.FF.FFF.FF..FF..FF.FFF.FFF.FFF
+
+Failures:
+
+  1) Zerobounce.validate given incorrect API key should raise an API key error
+     Failure/Error:
+       expect{ described_class.validate('valid@example.com') }.to \
+       	raise_error(StandardError, 
+       		/Invalid API key or your account ran out of credits/)
+
+       expected StandardError with message matching /Invalid API key or your account ran out of credits/, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: GET h...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+         # ./lib/zerobounce/base_request.rb:26:in `_get'
+         # ./lib/zerobounce/mock_request.rb:11:in `get'
+         # ./lib/zerobounce.rb:72:in `validate'
+         # ./spec/mock_spec.rb:56:in `block (5 levels) in <top (required)>'
+         # ./spec/mock_spec.rb:56:in `block (4 levels) in <top (required)>'
+     # ./spec/mock_spec.rb:56:in `block (4 levels) in <top (required)>'
+
+  2) Zerobounce.validate given correct API key given a valid email address should return a valid result
+     Failure/Error: response = RestClient.get(url, {params: params})
+
+     WebMock::NetConnectNotAllowedError:
+       Real HTTP connections are disabled. Unregistered request: GET https://api.zerobounce.net/v2/validate?api_key=99e7ef20ceea4480a173b07b1be75371&email=valid@example.com&ip_address with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'api.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+       You can stub this request with the following snippet:
+
+       stub_request(:get, "https://api.zerobounce.net/v2/validate?api_key=99e7ef20ceea4480a173b07b1be75371&email=valid@example.com&ip_address").
+         with(
+           headers: {
+       	  'Accept'=>'*/*',
+       	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+       	  'Host'=>'api.zerobounce.net',
+       	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+           }).
+         to_return(status: 200, body: "", headers: {})
+
+       ============================================================
+     # ./lib/zerobounce/base_request.rb:26:in `_get'
+     # ./lib/zerobounce/mock_request.rb:11:in `get'
+     # ./lib/zerobounce.rb:72:in `validate'
+     # ./spec/mock_spec.rb:73:in `block (5 levels) in <top (required)>'
+
+  3) Zerobounce.validate given correct API key given a valid email address given an IP address should return a valid result
+     Failure/Error: response = RestClient.get(url, {params: params})
+
+     WebMock::NetConnectNotAllowedError:
+       Real HTTP connections are disabled. Unregistered request: GET https://api.zerobounce.net/v2/validate?api_key=99e7ef20ceea4480a173b07b1be75371&email=valid@example.com&ip_address=127.0.0.1 with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'api.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+       You can stub this request with the following snippet:
+
+       stub_request(:get, "https://api.zerobounce.net/v2/validate?api_key=99e7ef20ceea4480a173b07b1be75371&email=valid@example.com&ip_address=127.0.0.1").
+         with(
+           headers: {
+       	  'Accept'=>'*/*',
+       	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+       	  'Host'=>'api.zerobounce.net',
+       	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+           }).
+         to_return(status: 200, body: "", headers: {})
+
+       ============================================================
+     # ./lib/zerobounce/base_request.rb:26:in `_get'
+     # ./lib/zerobounce/mock_request.rb:11:in `get'
+     # ./lib/zerobounce.rb:72:in `validate'
+     # ./spec/mock_spec.rb:82:in `block (6 levels) in <top (required)>'
+
+  4) Zerobounce.credits given incorrect API key should return -1 credits
+     Failure/Error: response = RestClient.get(url, {params: params})
+
+     WebMock::NetConnectNotAllowedError:
+       Real HTTP connections are disabled. Unregistered request: GET https://api.zerobounce.net/v2/getcredits?api_key=hjct3kp6nfwlb20ixde7ryvzsgqamou5 with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'api.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+       You can stub this request with the following snippet:
+
+       stub_request(:get, "https://api.zerobounce.net/v2/getcredits?api_key=hjct3kp6nfwlb20ixde7ryvzsgqamou5").
+         with(
+           headers: {
+       	  'Accept'=>'*/*',
+       	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+       	  'Host'=>'api.zerobounce.net',
+       	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+           }).
+         to_return(status: 200, body: "", headers: {})
+
+       ============================================================
+     # ./lib/zerobounce/base_request.rb:26:in `_get'
+     # ./lib/zerobounce/mock_request.rb:11:in `get'
+     # ./lib/zerobounce.rb:79:in `credits'
+     # ./spec/mock_spec.rb:106:in `block (4 levels) in <top (required)>'
+
+  5) Zerobounce.credits given correct API key should return the correct number of credits
+     Failure/Error: response = RestClient.get(url, {params: params})
+
+     WebMock::NetConnectNotAllowedError:
+       Real HTTP connections are disabled. Unregistered request: GET https://api.zerobounce.net/v2/getcredits?api_key=99e7ef20ceea4480a173b07b1be75371 with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'api.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+       You can stub this request with the following snippet:
+
+       stub_request(:get, "https://api.zerobounce.net/v2/getcredits?api_key=99e7ef20ceea4480a173b07b1be75371").
+         with(
+           headers: {
+       	  'Accept'=>'*/*',
+       	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+       	  'Host'=>'api.zerobounce.net',
+       	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+           }).
+         to_return(status: 200, body: "", headers: {})
+
+       ============================================================
+     # ./lib/zerobounce/base_request.rb:26:in `_get'
+     # ./lib/zerobounce/mock_request.rb:11:in `get'
+     # ./lib/zerobounce.rb:79:in `credits'
+     # ./spec/mock_spec.rb:114:in `block (4 levels) in <top (required)>'
+
+  6) Zerobounce.api_usage given incorrect API key should raise an API key error
+     Failure/Error:
+       expect{ described_class.api_usage(Date.today, Date.today) }.to \
+       	raise_error(RuntimeError, /Invalid API key/)
+
+       expected RuntimeError with message matching /Invalid API key/, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: GET h...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+         # ./lib/zerobounce/base_request.rb:26:in `_get'
+         # ./lib/zerobounce/mock_request.rb:11:in `get'
+         # ./lib/zerobounce.rb:153:in `api_usage'
+         # ./spec/mock_spec.rb:140:in `block (5 levels) in <top (required)>'
+         # ./spec/mock_spec.rb:140:in `block (4 levels) in <top (required)>'
+     # ./spec/mock_spec.rb:140:in `block (4 levels) in <top (required)>'
+
+  7) Zerobounce.api_usage given correct API key should return API usage statistics
+     Failure/Error: response = RestClient.get(url, {params: params})
+
+     WebMock::NetConnectNotAllowedError:
+       Real HTTP connections are disabled. Unregistered request: GET https://api.zerobounce.net/v2/getapiusage?api_key=99e7ef20ceea4480a173b07b1be75371&end_date=2023-04-28&start_date=2023-04-28 with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'api.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+       You can stub this request with the following snippet:
+
+       stub_request(:get, "https://api.zerobounce.net/v2/getapiusage?api_key=99e7ef20ceea4480a173b07b1be75371&end_date=2023-04-28&start_date=2023-04-28").
+         with(
+           headers: {
+       	  'Accept'=>'*/*',
+       	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+       	  'Host'=>'api.zerobounce.net',
+       	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+           }).
+         to_return(status: 200, body: "", headers: {})
+
+       ============================================================
+     # ./lib/zerobounce/base_request.rb:26:in `_get'
+     # ./lib/zerobounce/mock_request.rb:11:in `get'
+     # ./lib/zerobounce.rb:153:in `api_usage'
+     # ./spec/mock_spec.rb:149:in `block (4 levels) in <top (required)>'
+
+  8) Zerobounce.validate_batch given incorrect API key should raise an API key error
+     Failure/Error:
+       expect{ described_class.validate_batch(emails) }.to \
+       	raise_error(RuntimeError, 
+       		/Invalid API Key or your account ran out of credits/)
+
+       expected RuntimeError with message matching /Invalid API Key or your account ran out of credits/, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: POST ...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+         # ./lib/zerobounce/base_request.rb:44:in `_post'
+         # ./lib/zerobounce/mock_request.rb:45:in `bulk_post'
+         # ./lib/zerobounce.rb:204:in `validate_batch'
+         # ./spec/mock_spec.rb:180:in `block (5 levels) in <top (required)>'
+         # ./spec/mock_spec.rb:180:in `block (4 levels) in <top (required)>'
+     # ./spec/mock_spec.rb:180:in `block (4 levels) in <top (required)>'
+
+  9) Zerobounce.validate_batch given correct API key given correct input should return valid results
+     Failure/Error:
+       response = RestClient.post(url, params.to_json, \
+                     content_type: :json, accept: :json)
+
+     WebMock::NetConnectNotAllowedError:
+       Real HTTP connections are disabled. Unregistered request: POST https://bulkapi.zerobounce.net/v2/validatebatch with body '{"email_batch":[{"email_address":"disposable@example.com","ip_address":null},{"email_address":"invalid@example.com","ip_address":null},{"email_address":"valid@example.com","ip_address":null},{"email_address":"toxic@example.com","ip_address":null},{"email_address":"donotmail@example.com","ip_address":null},{"email_address":"spamtrap@example.com","ip_address":null}],"api_key":"99e7ef20ceea4480a173b07b1be75371"}' with headers {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Content-Length'=>'412', 'Content-Type'=>'application/json', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+       You can stub this request with the following snippet:
+
+       stub_request(:post, "https://bulkapi.zerobounce.net/v2/validatebatch").
+         with(
+           body: "{\"email_batch\":[{\"email_address\":\"disposable@example.com\",\"ip_address\":null},{\"email_address\":\"invalid@example.com\",\"ip_address\":null},{\"email_address\":\"valid@example.com\",\"ip_address\":null},{\"email_address\":\"toxic@example.com\",\"ip_address\":null},{\"email_address\":\"donotmail@example.com\",\"ip_address\":null},{\"email_address\":\"spamtrap@example.com\",\"ip_address\":null}],\"api_key\":\"99e7ef20ceea4480a173b07b1be75371\"}",
+           headers: {
+       	  'Accept'=>'application/json',
+       	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+       	  'Content-Length'=>'412',
+       	  'Content-Type'=>'application/json',
+       	  'Host'=>'bulkapi.zerobounce.net',
+       	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+           }).
+         to_return(status: 200, body: "", headers: {})
+
+       ============================================================
+     # ./lib/zerobounce/base_request.rb:44:in `_post'
+     # ./lib/zerobounce/mock_request.rb:45:in `bulk_post'
+     # ./lib/zerobounce.rb:204:in `validate_batch'
+     # ./spec/mock_spec.rb:205:in `block (5 levels) in <top (required)>'
+
+  10) Zerobounce.validate_file_send given incorrect API key should raise an API key error
+      Failure/Error:
+        expect{ described_class.validate_file_send(validate_file_path) }.to \
+        	raise_error(RestClient::Unauthorized)
+
+        expected RestClient::Unauthorized, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: POST ...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+          # ./lib/zerobounce/base_request.rb:41:in `_post'
+          # ./lib/zerobounce/mock_request.rb:45:in `bulk_post'
+          # ./lib/zerobounce.rb:242:in `validate_file_send'
+          # ./spec/mock_spec.rb:233:in `block (5 levels) in <top (required)>'
+          # ./spec/mock_spec.rb:233:in `block (4 levels) in <top (required)>'
+      # ./spec/mock_spec.rb:233:in `block (4 levels) in <top (required)>'
+
+  11) Zerobounce.validate_file_send given correct API key given correct file format should return a correct upload result
+      Failure/Error: response = RestClient.post(url, params)
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: POST https://bulkapi.zerobounce.net/v2/sendfile with body '------RubyFormBoundaryrBrAjFOpAfmbKkcA
+        Content-Disposition: form-data; name="email_address_column"
+        
+        1
+        ------RubyFormBoundaryrBrAjFOpAfmbKkcA
+        Content-Disposition: form-data; name="first_name_column"
+        
+        2
+        ------RubyFormBoundaryrBrAjFOpAfmbKkcA
+        Content-Disposition: form-data; name="last_name_column"
+        
+        3
+        ------RubyFormBoundaryrBrAjFOpAfmbKkcA
+        Content-Disposition: form-data; name="gender_column"
+        
+        4
+        ------RubyFormBoundaryrBrAjFOpAfmbKkcA
+        Content-Disposition: form-data; name="has_header_row"
+        
+        true
+        ------RubyFormBoundaryrBrAjFOpAfmbKkcA
+        Content-Disposition: form-data; name="api_key"
+        
+        99e7ef20ceea4480a173b07b1be75371
+        ------RubyFormBoundaryrBrAjFOpAfmbKkcA
+        Content-Disposition: form-data; name="file"; filename="validation.csv"
+        Content-Type: text/csv
+        
+        email,first,last,gender,ip
+        disposable@example.com,First,Last,male,127.0.0.1
+        invalid@example.com,First,Last,male,127.0.0.1
+        valid@example.com,First,Last,male,127.0.0.1
+        toxic@example.com,First,Last,male,127.0.0.1
+        donotmail@example.com,First,Last,male,127.0.0.1
+        spamtrap@example.com,First,Last,male,127.0.0.1
+        abuse@example.com,First,Last,male,127.0.0.1
+        unknown@example.com,First,Last,male,127.0.0.1
+        catch_all@example.com,First,Last,male,127.0.0.1
+        antispam_system@example.com,First,Last,male,127.0.0.1
+        does_not_accept_mail@example.com,First,Last,male,127.0.0.1
+        exception_occurred@example.com,First,Last,male,127.0.0.1
+        failed_smtp_connection@example.com,First,Last,male,127.0.0.1
+        failed_syntax_check@example.com,First,Last,male,127.0.0.1
+        forcible_disconnect@example.com,First,Last,male,127.0.0.1
+        global_suppression@example.com,First,Last,male,127.0.0.1
+        greylisted@example.com,First,Last,male,127.0.0.1
+        leading_period_removed@example.com,First,Last,male,127.0.0.1
+        mail_server_did_not_respond@example.com,First,Last,male,127.0.0.1
+        mail_server_temporary_error@example.com,First,Last,male,127.0.0.1
+        mailbox_quota_exceeded@example.com,First,Last,male,127.0.0.1
+        mailbox_not_found@example.com,First,Last,male,127.0.0.1
+        no_dns_entries@example.com,First,Last,male,127.0.0.1
+        possible_trap@example.com,First,Last,male,127.0.0.1
+        possible_typo@example.com,First,Last,male,127.0.0.1
+        role_based@example.com,First,Last,male,127.0.0.1
+        timeout_exceeded@example.com,First,Last,male,127.0.0.1
+        unroutable_ip_address@example.com,First,Last,male,127.0.0.1
+        free_email@example.com,First,Last,male,127.0.0.1
+        role_based_catch_all@example.com,First,Last,male,127.0.0.1
+        ------RubyFormBoundaryrBrAjFOpAfmbKkcA--
+        ' with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Content-Length'=>'2483', 'Content-Type'=>'multipart/form-data; boundary=----RubyFormBoundaryrBrAjFOpAfmbKkcA', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:post, "https://bulkapi.zerobounce.net/v2/sendfile").
+          with(
+            body: "------RubyFormBoundaryrBrAjFOpAfmbKkcA\r\nContent-Disposition: form-data; name=\"email_address_column\"\r\n\r\n1\r\n------RubyFormBoundaryrBrAjFOpAfmbKkcA\r\nContent-Disposition: form-data; name=\"first_name_column\"\r\n\r\n2\r\n------RubyFormBoundaryrBrAjFOpAfmbKkcA\r\nContent-Disposition: form-data; name=\"last_name_column\"\r\n\r\n3\r\n------RubyFormBoundaryrBrAjFOpAfmbKkcA\r\nContent-Disposition: form-data; name=\"gender_column\"\r\n\r\n4\r\n------RubyFormBoundaryrBrAjFOpAfmbKkcA\r\nContent-Disposition: form-data; name=\"has_header_row\"\r\n\r\ntrue\r\n------RubyFormBoundaryrBrAjFOpAfmbKkcA\r\nContent-Disposition: form-data; name=\"api_key\"\r\n\r\n99e7ef20ceea4480a173b07b1be75371\r\n------RubyFormBoundaryrBrAjFOpAfmbKkcA\r\nContent-Disposition: form-data; name=\"file\"; filename=\"validation.csv\"\r\nContent-Type: text/csv\r\n\r\nemail,first,last,gender,ip\r\ndisposable@example.com,First,Last,male,127.0.0.1\r\ninvalid@example.com,First,Last,male,127.0.0.1\r\nvalid@example.com,First,Last,male,127.0.0.1\r\ntoxic@example.com,First,Last,male,127.0.0.1\r\ndonotmail@example.com,First,Last,male,127.0.0.1\r\nspamtrap@example.com,First,Last,male,127.0.0.1\r\nabuse@example.com,First,Last,male,127.0.0.1\r\nunknown@example.com,First,Last,male,127.0.0.1\r\ncatch_all@example.com,First,Last,male,127.0.0.1\r\nantispam_system@example.com,First,Last,male,127.0.0.1\r\ndoes_not_accept_mail@example.com,First,Last,male,127.0.0.1\r\nexception_occurred@example.com,First,Last,male,127.0.0.1\r\nfailed_smtp_connection@example.com,First,Last,male,127.0.0.1\r\nfailed_syntax_check@example.com,First,Last,male,127.0.0.1\r\nforcible_disconnect@example.com,First,Last,male,127.0.0.1\r\nglobal_suppression@example.com,First,Last,male,127.0.0.1\r\ngreylisted@example.com,First,Last,male,127.0.0.1\r\nleading_period_removed@example.com,First,Last,male,127.0.0.1\r\nmail_server_did_not_respond@example.com,First,Last,male,127.0.0.1\r\nmail_server_temporary_error@example.com,First,Last,male,127.0.0.1\r\nmailbox_quota_exceeded@example.com,First,Last,male,127.0.0.1\r\nmailbox_not_found@example.com,First,Last,male,127.0.0.1\r\nno_dns_entries@example.com,First,Last,male,127.0.0.1\r\npossible_trap@example.com,First,Last,male,127.0.0.1\r\npossible_typo@example.com,First,Last,male,127.0.0.1\r\nrole_based@example.com,First,Last,male,127.0.0.1\r\ntimeout_exceeded@example.com,First,Last,male,127.0.0.1\r\nunroutable_ip_address@example.com,First,Last,male,127.0.0.1\r\nfree_email@example.com,First,Last,male,127.0.0.1\r\nrole_based_catch_all@example.com,First,Last,male,127.0.0.1\r\n------RubyFormBoundaryrBrAjFOpAfmbKkcA--\r\n",
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Content-Length'=>'2483',
+        	  'Content-Type'=>'multipart/form-data; boundary=----RubyFormBoundaryrBrAjFOpAfmbKkcA',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:41:in `_post'
+      # ./lib/zerobounce/mock_request.rb:45:in `bulk_post'
+      # ./lib/zerobounce.rb:242:in `validate_file_send'
+      # ./spec/mock_spec.rb:246:in `block (5 levels) in <top (required)>'
+
+  12) Zerobounce.validate_file_check given incorrect API key should raise an API key error
+      Failure/Error:
+        expect{ described_class.validate_file_check(validate_file_id) }.to \
+        	raise_error(RestClient::Unauthorized)
+
+        expected RestClient::Unauthorized, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: GET h...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+          # ./lib/zerobounce/base_request.rb:26:in `_get'
+          # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+          # ./lib/zerobounce.rb:263:in `validate_file_check'
+          # ./spec/mock_spec.rb:270:in `block (5 levels) in <top (required)>'
+          # ./spec/mock_spec.rb:270:in `block (4 levels) in <top (required)>'
+      # ./spec/mock_spec.rb:270:in `block (4 levels) in <top (required)>'
+
+  13) Zerobounce.validate_file_check given correct API key given incorrect file id should return error message
+      Failure/Error: response = RestClient.get(url, {params: params})
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: GET https://bulkapi.zerobounce.net/v2/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:get, "https://bulkapi.zerobounce.net/v2/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id").
+          with(
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:26:in `_get'
+      # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+      # ./lib/zerobounce.rb:263:in `validate_file_check'
+      # ./spec/mock_spec.rb:280:in `block (5 levels) in <top (required)>'
+
+  14) Zerobounce.validate_file_check given correct API key given correct file id should return file processing progress
+      Failure/Error: response = RestClient.get(url, {params: params})
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: GET https://bulkapi.zerobounce.net/v2/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:get, "https://bulkapi.zerobounce.net/v2/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id").
+          with(
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:26:in `_get'
+      # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+      # ./lib/zerobounce.rb:263:in `validate_file_check'
+      # ./spec/mock_spec.rb:287:in `block (5 levels) in <top (required)>'
+
+  15) Zerobounce.validate_file_get given incorrect API key should raise an API key error
+      Failure/Error:
+        expect{ described_class.validate_file_get(validate_file_id) }.to \
+        	raise_error(RestClient::Unauthorized)
+
+        expected RestClient::Unauthorized, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: GET h...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+          # ./lib/zerobounce/base_request.rb:26:in `_get'
+          # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+          # ./lib/zerobounce.rb:274:in `validate_file_get'
+          # ./spec/mock_spec.rb:310:in `block (5 levels) in <top (required)>'
+          # ./spec/mock_spec.rb:310:in `block (4 levels) in <top (required)>'
+      # ./spec/mock_spec.rb:310:in `block (4 levels) in <top (required)>'
+
+  16) Zerobounce.validate_file_get given correct API key given incorrect file id should return error message
+      Failure/Error: response = RestClient.get(url, {params: params})
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: GET https://bulkapi.zerobounce.net/v2/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:get, "https://bulkapi.zerobounce.net/v2/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id").
+          with(
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:26:in `_get'
+      # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+      # ./lib/zerobounce.rb:274:in `validate_file_get'
+      # ./spec/mock_spec.rb:320:in `block (5 levels) in <top (required)>'
+
+  17) Zerobounce.validate_file_delete given incorrect API key should raise an API key error
+      Failure/Error:
+        expect{ described_class.validate_file_delete(validate_file_id) }.to \
+        	raise_error(RestClient::Unauthorized)
+
+        expected RestClient::Unauthorized, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: GET h...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+          # ./lib/zerobounce/base_request.rb:26:in `_get'
+          # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+          # ./lib/zerobounce.rb:291:in `validate_file_delete'
+          # ./spec/mock_spec.rb:349:in `block (5 levels) in <top (required)>'
+          # ./spec/mock_spec.rb:349:in `block (4 levels) in <top (required)>'
+      # ./spec/mock_spec.rb:349:in `block (4 levels) in <top (required)>'
+
+  18) Zerobounce.validate_file_delete given correct API key given incorrect file id should return error message
+      Failure/Error: response = RestClient.get(url, {params: params})
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: GET https://bulkapi.zerobounce.net/v2/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:get, "https://bulkapi.zerobounce.net/v2/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id").
+          with(
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:26:in `_get'
+      # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+      # ./lib/zerobounce.rb:291:in `validate_file_delete'
+      # ./spec/mock_spec.rb:359:in `block (5 levels) in <top (required)>'
+
+  19) Zerobounce.scoring_file_send given incorrect API key should raise an API key error
+      Failure/Error:
+        expect{ described_class.scoring_file_send(scoring_file_path) }.to \
+        	raise_error(RestClient::Unauthorized)
+
+        expected RestClient::Unauthorized, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: POST ...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+          # ./lib/zerobounce/base_request.rb:41:in `_post'
+          # ./lib/zerobounce/mock_request.rb:45:in `bulk_post'
+          # ./lib/zerobounce.rb:319:in `scoring_file_send'
+          # ./spec/mock_spec.rb:391:in `block (5 levels) in <top (required)>'
+          # ./spec/mock_spec.rb:391:in `block (4 levels) in <top (required)>'
+      # ./spec/mock_spec.rb:391:in `block (4 levels) in <top (required)>'
+
+  20) Zerobounce.scoring_file_send given correct API key given correct file format should return a correct upload result
+      Failure/Error: response = RestClient.post(url, params)
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: POST https://bulkapi.zerobounce.net/v2/scoring/sendfile with body '------RubyFormBoundaryDU2Kroes1yRNSpSa
+        Content-Disposition: form-data; name="email_address_column"
+        
+        1
+        ------RubyFormBoundaryDU2Kroes1yRNSpSa
+        Content-Disposition: form-data; name="has_header_row"
+        
+        true
+        ------RubyFormBoundaryDU2Kroes1yRNSpSa
+        Content-Disposition: form-data; name="api_key"
+        
+        99e7ef20ceea4480a173b07b1be75371
+        ------RubyFormBoundaryDU2Kroes1yRNSpSa
+        Content-Disposition: form-data; name="file"; filename="scoring.csv"
+        Content-Type: text/csv
+        
+        email
+        disposable@example.com
+        invalid@example.com
+        valid@example.com
+        toxic@example.com
+        donotmail@example.com
+        spamtrap@example.com
+        abuse@example.com
+        unknown@example.com
+        catch_all@example.com
+        antispam_system@example.com
+        does_not_accept_mail@example.com
+        exception_occurred@example.com
+        failed_smtp_connection@example.com
+        failed_syntax_check@example.com
+        forcible_disconnect@example.com
+        global_suppression@example.com
+        greylisted@example.com
+        leading_period_removed@example.com
+        mail_server_did_not_respond@example.com
+        mail_server_temporary_error@example.com
+        mailbox_quota_exceeded@example.com
+        mailbox_not_found@example.com
+        no_dns_entries@example.com
+        possible_trap@example.com
+        possible_typo@example.com
+        role_based@example.com
+        timeout_exceeded@example.com
+        unroutable_ip_address@example.com
+        free_email@example.com
+        role_based_catch_all@example.com
+        ------RubyFormBoundaryDU2Kroes1yRNSpSa--
+        ' with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Content-Length'=>'1375', 'Content-Type'=>'multipart/form-data; boundary=----RubyFormBoundaryDU2Kroes1yRNSpSa', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:post, "https://bulkapi.zerobounce.net/v2/scoring/sendfile").
+          with(
+            body: "------RubyFormBoundaryDU2Kroes1yRNSpSa\r\nContent-Disposition: form-data; name=\"email_address_column\"\r\n\r\n1\r\n------RubyFormBoundaryDU2Kroes1yRNSpSa\r\nContent-Disposition: form-data; name=\"has_header_row\"\r\n\r\ntrue\r\n------RubyFormBoundaryDU2Kroes1yRNSpSa\r\nContent-Disposition: form-data; name=\"api_key\"\r\n\r\n99e7ef20ceea4480a173b07b1be75371\r\n------RubyFormBoundaryDU2Kroes1yRNSpSa\r\nContent-Disposition: form-data; name=\"file\"; filename=\"scoring.csv\"\r\nContent-Type: text/csv\r\n\r\nemail\r\ndisposable@example.com\r\ninvalid@example.com\r\nvalid@example.com\r\ntoxic@example.com\r\ndonotmail@example.com\r\nspamtrap@example.com\r\nabuse@example.com\r\nunknown@example.com\r\ncatch_all@example.com\r\nantispam_system@example.com\r\ndoes_not_accept_mail@example.com\r\nexception_occurred@example.com\r\nfailed_smtp_connection@example.com\r\nfailed_syntax_check@example.com\r\nforcible_disconnect@example.com\r\nglobal_suppression@example.com\r\ngreylisted@example.com\r\nleading_period_removed@example.com\r\nmail_server_did_not_respond@example.com\r\nmail_server_temporary_error@example.com\r\nmailbox_quota_exceeded@example.com\r\nmailbox_not_found@example.com\r\nno_dns_entries@example.com\r\npossible_trap@example.com\r\npossible_typo@example.com\r\nrole_based@example.com\r\ntimeout_exceeded@example.com\r\nunroutable_ip_address@example.com\r\nfree_email@example.com\r\nrole_based_catch_all@example.com\r\n------RubyFormBoundaryDU2Kroes1yRNSpSa--\r\n",
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Content-Length'=>'1375',
+        	  'Content-Type'=>'multipart/form-data; boundary=----RubyFormBoundaryDU2Kroes1yRNSpSa',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:41:in `_post'
+      # ./lib/zerobounce/mock_request.rb:45:in `bulk_post'
+      # ./lib/zerobounce.rb:319:in `scoring_file_send'
+      # ./spec/mock_spec.rb:404:in `block (5 levels) in <top (required)>'
+
+  21) Zerobounce.scoring_file_check given incorrect API key should raise an API key error
+      Failure/Error:
+        expect{ described_class.scoring_file_check(scoring_file_id) }.to \
+        	raise_error(RestClient::Unauthorized)
+
+        expected RestClient::Unauthorized, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: GET h...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+          # ./lib/zerobounce/base_request.rb:26:in `_get'
+          # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+          # ./lib/zerobounce.rb:349:in `scoring_file_check'
+          # ./spec/mock_spec.rb:428:in `block (5 levels) in <top (required)>'
+          # ./spec/mock_spec.rb:428:in `block (4 levels) in <top (required)>'
+      # ./spec/mock_spec.rb:428:in `block (4 levels) in <top (required)>'
+
+  22) Zerobounce.scoring_file_check given correct API key given incorrect file id should return an error message
+      Failure/Error: response = RestClient.get(url, {params: params})
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: GET https://bulkapi.zerobounce.net/v2/scoring/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:get, "https://bulkapi.zerobounce.net/v2/scoring/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id").
+          with(
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:26:in `_get'
+      # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+      # ./lib/zerobounce.rb:349:in `scoring_file_check'
+      # ./spec/mock_spec.rb:438:in `block (5 levels) in <top (required)>'
+
+  23) Zerobounce.scoring_file_check given correct API key given correct file id should return file processing progress
+      Failure/Error: response = RestClient.get(url, {params: params})
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: GET https://bulkapi.zerobounce.net/v2/scoring/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:get, "https://bulkapi.zerobounce.net/v2/scoring/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id").
+          with(
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:26:in `_get'
+      # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+      # ./lib/zerobounce.rb:349:in `scoring_file_check'
+      # ./spec/mock_spec.rb:445:in `block (5 levels) in <top (required)>'
+
+  24) Zerobounce.scoring_file_get given incorrect API key should raise an API key error
+      Failure/Error:
+        expect{ described_class.scoring_file_get(scoring_file_id) }.to \
+        	raise_error(RestClient::Unauthorized)
+
+        expected RestClient::Unauthorized, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: GET h...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+          # ./lib/zerobounce/base_request.rb:26:in `_get'
+          # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+          # ./lib/zerobounce.rb:330:in `scoring_file_get'
+          # ./spec/mock_spec.rb:468:in `block (5 levels) in <top (required)>'
+          # ./spec/mock_spec.rb:468:in `block (4 levels) in <top (required)>'
+      # ./spec/mock_spec.rb:468:in `block (4 levels) in <top (required)>'
+
+  25) Zerobounce.scoring_file_get given correct API key given incorrect file id should return an error
+      Failure/Error: response = RestClient.get(url, {params: params})
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: GET https://bulkapi.zerobounce.net/v2/scoring/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:get, "https://bulkapi.zerobounce.net/v2/scoring/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id").
+          with(
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:26:in `_get'
+      # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+      # ./lib/zerobounce.rb:330:in `scoring_file_get'
+      # ./spec/mock_spec.rb:478:in `block (5 levels) in <top (required)>'
+
+  26) Zerobounce.scoring_file_get given correct API key given correct file id should download file contents
+      Failure/Error: response = RestClient.get(url, {params: params})
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: GET https://bulkapi.zerobounce.net/v2/scoring/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:get, "https://bulkapi.zerobounce.net/v2/scoring/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id").
+          with(
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:26:in `_get'
+      # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+      # ./lib/zerobounce.rb:330:in `scoring_file_get'
+      # ./spec/mock_spec.rb:488:in `block (5 levels) in <top (required)>'
+
+  27) Zerobounce.scoring_file_delete given incorrect API key should raise an API key error
+      Failure/Error:
+        expect{ described_class.scoring_file_delete(scoring_file_id) }.to \
+        	raise_error(RestClient::Unauthorized)
+
+        expected RestClient::Unauthorized, got #<WebMock::NetConnectNotAllowedError:"Real HTTP connections are disabled. Unregistered request: GET h...tus: 200, body: \"\", headers: {})\n\n============================================================"> with backtrace:
+          # ./lib/zerobounce/base_request.rb:26:in `_get'
+          # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+          # ./lib/zerobounce.rb:366:in `scoring_file_delete'
+          # ./spec/mock_spec.rb:507:in `block (5 levels) in <top (required)>'
+          # ./spec/mock_spec.rb:507:in `block (4 levels) in <top (required)>'
+      # ./spec/mock_spec.rb:507:in `block (4 levels) in <top (required)>'
+
+  28) Zerobounce.scoring_file_delete given correct API key given incorrect file id should return an error
+      Failure/Error: response = RestClient.get(url, {params: params})
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: GET https://bulkapi.zerobounce.net/v2/scoring/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:get, "https://bulkapi.zerobounce.net/v2/scoring/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id").
+          with(
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:26:in `_get'
+      # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+      # ./lib/zerobounce.rb:366:in `scoring_file_delete'
+      # ./spec/mock_spec.rb:517:in `block (5 levels) in <top (required)>'
+
+  29) Zerobounce.scoring_file_delete given correct API key given correct file id should return the correct file deleted response
+      Failure/Error: response = RestClient.get(url, {params: params})
+
+      WebMock::NetConnectNotAllowedError:
+        Real HTTP connections are disabled. Unregistered request: GET https://bulkapi.zerobounce.net/v2/scoring/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id with headers {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Host'=>'bulkapi.zerobounce.net', 'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'}
+
+        You can stub this request with the following snippet:
+
+        stub_request(:get, "https://bulkapi.zerobounce.net/v2/scoring/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id").
+          with(
+            headers: {
+        	  'Accept'=>'*/*',
+        	  'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        	  'Host'=>'bulkapi.zerobounce.net',
+        	  'User-Agent'=>'rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31'
+            }).
+          to_return(status: 200, body: "", headers: {})
+
+        ============================================================
+      # ./lib/zerobounce/base_request.rb:26:in `_get'
+      # ./lib/zerobounce/mock_request.rb:28:in `bulk_get'
+      # ./lib/zerobounce.rb:366:in `scoring_file_delete'
+      # ./spec/mock_spec.rb:524:in `block (5 levels) in <top (required)>'
+
+Finished in 0.12734 seconds (files took 0.49398 seconds to load)
+53 examples, 29 failures
+
+Failed examples:
+
+rspec ./spec/mock_spec.rb:54 # Zerobounce.validate given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:72 # Zerobounce.validate given correct API key given a valid email address should return a valid result
+rspec ./spec/mock_spec.rb:81 # Zerobounce.validate given correct API key given a valid email address given an IP address should return a valid result
+rspec ./spec/mock_spec.rb:105 # Zerobounce.credits given incorrect API key should return -1 credits
+rspec ./spec/mock_spec.rb:113 # Zerobounce.credits given correct API key should return the correct number of credits
+rspec ./spec/mock_spec.rb:139 # Zerobounce.api_usage given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:148 # Zerobounce.api_usage given correct API key should return API usage statistics
+rspec ./spec/mock_spec.rb:179 # Zerobounce.validate_batch given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:204 # Zerobounce.validate_batch given correct API key given correct input should return valid results
+rspec ./spec/mock_spec.rb:232 # Zerobounce.validate_file_send given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:245 # Zerobounce.validate_file_send given correct API key given correct file format should return a correct upload result
+rspec ./spec/mock_spec.rb:269 # Zerobounce.validate_file_check given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:279 # Zerobounce.validate_file_check given correct API key given incorrect file id should return error message
+rspec ./spec/mock_spec.rb:286 # Zerobounce.validate_file_check given correct API key given correct file id should return file processing progress
+rspec ./spec/mock_spec.rb:309 # Zerobounce.validate_file_get given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:319 # Zerobounce.validate_file_get given correct API key given incorrect file id should return error message
+rspec ./spec/mock_spec.rb:348 # Zerobounce.validate_file_delete given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:358 # Zerobounce.validate_file_delete given correct API key given incorrect file id should return error message
+rspec ./spec/mock_spec.rb:390 # Zerobounce.scoring_file_send given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:403 # Zerobounce.scoring_file_send given correct API key given correct file format should return a correct upload result
+rspec ./spec/mock_spec.rb:427 # Zerobounce.scoring_file_check given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:437 # Zerobounce.scoring_file_check given correct API key given incorrect file id should return an error message
+rspec ./spec/mock_spec.rb:444 # Zerobounce.scoring_file_check given correct API key given correct file id should return file processing progress
+rspec ./spec/mock_spec.rb:467 # Zerobounce.scoring_file_get given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:477 # Zerobounce.scoring_file_get given correct API key given incorrect file id should return an error
+rspec ./spec/mock_spec.rb:487 # Zerobounce.scoring_file_get given correct API key given correct file id should download file contents
+rspec ./spec/mock_spec.rb:506 # Zerobounce.scoring_file_delete given incorrect API key should raise an API key error
+rspec ./spec/mock_spec.rb:516 # Zerobounce.scoring_file_delete given correct API key given incorrect file id should return an error
+rspec ./spec/mock_spec.rb:523 # Zerobounce.scoring_file_delete given correct API key given correct file id should return the correct file deleted response
+
