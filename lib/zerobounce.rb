@@ -224,12 +224,12 @@ module Zerobounce
     # }
     def validate_file_send(
         filepath,
-        email_address_column=1,
-        first_name_column=2,
-        last_name_column=3,
-        gender_column=4,
-        has_header_row=true,
-        return_url=nil
+        email_address_column: 1,
+        first_name_column: 2,
+        last_name_column: 3,
+        gender_column: 4,
+        has_header_row: true,
+        return_url: nil
       )
       params = {
         email_address_column: email_address_column,
@@ -307,9 +307,9 @@ module Zerobounce
     # }
     def scoring_file_send(
         filepath,
-        email_address_column=1,
-        has_header_row=true,
-        return_url=nil
+        email_address_column: 1,
+        has_header_row: true,
+        return_url: nil
       )
       params = {
         email_address_column: email_address_column,
