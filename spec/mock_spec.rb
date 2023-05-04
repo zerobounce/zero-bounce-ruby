@@ -81,21 +81,25 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given a valid email address' do
 				it 'should return a valid result' do
-					# result = described_class.validate('valid@example.com')
-					# expect(result).to be_a_kind_of(Hash)
-					# expect(result).to include(
-					# 	'address', 'status', 'sub_status', 'domain_age_days', 
-					# 	'smtp_provider', 'mx_found', 'mx_record'
-					# )
+					VCR.use_cassette 'validate-valid-result' do
+					result = described_class.validate('valid@example.com')
+					expect(result).to be_a_kind_of(Hash)
+					expect(result).to include(
+						'address', 'status', 'sub_status', 'domain_age_days', 
+						'smtp_provider', 'mx_found', 'mx_record'
+					)
+					end
 				end 
 				context 'given an IP address' do
 					it 'should return a valid result' do # todo: this works with any address
-						# result = described_class.validate('valid@example.com', '127.0.0.1')
-						# expect(result).to be_a_kind_of(Hash)
-						# expect(result).to include(
-						# 	'address', 'status', 'sub_status', 'domain_age_days', 
-						# 	'smtp_provider', 'mx_found', 'mx_record'
-						# )	
+						VCR.use_cassette 'validate-ip-valid-result' do
+						result = described_class.validate('valid@example.com', '127.0.0.1')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(
+							'address', 'status', 'sub_status', 'domain_age_days', 
+							'smtp_provider', 'mx_found', 'mx_record'
+						)
+						end
 					end
 				end
 			end
