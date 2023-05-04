@@ -1,0 +1,75 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://bulkapi.zerobounce.net/v2/scoring/getfile?api_key=thiskeyisinvalidorotherwiseincorrect&file_id=4b887ccf-608c-436b-afc2-5220b73542b6
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - "*/*"
+      User-Agent:
+      - rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Host:
+      - bulkapi.zerobounce.net
+  response:
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      Date:
+      - Thu, 04 May 2023 14:07:43 GMT
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '52'
+      Connection:
+      - keep-alive
+      Www-Authenticate:
+      - api_key realm=bulkapi
+      Vary:
+      - Accept, Origin
+      Allow:
+      - GET, HEAD, OPTIONS
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Referrer-Policy:
+      - same-origin
+      Cross-Origin-Opener-Policy:
+      - same-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Credentials:
+      - 'true'
+      Access-Control-Allow-Methods:
+      - PUT, GET, POST, OPTIONS,DELETE
+      Access-Control-Allow-Headers:
+      - DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,x-access-token,x-token
+      Access-Control-Max-Age:
+      - '1728000'
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=hcKbMHZwbbZzj3GtWD7QZRjU8ADuOoo_yPJQ57w_feE-1683209263-0-Aet3dTdHbFHqvHMiIXwrGaqHi7o1dUxI7dzdH3kyXPRKq571CTREcwpvYGQJKRJ51SJXlZE7Y8riNy0d8gph5u4=;
+        path=/; expires=Thu, 04-May-23 14:37:43 GMT; domain=.zerobounce.net; HttpOnly;
+        Secure; SameSite=None
+      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8q9uWngt5inNHS; SameSite=None; Secure;
+        path=/; expires=Fri, 05-May-23 13:07:43 GMT; HttpOnly
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 7c214fc7cf5029c6-OTP
+      Alt-Svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+    body:
+      encoding: UTF-8
+      string: '{"success":"False","message":["api_key is invalid"]}'
+  recorded_at: Thu, 04 May 2023 14:07:43 GMT
+recorded_with: VCR 6.1.0

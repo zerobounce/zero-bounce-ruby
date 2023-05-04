@@ -437,8 +437,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				# expect{ described_class.scoring_file_send(scoring_file_path) }.to \
-				# 	raise_error(RestClient::Unauthorized)
+				VCR.use_cassette 'scoring-send-incorrect-api-key' do
+				expect{ described_class.scoring_file_send(scoring_file_path) }.to \
+					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -450,13 +452,15 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given correct file format' do 
 				it 'should return a correct upload result' do
-					# results = described_class.scoring_file_send(scoring_file_path)
-					# expect(results).to be_a_kind_of(Hash)
-					# expect(results['success']).to be(true)
-					# expect(results['message']).to eql('File Accepted')
-					# expect(results['file_id']).to be_a_kind_of(String)
-					# scoring_file_id = results['file_id']
-					# expect(results['file_name']).to eql('scoring.csv')
+					VCR.use_cassette 'scoring-send-valid' do
+					results = described_class.scoring_file_send(scoring_file_path)
+					expect(results).to be_a_kind_of(Hash)
+					expect(results['success']).to be(true)
+					expect(results['message']).to eql('File Accepted')
+					expect(results['file_id']).to be_a_kind_of(String)
+					scoring_file_id = results['file_id']
+					expect(results['file_name']).to eql('scoring.csv')
+					end
 				end
 			end
 		end
@@ -474,8 +478,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				# expect{ described_class.scoring_file_check(scoring_file_id) }.to \
-				# 	raise_error(RestClient::Unauthorized)
+				VCR.use_cassette 'scoring-check-incorrect-api-key' do
+				expect{ described_class.scoring_file_check(scoring_file_id) }.to \
+					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -484,19 +490,23 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return an error message' do
-					# results = described_class.scoring_file_check('invalid-file-id')
-					# expect(results['success']).to be(false)
-					# expect(results['message']).to eql('file_id is invalid.')
+					VCR.use_cassette 'scoring-check-incorrect-file-id' do
+					results = described_class.scoring_file_check('invalid-file-id')
+					expect(results['success']).to be(false)
+					expect(results['message']).to eql('file_id is invalid.')
+					end
 				end
 			end
 			context 'given correct file id' do
 				it 'should return file processing progress' do
-					# results = described_class.scoring_file_check(scoring_file_id)
-					# expect(results['success']).to be(true)
-					# expect(results['file_id']).to be_a_kind_of(String)
-					# expect(results['file_id']).to eql(scoring_file_id)
-					# expect(results['file_name']).to be_a_kind_of(String)
-					# expect(results['error_reason']).to be(nil)
+					VCR.use_cassette 'scoring-check-valid' do
+					results = described_class.scoring_file_check(scoring_file_id)
+					expect(results['success']).to be(true)
+					expect(results['file_id']).to be_a_kind_of(String)
+					expect(results['file_id']).to eql(scoring_file_id)
+					expect(results['file_name']).to be_a_kind_of(String)
+					expect(results['error_reason']).to be(nil)
+					end
 				end
 			end
 		end
@@ -514,8 +524,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				# expect{ described_class.scoring_file_get(scoring_file_id) }.to \
-				# 	raise_error(RestClient::Unauthorized)
+				VCR.use_cassette 'scoring-get-icorrect-api-key' do
+				expect{ described_class.scoring_file_get(scoring_file_id) }.to \
+					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -524,9 +536,11 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return an error' do 
-					# results = described_class.scoring_file_get('invalid-file-id')
-					# expect(results['success']).to be(false)
-					# expect(results['message']).to eql('file_id is invalid.')
+					VCR.use_cassette 'scoring-get-incorrect-file-id' do
+					results = described_class.scoring_file_get('invalid-file-id')
+					expect(results['success']).to be(false)
+					expect(results['message']).to eql('file_id is invalid.')
+					end
 				end
 			end
 			context 'given correct file id' do
@@ -534,8 +548,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 					described_class.config.apikey = valid_api_key
 				end
 				it 'should download file contents' do
-					# results = described_class.scoring_file_get(scoring_file_id)
-					# expect(results.class).to be(String)
+					VCR.use_cassette 'scoring-get-valid' do
+					results = described_class.scoring_file_get(scoring_file_id)
+					expect(results.class).to be(String)
+					end
 				end
 			end
 		end
@@ -553,8 +569,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				# expect{ described_class.scoring_file_delete(scoring_file_id) }.to \
-				# 	raise_error(RestClient::Unauthorized)
+				VCR.use_cassette 'scoring-delete-incorrect-api-key' do
+				expect{ described_class.scoring_file_delete(scoring_file_id) }.to \
+					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -563,18 +581,22 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return an error' do
-					# results = described_class.scoring_file_delete('invalid-file-id')
-					# expect(results['success']).to be(false)
-					# expect(results['message']).to eql('file_id is invalid.')
+					VCR.use_cassette 'scoring-delete-incorrect-file-id' do
+					results = described_class.scoring_file_delete('invalid-file-id')
+					expect(results['success']).to be(false)
+					expect(results['message']).to eql('file_id is invalid.')
+					end
 				end
 			end
 			context 'given correct file id' do
 				it 'should return the correct file deleted response' do 
-					# results = described_class.scoring_file_delete(scoring_file_id)
-					# expect(results['success']).to be(true)
-					# expect(results['message']).to eql('File Deleted')
-					# expect(results['file_name']).to eql('scoring.csv')
-					# expect(results['file_id']).to be_a_kind_of(String)
+					VCR.use_cassette 'scoring-delete-valid' do
+					results = described_class.scoring_file_delete(scoring_file_id)
+					expect(results['success']).to be(true)
+					expect(results['message']).to eql('File Deleted')
+					expect(results['file_name']).to eql('scoring.csv')
+					expect(results['file_id']).to be_a_kind_of(String)
+					end
 				end
 			end
 		end
