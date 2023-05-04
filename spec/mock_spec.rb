@@ -118,7 +118,9 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should return -1 credits' do
-				# expect(described_class.credits).to equal(-1)
+				VCR.use_cassette 'credits-incorrect-api-key' do
+				expect(described_class.credits).to equal(-1)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -126,7 +128,9 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = valid_api_key
 			end
 			it 'should return the correct number of credits' do 
-				# expect(described_class.credits).to satisfy { |n| n > -1 }
+				VCR.use_cassette 'credits-valid' do
+				expect(described_class.credits).to satisfy { |n| n > -1 }
+				end
 			end
 		end
 	end
@@ -152,8 +156,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				# expect{ described_class.api_usage(Date.today, Date.today) }.to \
-				# 	raise_error(RuntimeError, /Invalid API key/)
+				VCR.use_cassette 'api-usage-incorrect-api-key' do
+				expect{ described_class.api_usage(Date.today, Date.today) }.to \
+					raise_error(RuntimeError, /Invalid API key/)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -161,12 +167,14 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = valid_api_key
 			end
 			it 'should return API usage statistics' do 
-				# result = described_class.api_usage(Date.today, Date.today)
-				# expect(result).to be_a_kind_of(Hash)
-				# 	expect(result).to include(
-				# 		'total', 'status_valid', 'status_invalid', 'status_catch_all',
-				# 		'status_do_not_mail', 'status_spamtrap', 'status_unknown'
-				# 	)
+				VCR.use_cassette 'api-usage-valid' do
+				result = described_class.api_usage(Date.today, Date.today)
+				expect(result).to be_a_kind_of(Hash)
+				expect(result).to include(
+					'total', 'status_valid', 'status_invalid', 'status_catch_all',
+					'status_do_not_mail', 'status_spamtrap', 'status_unknown'
+				)
+				end
 			end
 		end
 	end
