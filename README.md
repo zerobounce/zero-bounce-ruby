@@ -377,12 +377,15 @@ Finished in 6.81 seconds (files took 0.40587 seconds to load)
 The tests use the following environment parameters:
 TEST {unit|live} influences whether mocked unit tests are run or the live server is used (credits may be used if you choose to do this)
 ZEROBOUNCE_API_KEY {<zerobounce-api-key-value>} this key is used to make requests to the live server; it is also used in mock tests as a valid key sample (any value will work for mock tests)
+INCORRECT_API_KEY {any non whitespace string value that is not a valid key} used for tests where the requests are meant to fail due to the API key value.
 
 To set them
 ```bash
-export ZEROBOUNCE_API_KEY=<zerobounce-api-key-value>
-export ZEROBOUNCE_API_KEY=
+export ZEROBOUNCE_API_KEY=99e7ef20ceea4480a173b07b1be75371
+export INCORRECT_API_KEY=thiskeyisinvalidorotherwiseincorrect
 export TEST=unit
 ```
 
 A .env.sample file is provided.
+
+Mock tests were generated using webmock and vcr. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.sample file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
