@@ -1,0 +1,66 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://api.zerobounce.net/v2/validate?api_key=99e7ef20ceea4480a173b07b1be75371&email=valid@example.com&ip_address
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - "*/*"
+      User-Agent:
+      - rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Host:
+      - api.zerobounce.net
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 04 May 2023 13:14:21 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Methods:
+      - GET, POST
+      Access-Control-Allow-Headers:
+      - Content-Type
+      X-Frame-Options:
+      - SAMEORIGIN
+      Last-Modified:
+      - Thu, 04 May 2023 12:55:29 GMT
+      Cf-Cache-Status:
+      - HIT
+      Age:
+      - '1132'
+      Expires:
+      - Thu, 04 May 2023 17:14:21 GMT
+      Cache-Control:
+      - public, max-age=14400
+      Vary:
+      - Accept-Encoding
+      Strict-Transport-Security:
+      - max-age=15552000; includeSubDomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 7c21019e9de00554-OTP
+      Alt-Svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"address":"valid@example.com","status":"valid","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":null,"domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2023-05-04
+        12:55:29.541"}'
+  recorded_at: Thu, 04 May 2023 13:14:21 GMT
+recorded_with: VCR 6.1.0
