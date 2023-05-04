@@ -1,0 +1,76 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://bulkapi.zerobounce.net/v2/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=invalid-file-id
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - "*/*"
+      User-Agent:
+      - rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Host:
+      - bulkapi.zerobounce.net
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 04 May 2023 13:54:36 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Vary:
+      - Accept, Origin
+      - Accept-Encoding
+      Allow:
+      - GET, HEAD, OPTIONS
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Referrer-Policy:
+      - same-origin
+      Cross-Origin-Opener-Policy:
+      - same-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Credentials:
+      - 'true'
+      Access-Control-Allow-Methods:
+      - PUT, GET, POST, OPTIONS,DELETE
+      Access-Control-Allow-Headers:
+      - DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,x-access-token,x-token
+      Access-Control-Max-Age:
+      - '1728000'
+      X-Xss-Protection:
+      - 1; mode=block
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=KxC3md.oCjyTo62gUBOgzILkpFbAcGwycEvGJei1VaE-1683208476-0-AQX8zf661edgTeLoyRudZtGWVvuwctafy62tFKiWknLs+olhGKfz+7XDSy6bhTnHlxpE+l76BIrEUy5+ZehDDyk=;
+        path=/; expires=Thu, 04-May-23 14:24:36 GMT; domain=.zerobounce.net; HttpOnly;
+        Secure; SameSite=None
+      - __cflb=02DiuJXghHGgGEKfEQbhUWr7g7HeZCiFwojuboZ7krFun; SameSite=None; Secure;
+        path=/; expires=Fri, 05-May-23 12:54:36 GMT; HttpOnly
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 7c213c92bac00525-OTP
+      Alt-Svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"success":false,"message":"File cannot be found."}'
+  recorded_at: Thu, 04 May 2023 13:54:36 GMT
+recorded_with: VCR 6.1.0
