@@ -1,0 +1,83 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://bulkapi.zerobounce.net/v2/scoring/sendfile
+    body:
+      encoding: ASCII-8BIT
+      string: "------RubyFormBoundaryKKoU8AXbziTtZ5qP\r\nContent-Disposition: form-data;
+        name=\"email_address_column\"\r\n\r\n1\r\n------RubyFormBoundaryKKoU8AXbziTtZ5qP\r\nContent-Disposition:
+        form-data; name=\"has_header_row\"\r\n\r\ntrue\r\n------RubyFormBoundaryKKoU8AXbziTtZ5qP\r\nContent-Disposition:
+        form-data; name=\"api_key\"\r\n\r\n99e7ef20ceea4480a173b07b1be75371\r\n------RubyFormBoundaryKKoU8AXbziTtZ5qP\r\nContent-Disposition:
+        form-data; name=\"file\"; filename=\"scoring.csv\"\r\nContent-Type: text/csv\r\n\r\nemail\r\ndisposable@example.com\r\ninvalid@example.com\r\nvalid@example.com\r\ntoxic@example.com\r\ndonotmail@example.com\r\nspamtrap@example.com\r\nabuse@example.com\r\nunknown@example.com\r\ncatch_all@example.com\r\nantispam_system@example.com\r\ndoes_not_accept_mail@example.com\r\nexception_occurred@example.com\r\nfailed_smtp_connection@example.com\r\nfailed_syntax_check@example.com\r\nforcible_disconnect@example.com\r\nglobal_suppression@example.com\r\ngreylisted@example.com\r\nleading_period_removed@example.com\r\nmail_server_did_not_respond@example.com\r\nmail_server_temporary_error@example.com\r\nmailbox_quota_exceeded@example.com\r\nmailbox_not_found@example.com\r\nno_dns_entries@example.com\r\npossible_trap@example.com\r\npossible_typo@example.com\r\nrole_based@example.com\r\ntimeout_exceeded@example.com\r\nunroutable_ip_address@example.com\r\nfree_email@example.com\r\nrole_based_catch_all@example.com\r\n------RubyFormBoundaryKKoU8AXbziTtZ5qP--\r\n"
+    headers:
+      Accept:
+      - "*/*"
+      User-Agent:
+      - rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31
+      Content-Length:
+      - '1375'
+      Content-Type:
+      - multipart/form-data; boundary=----RubyFormBoundaryKKoU8AXbziTtZ5qP
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Host:
+      - bulkapi.zerobounce.net
+  response:
+    status:
+      code: 201
+      message: Created
+    headers:
+      Date:
+      - Thu, 04 May 2023 14:03:35 GMT
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '117'
+      Connection:
+      - keep-alive
+      Vary:
+      - Accept, Origin
+      Allow:
+      - POST, OPTIONS
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Referrer-Policy:
+      - same-origin
+      Cross-Origin-Opener-Policy:
+      - same-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Credentials:
+      - 'true'
+      Access-Control-Allow-Methods:
+      - PUT, GET, POST, OPTIONS,DELETE
+      Access-Control-Allow-Headers:
+      - DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,x-access-token,x-token
+      Access-Control-Max-Age:
+      - '1728000'
+      X-Xss-Protection:
+      - 1; mode=block
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=Omr_z_5NA8VcMEakBEgZkO7ZU0MrgNJW64G_KonE6JY-1683209015-0-AWiw3t7B5uQdqNCdYlQzMeU6LrTmEp2A1G9BE/ev5MPJsQ2kwjyUORlAs7VPFwz4iH3V/J1A8LZclca9f6TkNn4=;
+        path=/; expires=Thu, 04-May-23 14:33:35 GMT; domain=.zerobounce.net; HttpOnly;
+        Secure; SameSite=None
+      - __cflb=02DiuJXghHGgGEKfEQatRnNkJ2DwhNuMJwFw3Hn5rkEfE; SameSite=None; Secure;
+        path=/; expires=Fri, 05-May-23 13:03:35 GMT; HttpOnly
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 7c2149b33b56052c-OTP
+      Alt-Svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+    body:
+      encoding: UTF-8
+      string: '{"success":true,"message":"File Accepted","file_name":"scoring.csv","file_id":"4b887ccf-608c-436b-afc2-5220b73542b6"}'
+  recorded_at: Thu, 04 May 2023 14:03:35 GMT
+recorded_with: VCR 6.1.0

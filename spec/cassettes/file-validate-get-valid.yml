@@ -1,0 +1,108 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://bulkapi.zerobounce.net/v2/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=64b99739-4d5f-4ef5-bc70-d427d167717f
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - "*/*"
+      User-Agent:
+      - rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Host:
+      - bulkapi.zerobounce.net
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 04 May 2023 14:13:51 GMT
+      Content-Type:
+      - application/octet-stream
+      Content-Length:
+      - '5187'
+      Connection:
+      - keep-alive
+      Content-Disposition:
+      - attachment; filename=validation_processed.csv; filename*=UTF-8''validation_processed.csv
+      Vary:
+      - Accept, Origin
+      Allow:
+      - GET, HEAD, OPTIONS
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Referrer-Policy:
+      - same-origin
+      Cross-Origin-Opener-Policy:
+      - same-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Credentials:
+      - 'true'
+      Access-Control-Allow-Methods:
+      - PUT, GET, POST, OPTIONS,DELETE
+      Access-Control-Allow-Headers:
+      - DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,x-access-token,x-token
+      Access-Control-Max-Age:
+      - '1728000'
+      X-Xss-Protection:
+      - 1; mode=block
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=IvLpvfH5sD7UgtXiFh4gog1Uspklw6YW5ctvqXnJSZA-1683209631-0-AdQUWm+UofxG1BURgjRyWIozqI7X29d9zgixElHJWIHUlHiyOrt+2zKg1k/Pe0ooCTWYXXFR+9r4W6N1QPFXOdQ=;
+        path=/; expires=Thu, 04-May-23 14:43:51 GMT; domain=.zerobounce.net; HttpOnly;
+        Secure; SameSite=None
+      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8pwjVqccfqdfA4; SameSite=None; Secure;
+        path=/; expires=Fri, 05-May-23 13:13:51 GMT; HttpOnly
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 7c2158c35de0623e-OTP
+      Alt-Svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+    body:
+      encoding: UTF-8
+      string: |
+        "email","first","last","gender","ip","ZB Status","ZB Sub Status","ZB Account","ZB Domain","ZB First Name","ZB Last Name","ZB Gender","ZB Free Email","ZB MX Found","ZB MX Record","ZB SMTP Provider","ZB Did You Mean"
+        "disposable@example.com","First","Last","male","127.0.0.1","do_not_mail","disposable","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "invalid@example.com","First","Last","male","127.0.0.1","invalid","mailbox_not_found","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "valid@example.com","First","Last","male","127.0.0.1","valid","","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "toxic@example.com","First","Last","male","127.0.0.1","do_not_mail","toxic","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "donotmail@example.com","First","Last","male","127.0.0.1","do_not_mail","role_based","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "spamtrap@example.com","First","Last","male","127.0.0.1","spamtrap","","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "abuse@example.com","First","Last","male","127.0.0.1","abuse","","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "unknown@example.com","First","Last","male","127.0.0.1","unknown","mail_server_temporary_error","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "catch_all@example.com","First","Last","male","127.0.0.1","catch-all","","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "antispam_system@example.com","First","Last","male","127.0.0.1","unknown","antispam_system","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "does_not_accept_mail@example.com","First","Last","male","127.0.0.1","invalid","does_not_accept_mail","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "exception_occurred@example.com","First","Last","male","127.0.0.1","unknown","exception_occurred","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "failed_smtp_connection@example.com","First","Last","male","127.0.0.1","unknown","failed_smtp_connection","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "failed_syntax_check@example.com","First","Last","male","127.0.0.1","invalid","failed_syntax_check","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "forcible_disconnect@example.com","First","Last","male","127.0.0.1","unknown","forcible_disconnect","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "global_suppression@example.com","First","Last","male","127.0.0.1","do_not_mail","global_suppression","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "greylisted@example.com","First","Last","male","127.0.0.1","unknown","greylisted","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "leading_period_removed@example.com","First","Last","male","127.0.0.1","valid","leading_period_removed","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "mail_server_did_not_respond@example.com","First","Last","male","127.0.0.1","unknown","mail_server_did_not_respond","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "mail_server_temporary_error@example.com","First","Last","male","127.0.0.1","unknown","mail_server_temporary_error","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "mailbox_quota_exceeded@example.com","First","Last","male","127.0.0.1","invalid","mailbox_quota_exceeded","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "mailbox_not_found@example.com","First","Last","male","127.0.0.1","invalid","mailbox_not_found","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "no_dns_entries@example.com","First","Last","male","127.0.0.1","invalid","no_dns_entries","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "possible_trap@example.com","First","Last","male","127.0.0.1","do_not_mail","possible_trap","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "possible_typo@example.com","First","Last","male","127.0.0.1","invalid","possible_typo","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "role_based@example.com","First","Last","male","127.0.0.1","do_not_mail","role_based","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "timeout_exceeded@example.com","First","Last","male","127.0.0.1","unknown","timeout_exceeded","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "unroutable_ip_address@example.com","First","Last","male","127.0.0.1","invalid","unroutable_ip_address","","","zero","bounce","male","False","true","mx.example.com","example",""
+        "free_email@example.com","First","Last","male","127.0.0.1","valid","","","","zero","bounce","male","True","true","mx.example.com","example",""
+        "role_based_catch_all@example.com","First","Last","male","127.0.0.1","do_not_mail","role_based_catch_all","","","zero","bounce","male","False","true","mx.example.com","example",""
+  recorded_at: Thu, 04 May 2023 14:13:51 GMT
+recorded_with: VCR 6.1.0

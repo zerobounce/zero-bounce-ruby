@@ -1,0 +1,86 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://bulkapi.zerobounce.net/v2/sendfile
+    body:
+      encoding: ASCII-8BIT
+      string: "------RubyFormBoundarylOxWBPkeXB45b3qE\r\nContent-Disposition: form-data;
+        name=\"email_address_column\"\r\n\r\n1\r\n------RubyFormBoundarylOxWBPkeXB45b3qE\r\nContent-Disposition:
+        form-data; name=\"first_name_column\"\r\n\r\n2\r\n------RubyFormBoundarylOxWBPkeXB45b3qE\r\nContent-Disposition:
+        form-data; name=\"last_name_column\"\r\n\r\n3\r\n------RubyFormBoundarylOxWBPkeXB45b3qE\r\nContent-Disposition:
+        form-data; name=\"gender_column\"\r\n\r\n4\r\n------RubyFormBoundarylOxWBPkeXB45b3qE\r\nContent-Disposition:
+        form-data; name=\"has_header_row\"\r\n\r\ntrue\r\n------RubyFormBoundarylOxWBPkeXB45b3qE\r\nContent-Disposition:
+        form-data; name=\"api_key\"\r\n\r\nthiskeyisinvalidorotherwiseincorrect\r\n------RubyFormBoundarylOxWBPkeXB45b3qE\r\nContent-Disposition:
+        form-data; name=\"file\"; filename=\"validation.csv\"\r\nContent-Type: text/csv\r\n\r\nemail,first,last,gender,ip\r\ndisposable@example.com,First,Last,male,127.0.0.1\r\ninvalid@example.com,First,Last,male,127.0.0.1\r\nvalid@example.com,First,Last,male,127.0.0.1\r\ntoxic@example.com,First,Last,male,127.0.0.1\r\ndonotmail@example.com,First,Last,male,127.0.0.1\r\nspamtrap@example.com,First,Last,male,127.0.0.1\r\nabuse@example.com,First,Last,male,127.0.0.1\r\nunknown@example.com,First,Last,male,127.0.0.1\r\ncatch_all@example.com,First,Last,male,127.0.0.1\r\nantispam_system@example.com,First,Last,male,127.0.0.1\r\ndoes_not_accept_mail@example.com,First,Last,male,127.0.0.1\r\nexception_occurred@example.com,First,Last,male,127.0.0.1\r\nfailed_smtp_connection@example.com,First,Last,male,127.0.0.1\r\nfailed_syntax_check@example.com,First,Last,male,127.0.0.1\r\nforcible_disconnect@example.com,First,Last,male,127.0.0.1\r\nglobal_suppression@example.com,First,Last,male,127.0.0.1\r\ngreylisted@example.com,First,Last,male,127.0.0.1\r\nleading_period_removed@example.com,First,Last,male,127.0.0.1\r\nmail_server_did_not_respond@example.com,First,Last,male,127.0.0.1\r\nmail_server_temporary_error@example.com,First,Last,male,127.0.0.1\r\nmailbox_quota_exceeded@example.com,First,Last,male,127.0.0.1\r\nmailbox_not_found@example.com,First,Last,male,127.0.0.1\r\nno_dns_entries@example.com,First,Last,male,127.0.0.1\r\npossible_trap@example.com,First,Last,male,127.0.0.1\r\npossible_typo@example.com,First,Last,male,127.0.0.1\r\nrole_based@example.com,First,Last,male,127.0.0.1\r\ntimeout_exceeded@example.com,First,Last,male,127.0.0.1\r\nunroutable_ip_address@example.com,First,Last,male,127.0.0.1\r\nfree_email@example.com,First,Last,male,127.0.0.1\r\nrole_based_catch_all@example.com,First,Last,male,127.0.0.1\r\n------RubyFormBoundarylOxWBPkeXB45b3qE--\r\n"
+    headers:
+      Accept:
+      - "*/*"
+      User-Agent:
+      - rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31
+      Content-Length:
+      - '2487'
+      Content-Type:
+      - multipart/form-data; boundary=----RubyFormBoundarylOxWBPkeXB45b3qE
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Host:
+      - bulkapi.zerobounce.net
+  response:
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      Date:
+      - Thu, 04 May 2023 13:51:09 GMT
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '52'
+      Connection:
+      - keep-alive
+      Www-Authenticate:
+      - api_key realm=bulkapi
+      Vary:
+      - Accept, Origin
+      Allow:
+      - POST, OPTIONS
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Referrer-Policy:
+      - same-origin
+      Cross-Origin-Opener-Policy:
+      - same-origin
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Credentials:
+      - 'true'
+      Access-Control-Allow-Methods:
+      - PUT, GET, POST, OPTIONS,DELETE
+      Access-Control-Allow-Headers:
+      - DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,x-access-token,x-token
+      Access-Control-Max-Age:
+      - '1728000'
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=zkN0uaiQtXJbsqOZpcrQPH4UI4uoRzKPzDaEhFl8pWc-1683208269-0-ASkb2aZg5HOtu1QIlQs8FBAPt819+DYg6JOx19T+Q9l6vxjAUDVA2VQdwBfalSaDyqIsxph5M3O5tUDvWC1xYOc=;
+        path=/; expires=Thu, 04-May-23 14:21:09 GMT; domain=.zerobounce.net; HttpOnly;
+        Secure; SameSite=None
+      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8qY2koHf5vwQqi; SameSite=None; Secure;
+        path=/; expires=Fri, 05-May-23 12:51:09 GMT; HttpOnly
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 7c2137850b18b9dd-OTP
+      Alt-Svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+    body:
+      encoding: UTF-8
+      string: '{"success":"False","message":["api_key is invalid"]}'
+  recorded_at: Thu, 04 May 2023 13:51:09 GMT
+recorded_with: VCR 6.1.0

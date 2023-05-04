@@ -1,9 +1,21 @@
 # frozen_string_literal: true
 
+require 'webmock/rspec' if ENV['TEST']=='unit'
+require 'vcr' if ENV['TEST']=='unit'
+
+if ENV['TEST']=='unit'
+	WebMock.disable_net_connect!(allow_localhost: true)
+	VCR.configure do |c|
+		c.cassette_library_dir = 'spec/cassettes'
+		c.hook_into :webmock
+		c.ignore_localhost = true
+	end
+end
+
 describe Zerobounce, :focus => ENV['TEST']=='unit' do
 
 	let (:valid_api_key) { ENV['ZEROBOUNCE_API_KEY'] }
-	let (:invalid_api_key) { [*('a'..'z'),*('0'..'9')].sample(32).join }
+	let (:invalid_api_key) { ENV['INCORRECT_API_KEY'] }
 
         it 'should run mock tests' do
                 puts 'running mock tests'
@@ -50,10 +62,11 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-
+				VCR.use_cassette 'validate-incorrect-api-key' do
 				expect{ described_class.validate('valid@example.com') }.to \
 					raise_error(StandardError, 
 						/Invalid API key or your account ran out of credits/)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -68,21 +81,25 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given a valid email address' do
 				it 'should return a valid result' do
+					VCR.use_cassette 'validate-valid-result' do
 					result = described_class.validate('valid@example.com')
 					expect(result).to be_a_kind_of(Hash)
 					expect(result).to include(
 						'address', 'status', 'sub_status', 'domain_age_days', 
 						'smtp_provider', 'mx_found', 'mx_record'
 					)
+					end
 				end 
 				context 'given an IP address' do
 					it 'should return a valid result' do # todo: this works with any address
+						VCR.use_cassette 'validate-ip-valid-result' do
 						result = described_class.validate('valid@example.com', '127.0.0.1')
 						expect(result).to be_a_kind_of(Hash)
 						expect(result).to include(
 							'address', 'status', 'sub_status', 'domain_age_days', 
 							'smtp_provider', 'mx_found', 'mx_record'
-						)	
+						)
+						end
 					end
 				end
 			end
@@ -101,7 +118,9 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should return -1 credits' do
+				VCR.use_cassette 'credits-incorrect-api-key' do
 				expect(described_class.credits).to equal(-1)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -109,7 +128,9 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = valid_api_key
 			end
 			it 'should return the correct number of credits' do 
+				VCR.use_cassette 'credits-valid' do
 				expect(described_class.credits).to satisfy { |n| n > -1 }
+				end
 			end
 		end
 	end
@@ -135,8 +156,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+				VCR.use_cassette 'api-usage-incorrect-api-key' do
 				expect{ described_class.api_usage(Date.today, Date.today) }.to \
 					raise_error(RuntimeError, /Invalid API key/)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -144,12 +167,14 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = valid_api_key
 			end
 			it 'should return API usage statistics' do 
+				VCR.use_cassette 'api-usage-valid' do
 				result = described_class.api_usage(Date.today, Date.today)
 				expect(result).to be_a_kind_of(Hash)
-					expect(result).to include(
-						'total', 'status_valid', 'status_invalid', 'status_catch_all',
-						'status_do_not_mail', 'status_spamtrap', 'status_unknown'
-					)
+				expect(result).to include(
+					'total', 'status_valid', 'status_invalid', 'status_catch_all',
+					'status_do_not_mail', 'status_spamtrap', 'status_unknown'
+				)
+				end
 			end
 		end
 	end
@@ -175,9 +200,11 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+				VCR.use_cassette 'batch-validate-incorrect-api-key' do
 				expect{ described_class.validate_batch(emails) }.to \
 					raise_error(RuntimeError, 
 						/Invalid API Key or your account ran out of credits/)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -200,6 +227,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 					described_class.config.apikey = valid_api_key
 				end
 				it 'should return valid results' do
+					VCR.use_cassette 'batch-validate-valid' do
 					results = described_class.validate_batch(emails)
 					expect(results.length).to be(6)
 					results.each do |result|
@@ -207,6 +235,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 							'address', 'status', 'sub_status', 'domain_age_days', 
 							'smtp_provider', 'mx_found', 'mx_record'
 						)
+					end
 					end
 				end
 			end
@@ -228,8 +257,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+				VCR.use_cassette 'file-validate-send-incorrect-api-key' do
 				expect{ described_class.validate_file_send(validate_file_path) }.to \
 					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -241,6 +272,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given correct file format' do 
 				it 'should return a correct upload result' do
+					VCR.use_cassette 'file-validate-send-valid' do
 					results = described_class.validate_file_send(validate_file_path)
 					expect(results).to be_a_kind_of(Hash)
 					expect(results['success']).to be(true)
@@ -248,6 +280,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 					expect(results['file_id']).to be_a_kind_of(String)
 					validate_file_id = results['file_id']
 					expect(results['file_name']).to eql('validation.csv')
+					end
 				end
 			end
 		end
@@ -265,8 +298,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+				VCR.use_cassette 'file-validate-check-incorrect-api-key' do
 				expect{ described_class.validate_file_check(validate_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -275,19 +310,23 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return error message' do
+					VCR.use_cassette 'file-validate-incorrect-file-id' do
 					results = described_class.validate_file_check('invalid-file-id')
 					expect(results['success']).to be(false)
 					expect(results['message']).to eql('File cannot be found.')
+					end
 				end
 			end
 			context 'given correct file id' do
 				it 'should return file processing progress' do
+					VCR.use_cassette 'file-validate-check-valid' do
 					results = described_class.validate_file_check(validate_file_id)
 					expect(results['success']).to be(true)
 					expect(results['file_id']).to be_a_kind_of(String)
 					expect(results['file_id']).to eql(validate_file_id)
 					expect(results['file_name']).to be_a_kind_of(String)
 					expect(results['error_reason']).to be(nil)
+					end
 				end
 			end
 		end
@@ -305,8 +344,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+				VCR.use_cassette 'file-validate-get-incorrect-api-key' do
 				expect{ described_class.validate_file_get(validate_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -315,9 +356,11 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return error message' do
+					VCR.use_cassette 'file-validate-get-incorrect-file-id' do
 					results = described_class.validate_file_get('invalid-file-id')
 					expect(results['success']).to be(false)
 					expect(results['message']).to eql('File cannot be found.')
+					end
 				end
 			end
 			context 'given correct file id' do
@@ -325,8 +368,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 					described_class.config.apikey = valid_api_key
 				end
 				it 'should download file contents' do 
-					# results = described_class.validate_file_get(validate_file_id)
-					# expect(results.class).to be(String)
+					VCR.use_cassette 'file-validate-get-valid' do
+					results = described_class.validate_file_get(validate_file_id)
+					expect(results.class).to be(String)
+					end
 				end
 			end
 		end
@@ -344,8 +389,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+				VCR.use_cassette 'file-validate-delete-incorrect-api-key' do
 				expect{ described_class.validate_file_delete(validate_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -354,19 +401,23 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return error message' do
+					VCR.use_cassette 'file-validate-delete-incorrect-file-id' do
 					results = described_class.validate_file_delete('invalid-file-id')
 					expect(results['success']).to be(false)
 					expect(results['message']).to eql('File cannot be found.')
+					end
 				end
 			end
 			context 'given correct file id' do
 				it 'should return deleted response' do
-					# results = described_class.validate_file_delete(validate_file_id)
-					# expect(results['success']).to be(true)
-					# expect(results['message']).to eql('File Deleted')
-					# expect(results['file_name']).to eql('validation.csv')
-					# expect(results['file_id']).to be_a_kind_of(String)
-					# expect(results['file_id']).to eql(validate_file_id)
+					VCR.use_cassette 'file-validate-delete-valid' do 
+					results = described_class.validate_file_delete(validate_file_id)
+					expect(results['success']).to be(true)
+					expect(results['message']).to eql('File Deleted')
+					expect(results['file_name']).to eql('validation.csv')
+					expect(results['file_id']).to be_a_kind_of(String)
+					expect(results['file_id']).to eql(validate_file_id)
+					end
 				end
 			end
 		end
@@ -386,8 +437,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+				VCR.use_cassette 'scoring-send-incorrect-api-key' do
 				expect{ described_class.scoring_file_send(scoring_file_path) }.to \
 					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -399,6 +452,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given correct file format' do 
 				it 'should return a correct upload result' do
+					VCR.use_cassette 'scoring-send-valid' do
 					results = described_class.scoring_file_send(scoring_file_path)
 					expect(results).to be_a_kind_of(Hash)
 					expect(results['success']).to be(true)
@@ -406,6 +460,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 					expect(results['file_id']).to be_a_kind_of(String)
 					scoring_file_id = results['file_id']
 					expect(results['file_name']).to eql('scoring.csv')
+					end
 				end
 			end
 		end
@@ -423,8 +478,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+				VCR.use_cassette 'scoring-check-incorrect-api-key' do
 				expect{ described_class.scoring_file_check(scoring_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -433,19 +490,23 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return an error message' do
+					VCR.use_cassette 'scoring-check-incorrect-file-id' do
 					results = described_class.scoring_file_check('invalid-file-id')
 					expect(results['success']).to be(false)
 					expect(results['message']).to eql('file_id is invalid.')
+					end
 				end
 			end
 			context 'given correct file id' do
 				it 'should return file processing progress' do
+					VCR.use_cassette 'scoring-check-valid' do
 					results = described_class.scoring_file_check(scoring_file_id)
 					expect(results['success']).to be(true)
 					expect(results['file_id']).to be_a_kind_of(String)
 					expect(results['file_id']).to eql(scoring_file_id)
 					expect(results['file_name']).to be_a_kind_of(String)
 					expect(results['error_reason']).to be(nil)
+					end
 				end
 			end
 		end
@@ -463,8 +524,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+				VCR.use_cassette 'scoring-get-icorrect-api-key' do
 				expect{ described_class.scoring_file_get(scoring_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -473,9 +536,11 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return an error' do 
+					VCR.use_cassette 'scoring-get-incorrect-file-id' do
 					results = described_class.scoring_file_get('invalid-file-id')
 					expect(results['success']).to be(false)
 					expect(results['message']).to eql('file_id is invalid.')
+					end
 				end
 			end
 			context 'given correct file id' do
@@ -483,8 +548,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 					described_class.config.apikey = valid_api_key
 				end
 				it 'should download file contents' do
+					VCR.use_cassette 'scoring-get-valid' do
 					results = described_class.scoring_file_get(scoring_file_id)
 					expect(results.class).to be(String)
+					end
 				end
 			end
 		end
@@ -502,8 +569,10 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+				VCR.use_cassette 'scoring-delete-incorrect-api-key' do
 				expect{ described_class.scoring_file_delete(scoring_file_id) }.to \
 					raise_error(RestClient::Unauthorized)
+				end
 			end
 		end
 		context 'given correct API key' do 
@@ -512,18 +581,22 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return an error' do
+					VCR.use_cassette 'scoring-delete-incorrect-file-id' do
 					results = described_class.scoring_file_delete('invalid-file-id')
 					expect(results['success']).to be(false)
 					expect(results['message']).to eql('file_id is invalid.')
+					end
 				end
 			end
 			context 'given correct file id' do
 				it 'should return the correct file deleted response' do 
+					VCR.use_cassette 'scoring-delete-valid' do
 					results = described_class.scoring_file_delete(scoring_file_id)
 					expect(results['success']).to be(true)
 					expect(results['message']).to eql('File Deleted')
 					expect(results['file_name']).to eql('scoring.csv')
 					expect(results['file_id']).to be_a_kind_of(String)
+					end
 				end
 			end
 		end
