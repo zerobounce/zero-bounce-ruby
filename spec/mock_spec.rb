@@ -369,8 +369,8 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				end
 				it 'should download file contents' do 
 					VCR.use_cassette 'file-validate-get-valid' do
-					# results = described_class.validate_file_get(validate_file_id)
-					# expect(results.class).to be(String)
+					results = described_class.validate_file_get(validate_file_id)
+					expect(results.class).to be(String)
 					end
 				end
 			end
@@ -411,12 +411,12 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			context 'given correct file id' do
 				it 'should return deleted response' do
 					VCR.use_cassette 'file-validate-delete-valid' do 
-					# results = described_class.validate_file_delete(validate_file_id)
-					# expect(results['success']).to be(true)
-					# expect(results['message']).to eql('File Deleted')
-					# expect(results['file_name']).to eql('validation.csv')
-					# expect(results['file_id']).to be_a_kind_of(String)
-					# expect(results['file_id']).to eql(validate_file_id)
+					results = described_class.validate_file_delete(validate_file_id)
+					expect(results['success']).to be(true)
+					expect(results['message']).to eql('File Deleted')
+					expect(results['file_name']).to eql('validation.csv')
+					expect(results['file_id']).to be_a_kind_of(String)
+					expect(results['file_id']).to eql(validate_file_id)
 					end
 				end
 			end
