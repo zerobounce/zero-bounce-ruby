@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
-describe Zerobounce, :focus => ENV['TEST']!='unit' do
-
+describe Zerobounce, :focus => ENV['TEST']=='unit' do
 
 	let (:valid_api_key) { ENV['ZEROBOUNCE_API_KEY'] }
 	let (:invalid_api_key) { [*('a'..'z'),*('0'..'9')].sample(32).join }
 
-        it 'should run live tests' do
-                puts 'running live tests'
+        it 'should run mock tests' do
+                puts 'running mock tests'
         end
 
 	it 'should generate different keys' do
@@ -51,6 +50,7 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
+
 				expect{ described_class.validate('valid@example.com') }.to \
 					raise_error(StandardError, 
 						/Invalid API key or your account ran out of credits/)

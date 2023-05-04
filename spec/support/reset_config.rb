@@ -2,6 +2,6 @@
 
 RSpec.configure do |config|
   config.after do
-    Zerobounce.instance_variable_set(:@configuration, Zerobounce::Configuration.new)
+    Zerobounce.config.apikey = nil
   end
 end

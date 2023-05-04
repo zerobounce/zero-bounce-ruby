@@ -5,8 +5,8 @@ require 'zerobounce/base_request'
 module Zerobounce
   
   # Sends the HTTP request.
-  class Request < BaseRequest
-
+  class MockRequest < BaseRequest
+    
     def self.get(path, params, content_type='application/json')
       response = self._get(Zerobounce::API_ROOT_URL, path, params, content_type)
       if response.headers[:content_type] == 'application/json'
