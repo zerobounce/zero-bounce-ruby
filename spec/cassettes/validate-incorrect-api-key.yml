@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/getcredits?api_key=99e7ef20ceea4480a173b07b1be75371
+    uri: https://api.zerobounce.net/v2/validate?api_key=thiskeyisinvalidorotherwiseincorrect&email=valid@example.com&ip_address
     body:
       encoding: US-ASCII
       string: ''
@@ -21,13 +21,17 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Thu, 04 May 2023 13:15:29 GMT
+      - Thu, 04 May 2023 13:41:40 GMT
       Content-Type:
       - application/json
-      Content-Length:
-      - '20'
+      Transfer-Encoding:
+      - chunked
       Connection:
       - keep-alive
+      Zb-Status:
+      - '4001'
+      Zb-Requested-With-Ip:
+      - 81.196.141.10
       Access-Control-Allow-Origin:
       - "*"
       Access-Control-Allow-Methods:
@@ -37,7 +41,15 @@ http_interactions:
       X-Frame-Options:
       - SAMEORIGIN
       Cf-Cache-Status:
-      - DYNAMIC
+      - MISS
+      Last-Modified:
+      - Thu, 04 May 2023 13:41:40 GMT
+      Expires:
+      - Thu, 04 May 2023 17:41:40 GMT
+      Cache-Control:
+      - public, max-age=14400
+      Vary:
+      - Accept-Encoding
       Strict-Transport-Security:
       - max-age=15552000; includeSubDomains; preload
       X-Content-Type-Options:
@@ -45,11 +57,11 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 7c210346f9db98a0-OTP
+      - 7c21299f6e0a053d-OTP
       Alt-Svc:
       - h3=":443"; ma=86400, h3-29=":443"; ma=86400
     body:
-      encoding: UTF-8
-      string: '{"Credits":"499601"}'
-  recorded_at: Thu, 04 May 2023 13:15:29 GMT
+      encoding: ASCII-8BIT
+      string: '{"error":"Invalid API key or your account ran out of credits"}'
+  recorded_at: Thu, 04 May 2023 13:41:40 GMT
 recorded_with: VCR 6.1.0

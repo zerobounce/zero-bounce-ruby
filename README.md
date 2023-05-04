@@ -381,5 +381,8 @@ ZEROBOUNCE_API_KEY {<zerobounce-api-key-value>} this key is used to make request
 To set them
 ```bash
 export ZEROBOUNCE_API_KEY=<zerobounce-api-key-value>
+export ZEROBOUNCE_API_KEY=
 export TEST=unit
 ```
+
+A .env.sample file is provided.
