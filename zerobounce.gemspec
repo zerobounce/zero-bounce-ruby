@@ -5,10 +5,10 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'zerobounce/version'
 
 Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
-  spec.name          = 'zerobounce'
+  spec.name          = 'zerobounce-sdk'
   spec.version       = Zerobounce::VERSION
   spec.authors       = ['Zero Bounce']
-  spec.email         = ['wrappers@zerobounce.net']
+  spec.email         = ['integrations@zerobounce.net']
 
   spec.summary       = 'A Ruby client for Zerobounce.net.'
   spec.description   = 'A Ruby client for Zerobounce.net.'

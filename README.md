@@ -5,7 +5,7 @@ Ruby client for Zerobounce.net API. Developed based on [this version](https://gi
 ## Usage
 Add this line to your application's Gemfile:
 ```ruby
-gem 'zerobounce'
+gem 'zerobounce-sdk'
 ```
 
 And then execute:
@@ -15,7 +15,7 @@ $bundle
 
 Or install it yourself as:
 ```bash
-$gem install zerobounce
+$gem install zerobounce-sdk
 ```
 
 Import
