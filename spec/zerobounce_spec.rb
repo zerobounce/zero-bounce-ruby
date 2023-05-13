@@ -89,6 +89,45 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 		end
 	end
 
+	describe '.activity' do
+		context 'given no API key' do
+			it 'should raise an API key error' do 
+				expect{ described_class.activity('ss@gmail.com') }.to \
+					raise_error(StandardError, /API key must be assigned/)
+			end
+		end
+		context 'given incorrect API key' do
+			before do
+				described_class.config.apikey = invalid_api_key
+			end
+			it 'should raise an API key error' do
+				expect{ described_class.activity('ss@gmail.com') }.to \
+					raise_error(StandardError, 
+						/Invalid API key or your account ran out of credits/)
+			end
+		end
+		context 'given correct API key' do 
+			before do
+				described_class.config.apikey = valid_api_key
+			end
+			context 'given no email address' do 
+				it 'should raise an error' do 
+					expect{ described_class.activity() }.to \
+						raise_error(ArgumentError)
+				end
+			end
+			context 'given a valid email address' do
+				it 'should return a valid result' do
+					result = described_class.activity('ss@gmail.com')
+					expect(result).to be_a_kind_of(Hash)
+					expect(result).to include(
+						'found', 'active_in_days'
+					)
+				end 
+			end
+		end
+	end
+
 	describe '.credits' do
 		context 'given no API key' do
 			it 'should raise an API key error' do 

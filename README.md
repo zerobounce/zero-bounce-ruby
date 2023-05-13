@@ -42,6 +42,12 @@ Zerobounce.credits
 => 79   # returns -1 for invalid key
 ```
 
+Activity
+```ruby
+Zerobounce.activity('ss@gmail.com')
+=> {"found"=>true, "active_in_days"=>"180"}
+```
+
 Usage statistics
 ```ruby
 Zerobounce.api_usage(Date.today, Date.today)
