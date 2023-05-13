@@ -153,6 +153,20 @@ module Zerobounce
       @@request.get('getapiusage', params)
     end
 
+    # Get Activty for email
+    #
+    # @param [String] :email Email to get activity for
+    # 
+    # @return [Hash] 
+    # {
+    #   "found": true,
+    #   "active_in_days": "180"
+    # }
+    def activity(email)
+      params = {email: email}
+      @@request.get('activity', params)
+    end
+
     # Validate email batch
     # 
     # @param [Array] :emails List of email addresses to validate.
