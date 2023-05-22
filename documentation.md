@@ -1,8 +1,8 @@
 
-# Zerobounce
+### Zerobounce
 Ruby client for Zerobounce.net API. Developed based on [this version](https://github.com/afrase/zerobounce) by Aaron Frase.
 
-## Usage
+#### Usage
 Add this line to your application's Gemfile:
 ```ruby
 gem 'zerobounce-sdk'
@@ -39,7 +39,7 @@ Zerobounce.config.apikey = '<zerobounce-api-key>'
 Credits
 ```ruby
 Zerobounce.credits
-=> 79   # returns -1 for invalid key
+=> 79   ### returns -1 for invalid key
 ```
 
 Activity
@@ -88,12 +88,12 @@ Zerobounce.api_usage(Date.today, Date.today)
  "end_date"=>"4/28/2023"}
 ```
 
-### Email Validation
+##### Email Validation
 
 Validate single eMail
 ```ruby
 Zerobounce.validate('valid@example.com') 
-# Zerobounce.validate('valid@example.com', '192.168.0.1') # optional IP address
+### Zerobounce.validate('valid@example.com', '192.168.0.1') # optional IP address
 =>
 {"address"=>"valid@example.com",
  "status"=>"valid",
@@ -127,9 +127,9 @@ emails
  "donotmail@example.com",
  "spamtrap@example.com"]
  
-# ip_addresses 
+### ip_addresses 
 => ["192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1"]
-# Zerobounce.validate_batch(emails, ip_addresses) # optional ip_addresses parameter
+### Zerobounce.validate_batch(emails, ip_addresses) # optional ip_addresses parameter
  
 Zerobounce.validate_batch(emails)
 =>
@@ -249,11 +249,11 @@ Zerobounce.validate_batch(emails)
   "processed_at"=>"2023-04-28 15:21:44.340"}]
 ```
 
-#### Batch File Validation
+###### Batch File Validation
 
 Send file
 ```ruby
-# sample file can be found in the files folder of this repository
+### sample file can be found in the files folder of this repository
  validate_file_path = File.join(Dir.pwd, 'files', 'validation.csv')
 => "/home/zb/wrappers/ruby-test/files/validation.csv"
  Zerobounce.validate_file_send(validate_file_path)
@@ -262,15 +262,15 @@ Send file
  "message"=>"File Accepted",
  "file_name"=>"validation.csv",
  "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
- # file_id will be required for next steps
- # optional named parameters: 
+ ### file_id will be required for next steps
+ ### optional named parameters: 
     email_address_column: 1,
     first_name_column: 2,
     last_name_column: 3,
     gender_column: 4,
     has_header_row: true,
-    return_url: nil         # results callback url
- # Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4) 
+    return_url: nil         ### results callback url
+ ### Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4) 
 ```
 
 Check file
@@ -309,7 +309,7 @@ Zerobounce.validate_file_delete(file_id)
  "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
 ```
 
-### AI Scoring
+##### AI Scoring
 
 Send file
 ```ruby
@@ -321,12 +321,12 @@ Zerobounce.scoring_file_send(scoring_file_path)
  "message"=>"File Accepted",
  "file_name"=>"scoring.csv",
  "file_id"=>"89fb7262-b845-4fa1-aa25-e486347ec64e"}
-# file_id will be required for the next steps
-# optional named parameters
+### file_id will be required for the next steps
+### optional named parameters
     email_address_column: 1,
     has_header_row: true,
-    return_url: nil         # results callback url
-# Zerobounce.scoring_file_send(scoring_file_path, email_address_column: 1)
+    return_url: nil         ### results callback url
+### Zerobounce.scoring_file_send(scoring_file_path, email_address_column: 1)
 ```
 
 File check
@@ -361,11 +361,11 @@ Zerobounce.validate_file_delete(file_id)
 ```
 
 
-## Development
+#### Development
 
 After checking out the repo run tests
 ```bash
-rspec --init # if needed
+rspec --init ### if needed
 bundle exec rspec
 ```
 
@@ -379,7 +379,7 @@ Finished in 6.81 seconds (files took 0.40587 seconds to load)
 53 examples, 0 failures
 ```
 
-### Test parameters
+##### Test parameters
 The tests use the following environment parameters:
 TEST {unit|live} influences whether mocked unit tests are run or the live server is used (credits may be used if you choose to do this)
 ZEROBOUNCE_API_KEY {<zerobounce-api-key-value>} this key is used to make requests to the live server; it is also used in mock tests as a valid key sample (any value will work for mock tests)
