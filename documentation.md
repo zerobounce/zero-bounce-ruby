@@ -1,7 +1,3 @@
-
-### Zerobounce
-Ruby client for Zerobounce.net API. Developed based on [this version](https://github.com/afrase/zerobounce) by Aaron Frase.
-
 #### Usage
 Add this line to your application's Gemfile:
 ```ruby
