@@ -1,7 +1,4 @@
-# Zerobounce
-Cliente Ruby para la API de Zerobounce.net. Desarrollado basado en [esta versión](https://github.com/afrase/zerobounce) por Aaron Frase.
-
-## Uso
+#### Uso
 Agrega esta línea a tu Gemfile de la aplicación:
 ```ruby
 gem 'zerobounce-sdk'
@@ -38,7 +35,7 @@ Zerobounce.config.apikey = '<clave-de-api-de-zerobounce>'
 Créditos
 ```ruby
 Zerobounce.credits
-=> 79   # devuelve -1 si la clave es inválida
+=> 79   ### devuelve -1 si la clave es inválida
 ```
 
 Actividad
@@ -87,12 +84,12 @@ Zerobounce.api_usage(Date.today, Date.today)
  "end_date"=>"4/28/2023"}
 ```
 
-### Validación de correo electrónico
+##### Validación de correo electrónico
 
 Validar un solo correo electrónico
 ```ruby
 Zerobounce.validate('valid@example.com') 
-# Zerobounce.validate('valid@example.com', '192.168.0.1') # dirección IP opcional
+### Zerobounce.validate('valid@example.com', '192.168.0.1') # dirección IP opcional
 =>
 {"address"=>"valid@example.com",
  "status"=>"valid",
@@ -128,9 +125,9 @@ emails
  "donotmail@example.com",
  "spamtrap@example.com"]
  
-# ip_addresses 
+### ip_addresses 
 => ["192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1"]
-# Zerobounce.validate_batch(emails, ip_addresses) # parámetro ip_addresses opcional
+### Zerobounce.validate_batch(emails, ip_addresses) # parámetro ip_addresses opcional
  
 Zerobounce.validate_batch(emails)
 =>
@@ -252,11 +249,11 @@ _age_days"=>"9692",
   "processed_at"=>"2023-04-28 15:21:44.340"}]
 ```
 
-#### Validación de archivo en lote
+###### Validación de archivo en lote
 
 Enviar archivo
 ```ruby
-# puedes encontrar un archivo de muestra en la carpeta files de este repositorio
+### puedes encontrar un archivo de muestra en la carpeta files de este repositorio
 validate_file_path = File.join(Dir.pwd, 'files', 'validation.csv')
 => "/home/zb/wrappers/ruby-test/files/validation.csv"
 Zerobounce.validate_file_send(validate_file_path)
@@ -265,15 +262,15 @@ Zerobounce.validate_file_send(validate_file_path)
  "message"=>"File Accepted",
  "file_name"=>"validation.csv",
  "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
- # se requerirá el file_id para los próximos pasos
- # parámetros opcionales: 
+ ### se requerirá el file_id para los próximos pasos
+ ### parámetros opcionales: 
     email_address_column: 1,
     first_name_column: 2,
     last_name_column: 3,
     gender_column: 4,
     has_header_row: true,
-    return_url: nil         # URL de devolución de resultados
- # Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4) 
+    return_url: nil         ### URL de devolución de resultados
+ ### Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4) 
 ```
 
 Verificar archivo
@@ -318,7 +315,7 @@ Zerobounce.validate_file_delete(file_id)
 c"}
 ```
 
-### Puntuación de IA
+##### Puntuación de IA
 
 Enviar archivo
 ```ruby
@@ -330,12 +327,12 @@ Zerobounce.scoring_file_send(scoring_file_path)
  "message"=>"File Accepted",
  "file_name"=>"scoring.csv",
  "file_id"=>"89fb7262-b845-4fa1-aa25-e486347ec64e"}
-# se requerirá el file_id para los próximos pasos
-# parámetros opcionales
+### se requerirá el file_id para los próximos pasos
+### parámetros opcionales
     email_address_column: 1,
     has_header_row: true,
-    return_url: nil         # URL de devolución de resultados
-# Zerobounce.scoring_file_send(scoring_file_path, email_address_column: 1)
+    return_url: nil         ### URL de devolución de resultados
+### Zerobounce.scoring_file_send(scoring_file_path, email_address_column: 1)
 ```
 
 Verificar archivo
@@ -372,11 +369,11 @@ Zerobounce.validate_file_delete(file_id)
 ```
 
 
-## Desarrollo
+#### Desarrollo
 
 Después de revisar el repositorio, ejecuta las pruebas:
 ```bash
-rspec --init # si es necesario
+rspec --init ### si es necesario
 bundle exec rspec
 ```
 
@@ -390,7 +387,7 @@ Finished in 6.81 seconds (files took 0.40587 seconds to load)
 53 examples, 0 failures
 ```
 
-### Parámetros de prueba
+##### Parámetros de prueba
 Las pruebas utilizan los siguientes parámetros de entorno:
 TEST {unit|live} influye en si se ejecutan las pruebas simuladas de unidad o se utiliza el servidor en vivo (se pueden utilizar créditos si eliges hacer esto)
 ZEROBOUNCE_API_KEY {<zerobounce-api-key-value>} esta clave se utiliza para realizar solicitudes al servidor en vivo; también se utiliza en las pruebas simuladas como un ejemplo de clave válida (cualquier valor funcionará para las pruebas simuladas)
