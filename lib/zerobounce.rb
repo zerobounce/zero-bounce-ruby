@@ -375,9 +375,26 @@ module Zerobounce
     #   "file_id": "6d44a908-7283-42a9-aa5f-9e57b16f84bd"
     # }
     def scoring_file_delete(file_id)
-      # todo:
       params = {file_id: file_id}
       @@request.bulk_get('scoring/deletefile', params)
+    end
+
+
+    def guessformat(domain, first_name: '', middle_name: '', last_name: '')
+      params = {
+        domain: domain
+      }
+      unless first_name.empty?
+        params['first_name'] = first_name
+      end
+      unless middle_name.empty?
+        params['middle_name'] = middle_name
+      end
+      unless last_name.empty?
+        params['last_name'] = last_name
+      end
+
+      @@request.get('guessformat', params)
     end
 
   end
