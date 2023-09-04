@@ -1,0 +1,55 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://api.zerobounce.net/v2/guessformat?api_key=99e7ef20ceea4480a173b07b1be75371&domain=zerobounce.net
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - "*/*"
+      User-Agent:
+      - rest-client/2.1.0 (linux x86_64) ruby/3.2.1p31
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Host:
+      - api.zerobounce.net
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Mon, 04 Sep 2023 14:00:12 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Methods:
+      - GET, POST
+      Access-Control-Allow-Headers:
+      - Content-Type
+      X-Frame-Options:
+      - SAMEORIGIN
+      Cf-Cache-Status:
+      - DYNAMIC
+      Strict-Transport-Security:
+      - max-age=15552000; includeSubDomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 8016c1e5ac731ca2-AMS
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"email":"","domain":"zerobounce.net","format":"first.last","status":"","sub_status":"","confidence":"high","did_you_mean":"","failure_reason":"","other_domain_formats":[{"format":"first","confidence":"high"},{"format":"last.first","confidence":"high"},{"format":"lfirst","confidence":"high"},{"format":"lastfirst","confidence":"high"},{"format":"firstl","confidence":"high"},{"format":"last","confidence":"medium"},{"format":"first.middle.last","confidence":"medium"},{"format":"first-last","confidence":"medium"},{"format":"l.first","confidence":"medium"},{"format":"f.last","confidence":"medium"},{"format":"f-last","confidence":"medium"},{"format":"first.l","confidence":"medium"},{"format":"first-l","confidence":"medium"},{"format":"firstlast","confidence":"medium"},{"format":"first_l","confidence":"medium"},{"format":"f_last","confidence":"medium"},{"format":"last.f","confidence":"medium"},{"format":"last-f","confidence":"medium"},{"format":"last-first","confidence":"medium"},{"format":"first_last","confidence":"medium"},{"format":"last_f","confidence":"medium"},{"format":"last_first","confidence":"medium"},{"format":"flast","confidence":"medium"},{"format":"lastf","confidence":"medium"},{"format":"l-first","confidence":"low"},{"format":"l_first","confidence":"low"}]}'
+  recorded_at: Mon, 04 Sep 2023 14:00:12 GMT
+recorded_with: VCR 6.1.0

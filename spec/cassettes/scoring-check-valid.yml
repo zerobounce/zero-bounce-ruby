@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/scoring/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=4b887ccf-608c-436b-afc2-5220b73542b6
+    uri: https://bulkapi.zerobounce.net/v2/scoring/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=0ed15060-38de-4a7f-a21d-5a68a07329bb
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Thu, 04 May 2023 14:06:22 GMT
+      - Mon, 04 Sep 2023 14:00:07 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -29,8 +29,8 @@ http_interactions:
       Connection:
       - keep-alive
       Vary:
-      - Accept, Origin
       - Accept-Encoding
+      - Origin
       Allow:
       - GET, HEAD, OPTIONS
       X-Frame-Options:
@@ -58,20 +58,20 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=5VpjdLYg0LbqnPrdIP1GpS.UJ9tNF1VnnwJvFz.I6iA-1683209182-0-ASHD8eK6xnlme+Zs+lAoo8q3dkCgtUvXKNTSVugXL87KBSJiK+yiRPpLgDU2AZtxQa/ewwk5T8xO7d6JmQiUC4Q=;
-        path=/; expires=Thu, 04-May-23 14:36:22 GMT; domain=.zerobounce.net; HttpOnly;
+      - __cf_bm=cROVO6J2TZGD2GC0v562jFMZ4rxfff0eWNxPfUmtNCY-1693836007-0-AdK0+U0reW1JoOQrdhhvJSzrti53KEeBYfHRo7qM7NH0XMjVXWgiDy76wc2PROUTllR8DKV6OneGfKL4uZepFOg=;
+        path=/; expires=Mon, 04-Sep-23 14:30:07 GMT; domain=.zerobounce.net; HttpOnly;
         Secure; SameSite=None
-      - __cflb=02DiuJXghHGgGEKfEQbhUWr7g7HeZCiFxeUpUKmy896ag; SameSite=None; Secure;
-        path=/; expires=Fri, 05-May-23 13:06:22 GMT; HttpOnly
+      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8qs6sXNWVAaE6Q; SameSite=None; Secure;
+        path=/; expires=Tue, 05-Sep-23 13:00:07 GMT; HttpOnly
       Server:
       - cloudflare
       Cf-Ray:
-      - 7c214dcd5bf3053f-OTP
+      - 8016c1c85cdc1c90-AMS
       Alt-Svc:
-      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+      - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"success":true,"file_id":"4b887ccf-608c-436b-afc2-5220b73542b6","file_name":"scoring.csv","upload_date":"2023-05-04T14:03:34Z","file_status":"Complete","complete_percentage":"100%
+      string: '{"success":true,"file_id":"0ed15060-38de-4a7f-a21d-5a68a07329bb","file_name":"scoring.csv","upload_date":"2023-09-04T14:00:04Z","file_status":"Complete","complete_percentage":"100%
         Complete.","return_url":null}'
-  recorded_at: Thu, 04 May 2023 14:06:22 GMT
+  recorded_at: Mon, 04 Sep 2023 14:00:07 GMT
 recorded_with: VCR 6.1.0

@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=64b99739-4d5f-4ef5-bc70-d427d167717f
+    uri: https://bulkapi.zerobounce.net/v2/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=95774336-639d-42b6-a238-2dd4e8717243
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Thu, 04 May 2023 14:14:08 GMT
+      - Mon, 04 Sep 2023 14:00:04 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -29,8 +29,8 @@ http_interactions:
       Connection:
       - keep-alive
       Vary:
-      - Accept, Origin
       - Accept-Encoding
+      - Origin
       Allow:
       - GET, HEAD, OPTIONS
       X-Frame-Options:
@@ -58,19 +58,19 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=0mcXvSkyyQceCtM4JQgVFo1Z6MvrDCQgGCO50Gwhpxw-1683209648-0-Af9HG91ntvsxjGVKQ/FtFGlPeIlzkscxyw4BuKAYmnW35Ke9ujtLW9ZTqw5dpqyuo7qJ+j8bWAT4cnl6Y++SXf4=;
-        path=/; expires=Thu, 04-May-23 14:44:08 GMT; domain=.zerobounce.net; HttpOnly;
+      - __cf_bm=V_74RkQGGZO2Amv0A7A3kvl9JL6HqfaOIjggzBJ4SmU-1693836004-0-ASwusCLc+y0LJ2LUkTlJxvC5KLXnKpXZMiFnDW0p2mNHXjcbpZW9ZFlKBaZQB/+5bSeXxpCaDgkNDzwlYbYoNXk=;
+        path=/; expires=Mon, 04-Sep-23 14:30:04 GMT; domain=.zerobounce.net; HttpOnly;
         Secure; SameSite=None
-      - __cflb=02DiuJXghHGgGEKfEQatRnNkJ2DwhNuMJrUShZAmsHNy2; SameSite=None; Secure;
-        path=/; expires=Fri, 05-May-23 13:14:08 GMT; HttpOnly
+      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8qptQxmpYHmEdA; SameSite=None; Secure;
+        path=/; expires=Tue, 05-Sep-23 13:00:04 GMT; HttpOnly
       Server:
       - cloudflare
       Cf-Ray:
-      - 7c21592d0de36259-OTP
+      - 8016c1b0c9a9b8c7-AMS
       Alt-Svc:
-      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+      - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"success":true,"message":"File Deleted","file_name":"validation.csv","file_id":"64b99739-4d5f-4ef5-bc70-d427d167717f"}'
-  recorded_at: Thu, 04 May 2023 14:14:08 GMT
+      string: '{"success":false,"message":"File cannot be found."}'
+  recorded_at: Mon, 04 Sep 2023 14:00:04 GMT
 recorded_with: VCR 6.1.0

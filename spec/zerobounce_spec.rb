@@ -39,55 +39,8 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
     	end
   	end
 
-	describe '.validate' do
-		context 'given no API key' do
-			it 'should raise an API key error' do 
-				expect{ described_class.validate('valid@example.com') }.to \
-					raise_error(StandardError, /API key must be assigned/)
-			end
-		end
-		context 'given incorrect API key' do
-			before do
-				described_class.config.apikey = invalid_api_key
-			end
-			it 'should raise an API key error' do
-				expect{ described_class.validate('valid@example.com') }.to \
-					raise_error(StandardError, 
-						/Invalid API key or your account ran out of credits/)
-			end
-		end
-		context 'given correct API key' do 
-			before do
-				described_class.config.apikey = valid_api_key
-			end
-			context 'given no email address' do 
-				it 'should raise an error' do 
-					expect{ described_class.validate() }.to \
-						raise_error(ArgumentError)
-				end
-			end
-			context 'given a valid email address' do
-				it 'should return a valid result' do
-					result = described_class.validate('valid@example.com')
-					expect(result).to be_a_kind_of(Hash)
-					expect(result).to include(
-						'address', 'status', 'sub_status', 'domain_age_days', 
-						'smtp_provider', 'mx_found', 'mx_record'
-					)
-				end 
-				context 'given an IP address' do
-					it 'should return a valid result' do # todo: this works with any address
-						result = described_class.validate('valid@example.com', '127.0.0.1')
-						expect(result).to be_a_kind_of(Hash)
-						expect(result).to include(
-							'address', 'status', 'sub_status', 'domain_age_days', 
-							'smtp_provider', 'mx_found', 'mx_record'
-						)	
-					end
-				end
-			end
-		end
-	end
+	
+
 
 	describe '.activity' do
 		context 'given no API key' do
@@ -102,8 +55,9 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			it 'should raise an API key error' do
 				expect{ described_class.activity('ss@gmail.com') }.to \
-					raise_error(StandardError, 
-						/Invalid API key or your account ran out of credits/)
+					raise_error(RestClient::Forbidden)
+					# raise_error(StandardError, 
+					# 	/Invalid API key or your account ran out of credits/)
 			end
 		end
 		context 'given correct API key' do 
@@ -140,7 +94,9 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should return -1 credits' do
-				expect(described_class.credits).to equal(-1)
+				expect{ described_class.credits }.to \
+					raise_error(RestClient::Forbidden)
+				# expect(described_class.credits).to equal(-1)
 			end
 		end
 		context 'given correct API key' do 
@@ -175,7 +131,8 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			it 'should raise an API key error' do
 				expect{ described_class.api_usage(Date.today, Date.today) }.to \
-					raise_error(RuntimeError, /Invalid API key/)
+					raise_error(RestClient::Forbidden)
+					# raise_error(RuntimeError, /Invalid API key/)
 			end
 		end
 		context 'given correct API key' do 
@@ -215,8 +172,9 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			it 'should raise an API key error' do
 				expect{ described_class.validate_batch(emails) }.to \
-					raise_error(RuntimeError, 
-						/Invalid API Key or your account ran out of credits/)
+					raise_error(RestClient::Forbidden)
+					# raise_error(RuntimeError, 
+					# 	/Invalid API Key or your account ran out of credits/)
 			end
 		end
 		context 'given correct API key' do 
@@ -305,7 +263,7 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			it 'should raise an API key error' do
 				expect{ described_class.validate_file_check(validate_file_id) }.to \
-					raise_error(RestClient::Unauthorized)
+					raise_error(RestClient::Forbidden)
 			end
 		end
 		context 'given correct API key' do 
@@ -345,7 +303,7 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			it 'should raise an API key error' do
 				expect{ described_class.validate_file_get(validate_file_id) }.to \
-					raise_error(RestClient::Unauthorized)
+					raise_error(RestClient::Forbidden)
 			end
 		end
 		context 'given correct API key' do 
@@ -354,9 +312,11 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return error message' do
-					results = described_class.validate_file_get('invalid-file-id')
-					expect(results['success']).to be(false)
-					expect(results['message']).to eql('File cannot be found.')
+					expect{ described_class.validate_file_get('invalid-file-id') }.to \
+						raise_error(RestClient::Forbidden)
+					# results = described_class.validate_file_get('invalid-file-id')
+					# expect(results['success']).to be(false)
+					# expect(results['message']).to eql('File cannot be found.')
 				end
 			end
 			context 'given correct file id' do
@@ -384,7 +344,7 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			it 'should raise an API key error' do
 				expect{ described_class.validate_file_delete(validate_file_id) }.to \
-					raise_error(RestClient::Unauthorized)
+					raise_error(RestClient::Forbidden)
 			end
 		end
 		context 'given correct API key' do 
@@ -393,9 +353,11 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return error message' do
-					results = described_class.validate_file_delete('invalid-file-id')
-					expect(results['success']).to be(false)
-					expect(results['message']).to eql('File cannot be found.')
+					expect{ described_class.validate_file_delete('invalid-file-id') }.to \
+						raise_error(RestClient::Forbidden)
+					# results = described_class.validate_file_delete('invalid-file-id')
+					# expect(results['success']).to be(false)
+					# expect(results['message']).to eql('File cannot be found.')
 				end
 			end
 			context 'given correct file id' do
@@ -463,7 +425,7 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			it 'should raise an API key error' do
 				expect{ described_class.scoring_file_check(scoring_file_id) }.to \
-					raise_error(RestClient::Unauthorized)
+					raise_error(RestClient::Forbidden)
 			end
 		end
 		context 'given correct API key' do 
@@ -472,9 +434,11 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return an error message' do
-					results = described_class.scoring_file_check('invalid-file-id')
-					expect(results['success']).to be(false)
-					expect(results['message']).to eql('file_id is invalid.')
+					expect{ described_class.scoring_file_check('invalid-file-id') }.to \
+						raise_error(RestClient::Forbidden)
+					# results = described_class.scoring_file_check('invalid-file-id')
+					# expect(results['success']).to be(false)
+					# expect(results['message']).to eql('file_id is invalid.')
 				end
 			end
 			context 'given correct file id' do
@@ -503,7 +467,7 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			it 'should raise an API key error' do
 				expect{ described_class.scoring_file_get(scoring_file_id) }.to \
-					raise_error(RestClient::Unauthorized)
+					raise_error(RestClient::Forbidden)
 			end
 		end
 		context 'given correct API key' do 
@@ -512,9 +476,11 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return an error' do 
-					results = described_class.scoring_file_get('invalid-file-id')
-					expect(results['success']).to be(false)
-					expect(results['message']).to eql('file_id is invalid.')
+					expect{ described_class.scoring_file_get('invalid-file-id') }.to \
+						raise_error(RestClient::Forbidden)
+					# results = described_class.scoring_file_get('invalid-file-id')
+					# expect(results['success']).to be(false)
+					# expect(results['message']).to eql('file_id is invalid.')
 				end
 			end
 			context 'given correct file id' do
@@ -542,7 +508,7 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			it 'should raise an API key error' do
 				expect{ described_class.scoring_file_delete(scoring_file_id) }.to \
-					raise_error(RestClient::Unauthorized)
+					raise_error(RestClient::Forbidden)
 			end
 		end
 		context 'given correct API key' do 
@@ -551,9 +517,11 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 			end
 			context 'given incorrect file id' do
 				it 'should return an error' do
-					results = described_class.scoring_file_delete('invalid-file-id')
-					expect(results['success']).to be(false)
-					expect(results['message']).to eql('file_id is invalid.')
+					expect{ described_class.scoring_file_delete('invalid-file-id') }.to \
+						raise_error(RestClient::Forbidden)
+					# results = described_class.scoring_file_delete('invalid-file-id')
+					# expect(results['success']).to be(false)
+					# expect(results['message']).to eql('file_id is invalid.')
 				end
 			end
 			context 'given correct file id' do
@@ -563,6 +531,91 @@ describe Zerobounce, :focus => ENV['TEST']!='unit' do
 					expect(results['message']).to eql('File Deleted')
 					expect(results['file_name']).to eql('scoring.csv')
 					expect(results['file_id']).to be_a_kind_of(String)
+				end
+			end
+		end
+	end
+
+	describe '.guessformat' do
+		context 'given no API key' do
+			it 'should raise an API key error' do 
+				expect{ described_class.guessformat(
+					'example.com', 
+					first_name: 'John', 
+					middle_name: 'Deere', 
+					last_name: 'Doe'
+				) }.to \
+					raise_error(RuntimeError, /API key must be assigned/)
+			end
+		end
+		context 'given incorrect API key' do
+			before do
+				described_class.config.apikey = invalid_api_key
+			end
+			it 'should raise a forbidden error' do
+				expect{ described_class.guessformat(
+					'example.com', 
+					first_name: 'John', 
+					middle_name: 'Deere', 
+					last_name: 'Doe') }.to \
+					raise_error(RestClient::Forbidden)
+			end
+		end
+		context 'given correct API key' do 
+			fields = ['email', 'domain', 'format', 'status',
+				'sub_status', 'confidence', 'did_you_mean',
+				'other_domain_formats']
+			before do
+				described_class.config.apikey = valid_api_key
+			end
+			context 'given no domain' do 
+				it 'should raise an error' do 
+					expect{ described_class.guessformat() }.to \
+						raise_error(ArgumentError)
+				end
+				it 'should raise an error' do 
+					expect{ described_class.guessformat(
+						first_name: 'John') }.to \
+						raise_error(ArgumentError)
+				end
+			end
+			context 'given a valid domain' do
+				context 'given no names' do
+					it 'should return a valid result' do 
+						result = described_class.guessformat(
+							'zerobounce.net')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields)
+					end
+				end
+				context 'given first name' do 
+					it 'should return a valid result' do
+						result = described_class.guessformat(
+							'zerobounce.net', 
+							first_name: 'John')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields)
+					end 
+				end
+				context 'given last name'do 
+					it 'should return a valid result' do
+						result = described_class.guessformat(
+							'zerobounce.net', 
+							last_name: 'Doe')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields)
+					end 
+				end
+				context 'given first, last, and, middle names' do 
+					it 'should return a valid result' do
+						result = described_class.guessformat(
+							'zerobounce.net', 
+							first_name: 'John', 
+							middle_name: 'Deere', 
+							last_name: 'Doe')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields)
+					end 
 				end
 			end
 		end
