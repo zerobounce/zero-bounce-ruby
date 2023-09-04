@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    zerobounce-sdk (1.0.1)
+    zerobounce-sdk (1.1.0)
       rest-client (~> 2.1)
 
 GEM

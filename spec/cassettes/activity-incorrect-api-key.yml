@@ -21,7 +21,7 @@ http_interactions:
       message: Forbidden
     headers:
       Date:
-      - Mon, 04 Sep 2023 12:11:04 GMT
+      - Mon, 04 Sep 2023 13:59:52 GMT
       Content-Type:
       - text/html; charset=UTF-8
       Transfer-Encoding:
@@ -45,7 +45,7 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 80162207b9b228ad-AMS
+      - 8016c169cc290e87-AMS
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
@@ -99,11 +99,11 @@ http_interactions:
         <div class="cf-error-wrapper" id="error-details"><p class="cf-error-details-endpoint">I got an error when visiting api.zerobounce.net/v2/activity?email=ss%40gmail.com&amp;api_key=thiskeyisinvalidorotherwiseincorrect.</p>
 
         <p>Error code: 1020</p>
-        <p>Ray ID: 80162207b9b228ad</p>
+        <p>Ray ID: 8016c169cc290e87</p>
         <p>Country: NL</p>
-        <p>Data center: ams07</p>
+        <p>Data center: ams15</p>
         <p>IP: 128.199.59.231</p>
-        <p>Timestamp: 2023-09-04 12:11:04 UTC</p>
+        <p>Timestamp: 2023-09-04 13:59:52 UTC</p>
         </div>
                           <p class="cf-copy-label hidden" id="copy-label">Click to copy</p>
                        </button>
@@ -134,5 +134,5 @@ http_interactions:
            </div>
         </body>
         </html>
-  recorded_at: Mon, 04 Sep 2023 12:11:04 GMT
+  recorded_at: Mon, 04 Sep 2023 13:59:52 GMT
 recorded_with: VCR 6.1.0

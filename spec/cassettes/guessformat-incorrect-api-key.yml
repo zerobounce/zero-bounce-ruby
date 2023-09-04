@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/validate?api_key=thiskeyisinvalidorotherwiseincorrect&email=valid@example.com&ip_address
+    uri: https://api.zerobounce.net/v2/guessformat?api_key=thiskeyisinvalidorotherwiseincorrect&domain=example.com&first_name=John&last_name=Doe&middle_name=Deere
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: Forbidden
     headers:
       Date:
-      - Mon, 04 Sep 2023 13:59:51 GMT
+      - Mon, 04 Sep 2023 14:00:12 GMT
       Content-Type:
       - text/html; charset=UTF-8
       Transfer-Encoding:
@@ -45,7 +45,7 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 8016c161aef90eab-AMS
+      - 8016c1e3af2c0e8c-AMS
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
@@ -96,14 +96,14 @@ http_interactions:
                     <div class="cf-expandable-error-info hidden">
                        <p class="cf-error-copy-description">Provide the site owner this information.</p>
                        <button class="cf-click-to-copy-btn" id="click-to-copy-btn" title="Click to copy" type="button">
-        <div class="cf-error-wrapper" id="error-details"><p class="cf-error-details-endpoint">I got an error when visiting api.zerobounce.net/v2/validate?email=valid%40example.com&amp;ip_address&amp;api_key=thiskeyisinvalidorotherwiseincorrect.</p>
+        <div class="cf-error-wrapper" id="error-details"><p class="cf-error-details-endpoint">I got an error when visiting api.zerobounce.net/v2/guessformat?domain=example.com&amp;first_name=John&amp;middle_name=Deere&amp;last_name=Doe&amp;api_key=thiskeyisinvalidorotherwiseincorrect.</p>
 
         <p>Error code: 1020</p>
-        <p>Ray ID: 8016c161aef90eab</p>
+        <p>Ray ID: 8016c1e3af2c0e8c</p>
         <p>Country: NL</p>
         <p>Data center: ams15</p>
         <p>IP: 128.199.59.231</p>
-        <p>Timestamp: 2023-09-04 13:59:51 UTC</p>
+        <p>Timestamp: 2023-09-04 14:00:12 UTC</p>
         </div>
                           <p class="cf-copy-label hidden" id="copy-label">Click to copy</p>
                        </button>
@@ -134,5 +134,5 @@ http_interactions:
            </div>
         </body>
         </html>
-  recorded_at: Mon, 04 Sep 2023 13:59:51 GMT
+  recorded_at: Mon, 04 Sep 2023 14:00:12 GMT
 recorded_with: VCR 6.1.0

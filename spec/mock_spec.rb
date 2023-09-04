@@ -668,4 +668,103 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 		end
 	end
 
+	describe '.guessformat' do
+		context 'given no API key' do
+			it 'should raise an API key error' do 
+				expect{ described_class.guessformat(
+					'example.com', 
+					first_name: 'John', 
+					middle_name: 'Deere', 
+					last_name: 'Doe'
+				) }.to \
+					raise_error(RuntimeError, /API key must be assigned/)
+			end
+		end
+		context 'given incorrect API key' do
+			before do
+				described_class.config.apikey = invalid_api_key
+			end
+			it 'should raise a forbidden error' do
+				VCR.use_cassette 'guessformat-incorrect-api-key' do
+				expect{ described_class.guessformat(
+					'example.com', 
+					first_name: 'John', 
+					middle_name: 'Deere', 
+					last_name: 'Doe') }.to \
+					raise_error(RestClient::Forbidden)
+				end
+			end
+		end
+		context 'given correct API key' do 
+			fields = ['email', 'domain', 'format', 'status',
+				'sub_status', 'confidence', 'did_you_mean',
+				'other_domain_formats']
+			before do
+				described_class.config.apikey = valid_api_key
+			end
+			context 'given no domain' do 
+				context 'given no names' do 
+					it 'should raise an error' do 
+						expect{ described_class.guessformat() }.to \
+							raise_error(ArgumentError)
+					end
+				end
+				context 'given first_name' do 
+					it 'should raise an error' do 
+						expect{ described_class.guessformat(
+							first_name: 'John') }.to \
+							raise_error(ArgumentError)
+					end
+				end
+			end
+			context 'given a valid domain' do
+				context 'given no names' do
+					it 'should return a valid result' do 
+						VCR.use_cassette 'guessformat-valid-domain-no-names' do
+						result = described_class.guessformat(
+							'zerobounce.net')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields)
+						end
+					end
+				end
+				context 'given first name' do 
+					it 'should return a valid result' do
+						VCR.use_cassette 'guessformat-valid-domain-first-name' do
+						result = described_class.guessformat(
+							'zerobounce.net', 
+							first_name: 'John')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields)
+						end
+					end 
+				end
+				context 'given last name'do 
+					it 'should return a valid result' do
+						VCR.use_cassette 'guessformat-valid-domain-last-name' do
+						result = described_class.guessformat(
+							'zerobounce.net', 
+							last_name: 'Doe')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields)
+						end
+					end 
+				end
+				context 'given first, last, and, middle names' do 
+					it 'should return a valid result' do
+						VCR.use_cassette 'guessformat-valid-domain-all-names' do
+						result = described_class.guessformat(
+							'zerobounce.net', 
+							first_name: 'John', 
+							middle_name: 'Deere', 
+							last_name: 'Doe')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields)
+						end
+					end 
+				end
+			end
+		end
+	end
+
 end
