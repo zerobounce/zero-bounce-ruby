@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/scoring/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=4b887ccf-608c-436b-afc2-5220b73542b6
+    uri: https://bulkapi.zerobounce.net/v2/scoring/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=99171bb6-b31c-448c-92d6-d87817094305
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Thu, 04 May 2023 14:08:46 GMT
+      - Mon, 04 Sep 2023 12:11:20 GMT
       Content-Type:
       - application/octet-stream
       Content-Length:
@@ -30,10 +30,10 @@ http_interactions:
       - keep-alive
       Content-Disposition:
       - attachment; filename=scoring_all_results.csv; filename*=UTF-8''scoring_all_results.csv
-      Vary:
-      - Accept, Origin
       Allow:
       - GET, HEAD, OPTIONS
+      Vary:
+      - Origin
       X-Frame-Options:
       - DENY
       X-Content-Type-Options:
@@ -59,19 +59,19 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=Jc7xYAGIrRrrfBOkv6iNLB2rX8f5oTlurN.b21cdxTY-1683209326-0-AWDvevQp5baWkx1qrwJ21AxgNGdBmK8MB/y2aqy9YO0ooTPmZrthmwXOX0+dl1FzVPNSNax2JP0eANo/CaFs+ow=;
-        path=/; expires=Thu, 04-May-23 14:38:46 GMT; domain=.zerobounce.net; HttpOnly;
+      - __cf_bm=W6N1pqdCUIRnt3A3uQPBvGVbqYRkK5HvCuArnwlO_t0-1693829480-0-Ac4VYp64Glfta5P7nCjdCnVONeeRDmgwbcStPXNL/RF90WoNE8VMr2SZ+1x2aNEzkU/mhcxgk7xAmK7c1q1FEIU=;
+        path=/; expires=Mon, 04-Sep-23 12:41:20 GMT; domain=.zerobounce.net; HttpOnly;
         Secure; SameSite=None
-      - __cflb=02DiuJXghHGgGEKfEQbhUWr7g7HeZCiFxrJ6WBo9wxKgp; SameSite=None; Secure;
-        path=/; expires=Fri, 05-May-23 13:08:46 GMT; HttpOnly
+      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8qshAHGMy2gswS; SameSite=None; Secure;
+        path=/; expires=Tue, 05-Sep-23 11:11:20 GMT; HttpOnly
       Server:
       - cloudflare
       Cf-Ray:
-      - 7c2151522d930538-OTP
+      - 8016226c8db90b32-AMS
       Alt-Svc:
-      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+      - h3=":443"; ma=86400
     body:
       encoding: UTF-8
       string: "\"email\",\"ZeroBounceQualityScore\"\r\n\"disposable@example.com\",\"0\"\r\n\"invalid@example.com\",\"10\"\r\n\"valid@example.com\",\"10\"\r\n\"toxic@example.com\",\"2\"\r\n\"donotmail@example.com\",\"0\"\r\n\"spamtrap@example.com\",\"0\"\r\n\"abuse@example.com\",\"10\"\r\n\"unknown@example.com\",\"10\"\r\n\"catch_all@example.com\",\"10\"\r\n\"antispam_system@example.com\",\"0\"\r\n\"does_not_accept_mail@example.com\",\"0\"\r\n\"exception_occurred@example.com\",\"0\"\r\n\"failed_smtp_connection@example.com\",\"0\"\r\n\"failed_syntax_check@example.com\",\"0\"\r\n\"forcible_disconnect@example.com\",\"0\"\r\n\"global_suppression@example.com\",\"0\"\r\n\"greylisted@example.com\",\"0\"\r\n\"leading_period_removed@example.com\",\"0\"\r\n\"mail_server_did_not_respond@example.com\",\"0\"\r\n\"mail_server_temporary_error@example.com\",\"0\"\r\n\"mailbox_quota_exceeded@example.com\",\"0\"\r\n\"mailbox_not_found@example.com\",\"0\"\r\n\"no_dns_entries@example.com\",\"0\"\r\n\"possible_trap@example.com\",\"0\"\r\n\"possible_typo@example.com\",\"0\"\r\n\"role_based@example.com\",\"0\"\r\n\"timeout_exceeded@example.com\",\"0\"\r\n\"unroutable_ip_address@example.com\",\"0\"\r\n\"free_email@example.com\",\"0\"\r\n\"role_based_catch_all@example.com\",\"0\""
-  recorded_at: Thu, 04 May 2023 14:08:46 GMT
+  recorded_at: Mon, 04 Sep 2023 12:11:20 GMT
 recorded_with: VCR 6.1.0

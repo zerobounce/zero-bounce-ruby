@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Thu, 04 May 2023 13:45:20 GMT
+      - Mon, 04 Sep 2023 12:11:05 GMT
       Content-Type:
       - application/json
       Content-Length:
@@ -45,11 +45,11 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 7c212f01fa1098b8-OTP
+      - 8016220f6950b902-AMS
       Alt-Svc:
-      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+      - h3=":443"; ma=86400
     body:
       encoding: UTF-8
-      string: '{"Credits":"499601"}'
-  recorded_at: Thu, 04 May 2023 13:45:20 GMT
+      string: '{"Credits":"499051"}'
+  recorded_at: Mon, 04 Sep 2023 12:11:05 GMT
 recorded_with: VCR 6.1.0

@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/scoring/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=4b887ccf-608c-436b-afc2-5220b73542b6
+    uri: https://bulkapi.zerobounce.net/v2/scoring/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=99171bb6-b31c-448c-92d6-d87817094305
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Thu, 04 May 2023 14:10:24 GMT
+      - Mon, 04 Sep 2023 12:11:22 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -29,8 +29,8 @@ http_interactions:
       Connection:
       - keep-alive
       Vary:
-      - Accept, Origin
       - Accept-Encoding
+      - Origin
       Allow:
       - GET, HEAD, OPTIONS
       X-Frame-Options:
@@ -58,19 +58,19 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=8.Ff2xnMa7va1I26BsqUpFueU87ERZFyUgCLvr8RlHc-1683209424-0-AQeDyZE9KtDqfysskV7camJp5v2n8GmvqRwi0mQGHI9lEB/1HtF6frSOrU561tlcfVtrTnl8w2Y62oy+RDTLHqo=;
-        path=/; expires=Thu, 04-May-23 14:40:24 GMT; domain=.zerobounce.net; HttpOnly;
+      - __cf_bm=EhutHse.jgy3nVjZJ11TsAR2tGq8McB1Wlw6WQ4Tuok-1693829482-0-ATJO+DqFnbNlfarVWe95hX4TKeXLLNALtLrrBU78GPods9QzpEEoCy05ASIqil6/ZcKyrccdjq0kw9GvmwZCltk=;
+        path=/; expires=Mon, 04-Sep-23 12:41:22 GMT; domain=.zerobounce.net; HttpOnly;
         Secure; SameSite=None
-      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8qZuJx3AqqsxdJ; SameSite=None; Secure;
-        path=/; expires=Fri, 05-May-23 13:10:24 GMT; HttpOnly
+      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8quAoKfVGHECvG; SameSite=None; Secure;
+        path=/; expires=Tue, 05-Sep-23 11:11:22 GMT; HttpOnly
       Server:
       - cloudflare
       Cf-Ray:
-      - 7c2153b75f3b98a8-OTP
+      - 801622787d6c415a-AMS
       Alt-Svc:
-      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+      - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"success":true,"message":"File Deleted","file_name":"scoring.csv","file_id":"4b887ccf-608c-436b-afc2-5220b73542b6"}'
-  recorded_at: Thu, 04 May 2023 14:10:24 GMT
+      string: '{"success":true,"message":"File Deleted","file_name":"scoring.csv","file_id":"99171bb6-b31c-448c-92d6-d87817094305"}'
+  recorded_at: Mon, 04 Sep 2023 12:11:22 GMT
 recorded_with: VCR 6.1.0
