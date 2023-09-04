@@ -361,6 +361,50 @@ Zerobounce.validate_file_delete(file_id)
 ```
 
 
+### Email Finder
+
+Guess Format
+```ruby
+Zerobounce.guessformat("zerobounce.net")
+=>
+{"email"=>"",
+ "domain"=>"zerobounce.net",
+ "format"=>"first.last",
+ "status"=>"",
+ "sub_status"=>"",
+ "confidence"=>"high",
+ "did_you_mean"=>"",
+ "failure_reason"=>"",
+ "other_domain_formats"=>
+  [{"format"=>"first", "confidence"=>"high"},
+   {"format"=>"last.first", "confidence"=>"high"},
+   {"format"=>"lfirst", "confidence"=>"high"},
+   {"format"=>"lastfirst", "confidence"=>"high"},
+   {"format"=>"firstl", "confidence"=>"high"},
+   {"format"=>"last", "confidence"=>"medium"},
+   {"format"=>"first.middle.last", "confidence"=>"medium"},
+   {"format"=>"first-last", "confidence"=>"medium"},
+   {"format"=>"l.first", "confidence"=>"medium"},
+   {"format"=>"f.last", "confidence"=>"medium"},
+   {"format"=>"f-last", "confidence"=>"medium"},
+   {"format"=>"first.l", "confidence"=>"medium"},
+   {"format"=>"first-l", "confidence"=>"medium"},
+   {"format"=>"firstlast", "confidence"=>"medium"},
+   {"format"=>"first_l", "confidence"=>"medium"},
+   {"format"=>"f_last", "confidence"=>"medium"},
+   {"format"=>"last.f", "confidence"=>"medium"},
+   {"format"=>"last-f", "confidence"=>"medium"},
+   {"format"=>"last-first", "confidence"=>"medium"},
+   {"format"=>"first_last", "confidence"=>"medium"},
+   {"format"=>"last_f", "confidence"=>"medium"},
+   {"format"=>"last_first", "confidence"=>"medium"},
+   {"format"=>"flast", "confidence"=>"medium"},
+   {"format"=>"lastf", "confidence"=>"medium"},
+   {"format"=>"l-first", "confidence"=>"low"},
+   {"format"=>"l_first", "confidence"=>"low"}]}
+# Zerobounce.guessformat("zerobounce.net", first_name: "John", middle_name: 'Deere', last_name: "Doe")
+```
+
 ## Development
 
 After checking out the repo run tests

@@ -379,7 +379,53 @@ module Zerobounce
       @@request.bulk_get('scoring/deletefile', params)
     end
 
-
+    # Guess email formatDomain to guess format for
+    # 
+    # @param [String] domain Domain to guess format for
+    #
+    # @option [String] first_name   First name of target.
+    # @option [String] middle_name  Middle name of target.
+    # @option [String] last_name    Last name of target.
+    # 
+    # @return [Hash]
+    # {
+    # 	"email"=>"",
+    #   "domain"=>"zerobounce.net",
+    #   "format"=>"first.last",
+    #    "status"=>"",
+    #    "sub_status"=>"",
+    #    "confidence"=>"high",
+    #    "did_you_mean"=>"",
+    #    "failure_reason"=>"",
+    #    "other_domain_formats"=> [
+    # 	    {"format"=>"first", "confidence"=>"high"},
+    # 	    {"format"=>"last.first", "confidence"=>"high"},
+    # 	    {"format"=>"lfirst", "confidence"=>"high"},
+    # 	    {"format"=>"lastfirst", "confidence"=>"high"},
+    # 	    {"format"=>"firstl", "confidence"=>"high"},
+    # 	    {"format"=>"last", "confidence"=>"medium"},
+    # 	    {"format"=>"first.middle.last", "confidence"=>"medium"},
+    # 	    {"format"=>"first-last", "confidence"=>"medium"},
+    # 	    {"format"=>"l.first", "confidence"=>"medium"},
+    # 	    {"format"=>"f.last", "confidence"=>"medium"},
+    # 	    {"format"=>"f-last", "confidence"=>"medium"},
+    # 	    {"format"=>"first.l", "confidence"=>"medium"},
+    # 	    {"format"=>"first-l", "confidence"=>"medium"},
+    # 	    {"format"=>"firstlast", "confidence"=>"medium"},
+    # 	    {"format"=>"first_l", "confidence"=>"medium"},
+    # 	    {"format"=>"f_last", "confidence"=>"medium"},
+    # 	    {"format"=>"last.f", "confidence"=>"medium"},
+    # 	    {"format"=>"last-f", "confidence"=>"medium"},
+    # 	    {"format"=>"last-first", "confidence"=>"medium"},
+    # 	    {"format"=>"first_last", "confidence"=>"medium"},
+    # 	    {"format"=>"last_f", "confidence"=>"medium"},
+    # 	    {"format"=>"last_first", "confidence"=>"medium"},
+    # 	    {"format"=>"flast", "confidence"=>"medium"},
+    # 	    {"format"=>"lastf", "confidence"=>"medium"},
+    # 	    {"format"=>"l-first", "confidence"=>"low"},
+    # 	    {"format"=>"l_first", "confidence"=>"low"}
+    #    ]
+    # }
     def guessformat(domain, first_name: '', middle_name: '', last_name: '')
       params = {
         domain: domain
