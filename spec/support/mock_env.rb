@@ -1,7 +1,9 @@
 # frozen_string_literal: true
+require 'dotenv'
 
 RSpec.configure do |config|
-  config.around(mock_env: true) do |example|
+    Dotenv.load
+    config.around(mock_env: true) do |example|
     original_env = ENV.to_h
 
     begin

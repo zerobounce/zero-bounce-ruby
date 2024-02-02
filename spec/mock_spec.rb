@@ -16,6 +16,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 
 	let (:valid_api_key) { ENV['ZEROBOUNCE_API_KEY'] }
 	let (:invalid_api_key) { ENV['INCORRECT_API_KEY'] }
+	let (:test_date) { Date.new(2023,9,4) }
 
         it 'should run mock tests' do
                 puts 'running mock tests'
@@ -186,15 +187,15 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 		context 'wrong number of parameters' do
 			it 'should raise ArgumentError' do
 				expect{ described_class.api_usage }.to raise_error(ArgumentError)
-				expect{ described_class.api_usage(Date.today) }.to \
+				expect{ described_class.api_usage(test_date) }.to \
 					raise_error(ArgumentError)
-				expect{ described_class.api_usage(Date.today, 'b') }.to \
+				expect{ described_class.api_usage(test_date, 'b') }.to \
 					raise_error(ArgumentError)
 			end
 		end
 		context 'given no API key' do
 			it 'should raise an API key error' do 
-				expect{ described_class.api_usage(Date.today, Date.today)}.to \
+				expect{ described_class.api_usage(test_date, test_date)}.to \
 					raise_error(StandardError, /API key must be assigned/)
 			end
 		end
@@ -204,7 +205,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			it 'should raise an API key error' do
 				VCR.use_cassette 'api-usage-incorrect-api-key' do
-				expect{ described_class.api_usage(Date.today, Date.today) }.to \
+				expect{ described_class.api_usage(test_date, test_date) }.to \
 					raise_error(RestClient::Forbidden)
 					# raise_error(RuntimeError, /Invalid API key/)
 				end
@@ -216,7 +217,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			end
 			it 'should return API usage statistics' do 
 				VCR.use_cassette 'api-usage-valid' do
-				result = described_class.api_usage(Date.today, Date.today)
+				result = described_class.api_usage(test_date, test_date)
 				expect(result).to be_a_kind_of(Hash)
 				expect(result).to include(
 					'total', 'status_valid', 'status_invalid', 'status_catch_all',

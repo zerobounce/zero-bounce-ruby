@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     zerobounce-sdk (1.1.0)
+      dotenv (~> 2.8.1)
       rest-client (~> 2.1)
 
 GEM
@@ -17,6 +18,7 @@ GEM
     docile (1.4.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
+    dotenv (2.8.1)
     hashdiff (1.0.1)
     http-accept (1.7.0)
     http-cookie (1.0.5)

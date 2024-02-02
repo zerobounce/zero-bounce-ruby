@@ -27,6 +27,7 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.required_ruby_version = '>= 2.5'
 
   spec.add_dependency 'rest-client', '~>2.1'
+  spec.add_dependency 'dotenv', '~> 2.8.1'
 
   spec.add_development_dependency 'bundler', '~> 2.4.6'
   spec.add_development_dependency 'pry', '~> 0.14.1'
