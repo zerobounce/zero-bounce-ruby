@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'stringio'
 require 'zerobounce/base_request'
 
 module Zerobounce
@@ -37,7 +38,9 @@ module Zerobounce
 
         return response_body_json
       else
-        return response.body
+        content = StringIO.new(response.body)
+        content.set_encoding_by_bom
+        return content.string
       end
     end
 
