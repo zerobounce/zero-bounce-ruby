@@ -57,3 +57,8 @@ build-iPhoneSimulator/
 
 # Used by RSpec
 .rspec_status
+
+
+# Log files
+output.err
+output.log
