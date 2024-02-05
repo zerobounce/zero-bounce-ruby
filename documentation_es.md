@@ -88,7 +88,7 @@ Zerobounce.api_usage(Date.today, Date.today)
 
 Validar un solo correo electrónico
 ```ruby
-Zerobounce.validate('valid@example.com') 
+Zerobounce.validate('valid@example.com')
 ### Zerobounce.validate('valid@example.com', '192.168.0.1') # dirección IP opcional
 =>
 {"address"=>"valid@example.com",
@@ -124,11 +124,11 @@ emails
  "toxic@example.com",
  "donotmail@example.com",
  "spamtrap@example.com"]
- 
-### ip_addresses 
+
+### ip_addresses
 => ["192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1"]
 ### Zerobounce.validate_batch(emails, ip_addresses) # parámetro ip_addresses opcional
- 
+
 Zerobounce.validate_batch(emails)
 =>
 [{"address"=>"disposable@example.com",
@@ -263,14 +263,14 @@ Zerobounce.validate_file_send(validate_file_path)
  "file_name"=>"validation.csv",
  "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
  ### se requerirá el file_id para los próximos pasos
- ### parámetros opcionales: 
+ ### parámetros opcionales:
     email_address_column: 1,
     first_name_column: 2,
     last_name_column: 3,
     gender_column: 4,
     has_header_row: true,
     return_url: nil         ### URL de devolución de resultados
- ### Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4) 
+ ### Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4)
 ```
 
 Verificar archivo

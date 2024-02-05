@@ -11,7 +11,7 @@ require 'zerobounce/configuration'
 
 # Validate an email address with Zerobounce.net
 module Zerobounce
-  
+
   API_ROOT_URL      = 'https://api.zerobounce.net/v2'
   BULK_API_ROOT_URL = 'https://bulkapi.zerobounce.net/v2'
 
@@ -44,7 +44,7 @@ module Zerobounce
     #
     # @param [String] :email The email address to validate.
     # @option [String] :ip_address IP address corresponding to the email.
-    # 
+    #
     # @return [Hash]
     # {
     #   "address": "valid@example.com",
@@ -96,16 +96,16 @@ module Zerobounce
     # @param [String] email
     # @return [Boolean]
     # def invalid?(email)
-    #   # todo: 
+    #   # todo:
     #   validate(email: email).invalid?
     # end
 
-    # Get API usage 
-    # 
+    # Get API usage
+    #
     # @param [Date] start_date
     # @param [Date] end_date
-    # 
-    # @return [Hash] 
+    #
+    # @return [Hash]
     # {
     #   "total": 5,
     #   "status_valid": 4,
@@ -156,8 +156,8 @@ module Zerobounce
     # Get Activty for email
     #
     # @param [String] :email Email to get activity for
-    # 
-    # @return [Hash] 
+    #
+    # @return [Hash]
     # {
     #   "found": true,
     #   "active_in_days": "180"
@@ -168,10 +168,10 @@ module Zerobounce
     end
 
     # Validate email batch
-    # 
+    #
     # @param [Array] :emails List of email addresses to validate.
     # @option [Array] :ip_addresses Corresponding list of IP addresses.
-    # 
+    #
     # @return [Array] list of validate result for each element
     # [
     #   {
@@ -220,15 +220,16 @@ module Zerobounce
     end
 
     # Validate CSV file
-    # 
+    #
     # @param [String] :filepath Path to the file to be uploaded
     # @option [Int] :email_address_column Specify which column the email address is on
     # @option [Int] :first_name_column Specify which column the first name is on
     # @option [Int] :last_name_column Specify which column the last name is on
     # @option [Int] :gender_column Specify which column the gender is on
+    # @option [Int] :ip_address_column Specify which column the IP is on
     # @option [Int] :has_header_row Specify whether the file includes a header row or not
     # @option [Int] :return_url Specify a callback URL (if nil, no callback will be performed)
-    # 
+    #
     # @return [Hash]
     # {
     #     "success": true,
@@ -242,24 +243,26 @@ module Zerobounce
         first_name_column: 2,
         last_name_column: 3,
         gender_column: 4,
+        ip_address_column: 5,
         has_header_row: true,
         return_url: nil
       )
       params = {
         email_address_column: email_address_column,
-        first_name_column: first_name_column,
-        last_name_column: last_name_column,
-        gender_column: gender_column,
         has_header_row: has_header_row,
       }
+      params[:first_name_column] = first_name_column if first_name_column
+      params[:last_name_column] = last_name_column if last_name_column
+      params[:gender_column] = gender_column if gender_column
+      params[:ip_address_column] = ip_address_column if ip_address_column
       params[:return_url] = return_url if return_url
       @@request.bulk_post('sendfile', params, 'multipart/form-data', filepath)
     end
 
     # Get validate file status
-    # 
+    #
     # @param [String] :file_id Id of the file.
-    # 
+    #
     # @return [Hash]
     # {
     #     "success": true,
@@ -270,28 +273,28 @@ module Zerobounce
     #     "complete_percentage": "100%",
     #     "error_reason": null,
     #     "return_url": null
-    # }    
+    # }
     def validate_file_check(file_id)
       # todo:
       params = {file_id: file_id}
       @@request.bulk_get('filestatus', params)
     end
 
-    # Get validate results file 
-    # 
+    # Get validate results file
+    #
     # @param [String] :file_id Id of the file.
-    # 
-    # @return [String/File?] 
+    #
+    # @return [String/File?]
     def validate_file_get(file_id)
       # todo:
       params = {file_id: file_id}
       @@request.bulk_get('getfile', params)
     end
 
-    # Delete validate file 
-    # 
+    # Delete validate file
+    #
     # @param file_id Id of the file.
-    # 
+    #
     # @return [Hash]
     # {
     #   "success": true,
@@ -306,12 +309,12 @@ module Zerobounce
     end
 
     # Score CSV file
-    # 
+    #
     # @param [String] :filepath Path to the file to be uploaded
     # @option [Int] :email_address_column Specify which column the email address is on
     # @option [Int] :has_header_row Specify whether the file includes a header row or not
     # @option [Int] :return_url Specify a callback URL (if nil, no callback will be performed)
-    # 
+    #
     # @return [Hash]
     # {
     #     "success": true,
@@ -333,11 +336,11 @@ module Zerobounce
       @@request.bulk_post('scoring/sendfile', params, 'multipart/form-data', filepath)
     end
 
-    # Get validate results file 
-    # 
+    # Get validate results file
+    #
     # @param [String] :file_id Id of the file.
-    # 
-    # @return [String/File?] 
+    #
+    # @return [String/File?]
     def scoring_file_get(file_id)
       # todo:
       params = {file_id: file_id}
@@ -345,9 +348,9 @@ module Zerobounce
     end
 
     # Get validate file status
-    # 
+    #
     # @param [String] :file_id Id of the file.
-    # 
+    #
     # @return [Hash]
     # {
     #   "success": true,
@@ -357,16 +360,16 @@ module Zerobounce
     #   "file_status": "Complete",
     #   "complete_percentage": "100% Complete.",
     #   "return_url": null
-    # } 
+    # }
     def scoring_file_check(file_id)
       params = {file_id: file_id}
       @@request.bulk_get('scoring/filestatus', params)
     end
 
-    # Delete validate file 
-    # 
+    # Delete validate file
+    #
     # @param file_id Id of the file.
-    # 
+    #
     # @return [Hash]
     # {
     #   "success": true,
@@ -380,13 +383,13 @@ module Zerobounce
     end
 
     # Guess email formatDomain to guess format for
-    # 
+    #
     # @param [String] domain Domain to guess format for
     #
     # @option [String] first_name   First name of target.
     # @option [String] middle_name  Middle name of target.
     # @option [String] last_name    Last name of target.
-    # 
+    #
     # @return [Hash]
     # {
     # 	"email"=>"",
