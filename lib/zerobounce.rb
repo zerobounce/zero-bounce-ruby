@@ -226,7 +226,6 @@ module Zerobounce
     # @option [Int] :first_name_column Specify which column the first name is on
     # @option [Int] :last_name_column Specify which column the last name is on
     # @option [Int] :gender_column Specify which column the gender is on
-    # @option [Int] :ip_address_column Specify which column the IP is on
     # @option [Int] :has_header_row Specify whether the file includes a header row or not
     # @option [Int] :return_url Specify a callback URL (if nil, no callback will be performed)
     #
@@ -243,7 +242,6 @@ module Zerobounce
         first_name_column: 2,
         last_name_column: 3,
         gender_column: 4,
-        ip_address_column: 5,
         has_header_row: true,
         return_url: nil
       )
@@ -254,7 +252,6 @@ module Zerobounce
       params[:first_name_column] = first_name_column if first_name_column
       params[:last_name_column] = last_name_column if last_name_column
       params[:gender_column] = gender_column if gender_column
-      params[:ip_address_column] = ip_address_column if ip_address_column
       params[:return_url] = return_url if return_url
       @@request.bulk_post('sendfile', params, 'multipart/form-data', filepath)
     end
