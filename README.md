@@ -361,6 +361,55 @@ Zerobounce.validate_file_delete(file_id)
 ```
 
 
+### More details on CSV file submission and CSV result retrieval
+
+This applies for both 'Email validation' and 'AI Scoring' functionalities.
+
+**The data** of the submitted CSV file **will be included** in the result CSV file. Therefore, the first columns of the result CSV file will consist of the submitted data and the following columns will provide information specific to each functionality.
+
+#### 'Email validation'
+
+The additional columns that would be included in result CSV file:
+* ZB Status
+* ZB Sub Status
+* ZB Account
+* ZB Domain
+* ZB First Name
+* ZB Last Name
+* ZB Gender
+* ZB Free Email
+* ZB MX Found
+* ZB MX Record
+* ZB SMTP Provider
+* ZB Did You Mean
+* ZB City
+* ZB Region/State
+* ZB Zip Code
+* ZB Country
+
+When `has_header_row: true` is provided to `validate_file_send()` method, original columns of the submitted file will be retained.
+
+When `has_header_row: false`, the columns that were explicitly specified in `validate_file_send()` will be given the following column title:
+```
+email_address_column    => "Email Address"
+first_name_column       => "First Name"
+last_name_column        => "Last Name"
+gender_column           => "Gender"
+```
+
+Any additional that were not (or can not be) specified by parameters, will be given column title "Custom".
+
+
+#### 'AI Scoring':
+The additional _column_ that would be included in result CSV file:
+* ZeroBounceQualityScore
+
+When `has_header_row: true` is provided to `scoring_file_send()` method, original columns of the submitted file will be retained.
+
+
+When `has_header_row: false` is provided to `scoring_file_send()` method, column title for the email column (as well as the other columns) will be _Email Address_.
+
+
 ### Email Finder
 
 Guess Format
