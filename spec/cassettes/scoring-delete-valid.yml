@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/scoring/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=0ed15060-38de-4a7f-a21d-5a68a07329bb
+    uri: https://bulkapi.zerobounce.net/v2/scoring/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=08e04aeb-9248-47c1-aa16-b2295ce74a6b
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 04 Sep 2023 14:00:11 GMT
+      - Mon, 05 Feb 2024 14:48:46 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -58,19 +58,19 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=C4wlR9hsQI2nqUFOXM0ncbAlCZiZSzCCP_eyLveUVP0-1693836011-0-AdxmNTWdOIhbgwgEdcZCgDgn5ucn2dtFnAQNZTgnyfo9gbEUxs+2qykdajsXRkrcncjOFIx7HWV2NFJerThMWHg=;
-        path=/; expires=Mon, 04-Sep-23 14:30:11 GMT; domain=.zerobounce.net; HttpOnly;
+      - __cf_bm=DUYwiDZZECYnvIJEGvDoPZGDw8DzKKOFMnsT30nwO1I-1707144526-1-Aa2b9ukM9Zg5esDao/5ghO86TImvCKkf33/mw2TRA23Et6AFrMI0lXSiwowpNoNwvI04w1oIExuVCNtAQ+NmktM=;
+        path=/; expires=Mon, 05-Feb-24 15:18:46 GMT; domain=.zerobounce.net; HttpOnly;
         Secure; SameSite=None
-      - __cflb=02DiuJXghHGgGEKfEQatRnNkJ2DwhNuMKcFAcikA4iKXz; SameSite=None; Secure;
-        path=/; expires=Tue, 05-Sep-23 13:00:11 GMT; HttpOnly
+      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8qY1hkWWZ7ww4p; SameSite=None; Secure;
+        path=/; expires=Tue, 06-Feb-24 13:48:46 GMT; HttpOnly
       Server:
       - cloudflare
       Cf-Ray:
-      - 8016c1e0ad0c0e2f-AMS
+      - 850bf4c359e4989c-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"success":true,"message":"File Deleted","file_name":"scoring.csv","file_id":"0ed15060-38de-4a7f-a21d-5a68a07329bb"}'
-  recorded_at: Mon, 04 Sep 2023 14:00:11 GMT
+      string: '{"success":true,"message":"File Deleted","file_name":"scoring.csv","file_id":"08e04aeb-9248-47c1-aa16-b2295ce74a6b"}'
+  recorded_at: Mon, 05 Feb 2024 14:48:46 GMT
 recorded_with: VCR 6.1.0

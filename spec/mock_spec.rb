@@ -139,7 +139,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			context 'given a valid email address' do
 				it 'should return a valid result' do
 					VCR.use_cassette 'activity-valid-result' do
-					result = described_class.activity('ss@gmail.com')
+					result = described_class.activity('valid@example.com')
 					expect(result).to be_a_kind_of(Hash)
 					expect(result).to include(
 						'found', 'active_in_days'

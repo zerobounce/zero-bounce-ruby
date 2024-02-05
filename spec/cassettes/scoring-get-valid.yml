@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/scoring/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=0ed15060-38de-4a7f-a21d-5a68a07329bb
+    uri: https://bulkapi.zerobounce.net/v2/scoring/getfile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=08e04aeb-9248-47c1-aa16-b2295ce74a6b
     body:
       encoding: US-ASCII
       string: ''
@@ -21,11 +21,11 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 04 Sep 2023 14:00:09 GMT
+      - Mon, 05 Feb 2024 14:48:45 GMT
       Content-Type:
       - application/octet-stream
       Content-Length:
-      - '1075'
+      - '1045'
       Connection:
       - keep-alive
       Content-Disposition:
@@ -59,19 +59,50 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=mKKjUBzYu6geKheJghDcbdi2Htr8_AWqUtPAaVGShow-1693836009-0-AT4yMjh0WzDU0ysqXpRDyktfQs8j2Q0tkM3aIjmcPHHAc16l4MttOdXdgnNlW+wpslPZvyfoZRfWdgOV3Nj3Pug=;
-        path=/; expires=Mon, 04-Sep-23 14:30:09 GMT; domain=.zerobounce.net; HttpOnly;
+      - __cf_bm=OLcSh0A18XPGmoM2DxnsaRqmJ2jByNpv7q7V50tU5ik-1707144525-1-AZNVdP8r3MRFwQhBr6qK39BlgbU8YSaVjAdavBIcTtjZn6Apgw0WnjahHbjsXuIhNF9WKA0ua1SH0Bhwj5hEjjQ=;
+        path=/; expires=Mon, 05-Feb-24 15:18:45 GMT; domain=.zerobounce.net; HttpOnly;
         Secure; SameSite=None
-      - __cflb=02DiuJXghHGgGEKfEQatRnNkJ2DwhNuMKamXaKcrpAzZA; SameSite=None; Secure;
-        path=/; expires=Tue, 05-Sep-23 13:00:09 GMT; HttpOnly
+      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8qY1hkWWZ7ww4p; SameSite=None; Secure;
+        path=/; expires=Tue, 06-Feb-24 13:48:45 GMT; HttpOnly
       Server:
       - cloudflare
       Cf-Ray:
-      - 8016c1d45ce90a5d-AMS
+      - 850bf4c11f8d6250-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: UTF-8
-      string: "\"email\",\"ZeroBounceQualityScore\"\r\n\"disposable@example.com\",\"0\"\r\n\"invalid@example.com\",\"10\"\r\n\"valid@example.com\",\"10\"\r\n\"toxic@example.com\",\"2\"\r\n\"donotmail@example.com\",\"0\"\r\n\"spamtrap@example.com\",\"0\"\r\n\"abuse@example.com\",\"10\"\r\n\"unknown@example.com\",\"10\"\r\n\"catch_all@example.com\",\"10\"\r\n\"antispam_system@example.com\",\"0\"\r\n\"does_not_accept_mail@example.com\",\"0\"\r\n\"exception_occurred@example.com\",\"0\"\r\n\"failed_smtp_connection@example.com\",\"0\"\r\n\"failed_syntax_check@example.com\",\"0\"\r\n\"forcible_disconnect@example.com\",\"0\"\r\n\"global_suppression@example.com\",\"0\"\r\n\"greylisted@example.com\",\"0\"\r\n\"leading_period_removed@example.com\",\"0\"\r\n\"mail_server_did_not_respond@example.com\",\"0\"\r\n\"mail_server_temporary_error@example.com\",\"0\"\r\n\"mailbox_quota_exceeded@example.com\",\"0\"\r\n\"mailbox_not_found@example.com\",\"0\"\r\n\"no_dns_entries@example.com\",\"0\"\r\n\"possible_trap@example.com\",\"0\"\r\n\"possible_typo@example.com\",\"0\"\r\n\"role_based@example.com\",\"0\"\r\n\"timeout_exceeded@example.com\",\"0\"\r\n\"unroutable_ip_address@example.com\",\"0\"\r\n\"free_email@example.com\",\"0\"\r\n\"role_based_catch_all@example.com\",\"0\""
-  recorded_at: Mon, 04 Sep 2023 14:00:09 GMT
+      string: |-
+        "email","ZeroBounceQualityScore"
+        "disposable@example.com","0"
+        "invalid@example.com","10"
+        "valid@example.com","10"
+        "toxic@example.com","2"
+        "donotmail@example.com","0"
+        "spamtrap@example.com","0"
+        "abuse@example.com","10"
+        "unknown@example.com","10"
+        "catch_all@example.com","10"
+        "antispam_system@example.com","0"
+        "does_not_accept_mail@example.com","0"
+        "exception_occurred@example.com","0"
+        "failed_smtp_connection@example.com","0"
+        "failed_syntax_check@example.com","0"
+        "forcible_disconnect@example.com","0"
+        "global_suppression@example.com","0"
+        "greylisted@example.com","0"
+        "leading_period_removed@example.com","0"
+        "mail_server_did_not_respond@example.com","0"
+        "mail_server_temporary_error@example.com","0"
+        "mailbox_quota_exceeded@example.com","0"
+        "mailbox_not_found@example.com","0"
+        "no_dns_entries@example.com","0"
+        "possible_trap@example.com","0"
+        "possible_typo@example.com","0"
+        "role_based@example.com","0"
+        "timeout_exceeded@example.com","0"
+        "unroutable_ip_address@example.com","0"
+        "free_email@example.com","0"
+        "role_based_catch_all@example.com","0"
+  recorded_at: Mon, 05 Feb 2024 14:48:45 GMT
 recorded_with: VCR 6.1.0
