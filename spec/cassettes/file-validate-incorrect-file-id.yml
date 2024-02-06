@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 04 Sep 2023 13:59:59 GMT
+      - Mon, 05 Feb 2024 14:48:41 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -58,19 +58,19 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=rPXS2F9ZyE9lIUqKJWTiQIOoyeWH_YSfg3BdSiv0F9Q-1693835999-0-ASfXOPTcUdrFREbqJox/KDXFCbuhAIt4BQNNOpPq5EiANF76XWasKwniOk3UjXp5N7i9WLqLFhGdOFxQ+qxxmLY=;
-        path=/; expires=Mon, 04-Sep-23 14:29:59 GMT; domain=.zerobounce.net; HttpOnly;
+      - __cf_bm=znuookVpPj_rdUkmDG26tGsDSIynrUZ2Mf1aweG9vTM-1707144521-1-ASp95JR4Yblt5jkdoc4RlTADMPDTJRnmZqrOCadW5zUZ0yqMs7ARl7dEJlXqTJqawmBE7sh/9X1pN/25kkWyQ84=;
+        path=/; expires=Mon, 05-Feb-24 15:18:41 GMT; domain=.zerobounce.net; HttpOnly;
         Secure; SameSite=None
-      - __cflb=02DiuJXghHGgGEKfEQatRnNkJ2DwhNuMKTPLNKzNZUMf2; SameSite=None; Secure;
-        path=/; expires=Tue, 05-Sep-23 12:59:59 GMT; HttpOnly
+      - __cflb=02DiuJXghHGgGEKfEQatRnNkJ2DwhNuMKBFSgGF31vib6; SameSite=None; Secure;
+        path=/; expires=Tue, 06-Feb-24 13:48:41 GMT; HttpOnly
       Server:
       - cloudflare
       Cf-Ray:
-      - 8016c1948db5b71e-AMS
+      - 850bf4ad2ca770ca-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
       string: '{"success":false,"message":"File cannot be found."}'
-  recorded_at: Mon, 04 Sep 2023 13:59:59 GMT
+  recorded_at: Mon, 05 Feb 2024 14:48:41 GMT
 recorded_with: VCR 6.1.0

@@ -5,11 +5,11 @@ http_interactions:
     uri: https://bulkapi.zerobounce.net/v2/scoring/sendfile
     body:
       encoding: ASCII-8BIT
-      string: "------RubyFormBoundaryZAdlYKemZtIoWDlq\r\nContent-Disposition: form-data;
-        name=\"email_address_column\"\r\n\r\n1\r\n------RubyFormBoundaryZAdlYKemZtIoWDlq\r\nContent-Disposition:
-        form-data; name=\"has_header_row\"\r\n\r\ntrue\r\n------RubyFormBoundaryZAdlYKemZtIoWDlq\r\nContent-Disposition:
-        form-data; name=\"api_key\"\r\n\r\n99e7ef20ceea4480a173b07b1be75371\r\n------RubyFormBoundaryZAdlYKemZtIoWDlq\r\nContent-Disposition:
-        form-data; name=\"file\"; filename=\"scoring.csv\"\r\nContent-Type: text/csv\r\n\r\nemail\r\ndisposable@example.com\r\ninvalid@example.com\r\nvalid@example.com\r\ntoxic@example.com\r\ndonotmail@example.com\r\nspamtrap@example.com\r\nabuse@example.com\r\nunknown@example.com\r\ncatch_all@example.com\r\nantispam_system@example.com\r\ndoes_not_accept_mail@example.com\r\nexception_occurred@example.com\r\nfailed_smtp_connection@example.com\r\nfailed_syntax_check@example.com\r\nforcible_disconnect@example.com\r\nglobal_suppression@example.com\r\ngreylisted@example.com\r\nleading_period_removed@example.com\r\nmail_server_did_not_respond@example.com\r\nmail_server_temporary_error@example.com\r\nmailbox_quota_exceeded@example.com\r\nmailbox_not_found@example.com\r\nno_dns_entries@example.com\r\npossible_trap@example.com\r\npossible_typo@example.com\r\nrole_based@example.com\r\ntimeout_exceeded@example.com\r\nunroutable_ip_address@example.com\r\nfree_email@example.com\r\nrole_based_catch_all@example.com\r\n------RubyFormBoundaryZAdlYKemZtIoWDlq--\r\n"
+      string: "------RubyFormBoundaryiurYoxjJiuWAkM4U\r\nContent-Disposition: form-data;
+        name=\"email_address_column\"\r\n\r\n1\r\n------RubyFormBoundaryiurYoxjJiuWAkM4U\r\nContent-Disposition:
+        form-data; name=\"has_header_row\"\r\n\r\ntrue\r\n------RubyFormBoundaryiurYoxjJiuWAkM4U\r\nContent-Disposition:
+        form-data; name=\"api_key\"\r\n\r\n99e7ef20ceea4480a173b07b1be75371\r\n------RubyFormBoundaryiurYoxjJiuWAkM4U\r\nContent-Disposition:
+        form-data; name=\"file\"; filename=\"scoring.csv\"\r\nContent-Type: text/csv\r\n\r\nemail\r\ndisposable@example.com\r\ninvalid@example.com\r\nvalid@example.com\r\ntoxic@example.com\r\ndonotmail@example.com\r\nspamtrap@example.com\r\nabuse@example.com\r\nunknown@example.com\r\ncatch_all@example.com\r\nantispam_system@example.com\r\ndoes_not_accept_mail@example.com\r\nexception_occurred@example.com\r\nfailed_smtp_connection@example.com\r\nfailed_syntax_check@example.com\r\nforcible_disconnect@example.com\r\nglobal_suppression@example.com\r\ngreylisted@example.com\r\nleading_period_removed@example.com\r\nmail_server_did_not_respond@example.com\r\nmail_server_temporary_error@example.com\r\nmailbox_quota_exceeded@example.com\r\nmailbox_not_found@example.com\r\nno_dns_entries@example.com\r\npossible_trap@example.com\r\npossible_typo@example.com\r\nrole_based@example.com\r\ntimeout_exceeded@example.com\r\nunroutable_ip_address@example.com\r\nfree_email@example.com\r\nrole_based_catch_all@example.com\r\n------RubyFormBoundaryiurYoxjJiuWAkM4U--\r\n"
     headers:
       Accept:
       - "*/*"
@@ -18,7 +18,7 @@ http_interactions:
       Content-Length:
       - '1375'
       Content-Type:
-      - multipart/form-data; boundary=----RubyFormBoundaryZAdlYKemZtIoWDlq
+      - multipart/form-data; boundary=----RubyFormBoundaryiurYoxjJiuWAkM4U
       Accept-Encoding:
       - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
       Host:
@@ -29,7 +29,7 @@ http_interactions:
       message: Created
     headers:
       Date:
-      - Mon, 04 Sep 2023 14:00:05 GMT
+      - Mon, 05 Feb 2024 14:48:44 GMT
       Content-Type:
       - application/json
       Content-Length:
@@ -65,19 +65,19 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=PY1shjSPxQXChTJp9Jha5srKDU4vjCK.p4gnkdMpRuo-1693836005-0-AV6fxzxTLQ9aIksCltI8FbaPZAaNKnSNBJPOR8n++zJB8wsS74U7s/2tXYWiffU1PNzrsl8rjBl3f6gu89pcAMI=;
-        path=/; expires=Mon, 04-Sep-23 14:30:05 GMT; domain=.zerobounce.net; HttpOnly;
+      - __cf_bm=14uqBJ3hqyZ0St66JsGi3JAHSbKxol7u1By39TFEWkQ-1707144524-1-ARaINQFnPE+S6tW99u2DIJOWsqKp6RT8DQrYkps8aXnrZfpXuCaA55THp4NfOV8yEbno7Ps6PJPZNJtB1XpPoq0=;
+        path=/; expires=Mon, 05-Feb-24 15:18:44 GMT; domain=.zerobounce.net; HttpOnly;
         Secure; SameSite=None
-      - __cflb=02DiuJXghHGgGEKfEQatRnNkJ2DwhNuMKX5RyKocgpg76; SameSite=None; Secure;
-        path=/; expires=Tue, 05-Sep-23 13:00:05 GMT; HttpOnly
+      - __cflb=02DiuJXghHGgGEKfEQatRnNkJ2DwhNuMKBzGCTogeCP5W; SameSite=None; Secure;
+        path=/; expires=Tue, 06-Feb-24 13:48:44 GMT; HttpOnly
       Server:
       - cloudflare
       Cf-Ray:
-      - 8016c1b48a8cb909-AMS
+      - 850bf4b15fb90528-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: UTF-8
-      string: '{"success":true,"message":"File Accepted","file_name":"scoring.csv","file_id":"0ed15060-38de-4a7f-a21d-5a68a07329bb"}'
-  recorded_at: Mon, 04 Sep 2023 14:00:05 GMT
+      string: '{"success":true,"message":"File Accepted","file_name":"scoring.csv","file_id":"08e04aeb-9248-47c1-aa16-b2295ce74a6b"}'
+  recorded_at: Mon, 05 Feb 2024 14:48:44 GMT
 recorded_with: VCR 6.1.0

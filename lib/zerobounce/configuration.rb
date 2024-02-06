@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rest-client'
+require 'dotenv'
 
 module Zerobounce
   # Configuration object for Zerobounce.
@@ -26,6 +27,7 @@ module Zerobounce
     attr_accessor :mock
 
     def initialize(mock=false)
+      if File.file?(".env") then Dotenv.load(".env") else Dotenv.load end
       self.host = 'https://api.zerobounce.net'
       self.apikey = ENV['ZEROBOUNCE_API_KEY']
       self.valid_statuses = %i[valid catch_all]

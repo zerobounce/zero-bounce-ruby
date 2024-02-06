@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=95774336-639d-42b6-a238-2dd4e8717243
+    uri: https://bulkapi.zerobounce.net/v2/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=b71c74dc-079e-4f3b-a44a-eb33dd14aa0b
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 04 Sep 2023 14:00:00 GMT
+      - Mon, 05 Feb 2024 14:48:41 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -58,19 +58,19 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=oYjzpbkF5Met9k.QJmh8AT3OrzGpdemqIPh3dLZ87jw-1693836000-0-AUEZZ4xBfLoOxicEmZZFsFRcYcz7k/h55WVXezLJ/4Ztz9kkVIpQpDVrzLKmXdvVlJ80atW8Q8WkQGKgN6uuoqU=;
-        path=/; expires=Mon, 04-Sep-23 14:30:00 GMT; domain=.zerobounce.net; HttpOnly;
+      - __cf_bm=Ln89G0e9TONX6K3peKXhTd6NSMhRmdIRwOfDLfk4T1k-1707144521-1-ATFGaaxMhzl4m+DRNNUgviQ6zP4m4W9jBJtuIlnEwGDfIxkSMeh72JSs9L2ROI6LB3Or7clyXm7gSusB68vyClc=;
+        path=/; expires=Mon, 05-Feb-24 15:18:41 GMT; domain=.zerobounce.net; HttpOnly;
         Secure; SameSite=None
-      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8qmCKMn1JAQvB6; SameSite=None; Secure;
-        path=/; expires=Tue, 05-Sep-23 13:00:00 GMT; HttpOnly
+      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8qV4RfiFxcsH7A; SameSite=None; Secure;
+        path=/; expires=Tue, 06-Feb-24 13:48:41 GMT; HttpOnly
       Server:
       - cloudflare
       Cf-Ray:
-      - 8016c19759060bde-AMS
+      - 850bf4adbfaa0560-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"success":true,"file_id":"95774336-639d-42b6-a238-2dd4e8717243","file_name":"validation.csv","upload_date":"2023-09-04T13:59:58Z","file_status":"Queued","complete_percentage":"0%","error_reason":null,"return_url":null}'
-  recorded_at: Mon, 04 Sep 2023 14:00:00 GMT
+      string: '{"success":true,"file_id":"b71c74dc-079e-4f3b-a44a-eb33dd14aa0b","file_name":"validation.csv","upload_date":"2024-02-05T14:48:40Z","file_status":"Queued","complete_percentage":"0%","error_reason":null,"return_url":null}'
+  recorded_at: Mon, 05 Feb 2024 14:48:41 GMT
 recorded_with: VCR 6.1.0
