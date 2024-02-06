@@ -7,11 +7,11 @@ require 'rest-client'
 
 
 module Zerobounce
-  
+
   # Sends the HTTP request.
   class BaseRequest
 
-    protected 
+    protected
 
     def self._get(root, path, params, content_type='application/json')
 

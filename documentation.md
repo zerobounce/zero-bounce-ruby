@@ -26,7 +26,7 @@ Zerobounce.configure do |config|
   ...
 end
 ```
-or 
+or
 ```
 Zerobounce.config.apikey = '<zerobounce-api-key>'
 ...
@@ -88,7 +88,7 @@ Zerobounce.api_usage(Date.today, Date.today)
 
 Validate single eMail
 ```ruby
-Zerobounce.validate('valid@example.com') 
+Zerobounce.validate('valid@example.com')
 ### Zerobounce.validate('valid@example.com', '192.168.0.1') # optional IP address
 =>
 {"address"=>"valid@example.com",
@@ -122,11 +122,11 @@ emails
  "toxic@example.com",
  "donotmail@example.com",
  "spamtrap@example.com"]
- 
-### ip_addresses 
+
+### ip_addresses
 => ["192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1"]
 ### Zerobounce.validate_batch(emails, ip_addresses) # optional ip_addresses parameter
- 
+
 Zerobounce.validate_batch(emails)
 =>
 [{"address"=>"disposable@example.com",
@@ -259,14 +259,14 @@ Send file
  "file_name"=>"validation.csv",
  "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
  ### file_id will be required for next steps
- ### optional named parameters: 
+ ### optional named parameters:
     email_address_column: 1,
     first_name_column: 2,
     last_name_column: 3,
     gender_column: 4,
     has_header_row: true,
     return_url: nil         ### results callback url
- ### Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4) 
+ ### Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4)
 ```
 
 Check file

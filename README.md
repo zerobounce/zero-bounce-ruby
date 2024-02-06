@@ -30,7 +30,7 @@ Zerobounce.configure do |config|
   ...
 end
 ```
-or 
+or
 ```
 Zerobounce.config.apikey = '<zerobounce-api-key>'
 ...
@@ -92,7 +92,7 @@ Zerobounce.api_usage(Date.today, Date.today)
 
 Validate single eMail
 ```ruby
-Zerobounce.validate('valid@example.com') 
+Zerobounce.validate('valid@example.com')
 # Zerobounce.validate('valid@example.com', '192.168.0.1') # optional IP address
 =>
 {"address"=>"valid@example.com",
@@ -126,11 +126,11 @@ emails
  "toxic@example.com",
  "donotmail@example.com",
  "spamtrap@example.com"]
- 
-# ip_addresses 
+
+# ip_addresses
 => ["192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1"]
 # Zerobounce.validate_batch(emails, ip_addresses) # optional ip_addresses parameter
- 
+
 Zerobounce.validate_batch(emails)
 =>
 [{"address"=>"disposable@example.com",
@@ -263,14 +263,14 @@ Send file
  "file_name"=>"validation.csv",
  "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
  # file_id will be required for next steps
- # optional named parameters: 
+ # optional named parameters:
     email_address_column: 1,
     first_name_column: 2,
     last_name_column: 3,
     gender_column: 4,
     has_header_row: true,
     return_url: nil         # results callback url
- # Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4) 
+ # Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4)
 ```
 
 Check file
@@ -359,6 +359,55 @@ file_id = "89fb7262-b845-4fa1-aa25-e486347ec64e"
 Zerobounce.validate_file_delete(file_id)
 => {"success"=>false, "message"=>"File cannot be found."}
 ```
+
+
+### More details on CSV file submission and CSV result retrieval
+
+This applies for both 'Email validation' and 'AI Scoring' functionalities.
+
+**The data** of the submitted CSV file **will be included** in the result CSV file. Therefore, the first columns of the result CSV file will consist of the submitted data and the following columns will provide information specific to each functionality.
+
+#### 'Email validation'
+
+The additional columns that would be included in result CSV file:
+* ZB Status
+* ZB Sub Status
+* ZB Account
+* ZB Domain
+* ZB First Name
+* ZB Last Name
+* ZB Gender
+* ZB Free Email
+* ZB MX Found
+* ZB MX Record
+* ZB SMTP Provider
+* ZB Did You Mean
+* ZB City
+* ZB Region/State
+* ZB Zip Code
+* ZB Country
+
+When `has_header_row: true` is provided to `validate_file_send()` method, original columns of the submitted file will be retained.
+
+When `has_header_row: false`, the columns that were explicitly specified in `validate_file_send()` will be given the following column title:
+```
+email_address_column    => "Email Address"
+first_name_column       => "First Name"
+last_name_column        => "Last Name"
+gender_column           => "Gender"
+```
+
+Any additional that were not (or can not be) specified by parameters, will be given column title "Custom".
+
+
+#### 'AI Scoring':
+The additional _column_ that would be included in result CSV file:
+* ZeroBounceQualityScore
+
+When `has_header_row: true` is provided to `scoring_file_send()` method, original columns of the submitted file will be retained.
+
+
+When `has_header_row: false` is provided to `scoring_file_send()` method, column title for the email column (as well as the other columns) will be _Email Address_.
 
 
 ### Email Finder
