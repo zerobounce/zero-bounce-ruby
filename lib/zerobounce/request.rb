@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'stringio'
 require 'zerobounce/base_request'
 
 module Zerobounce
@@ -14,6 +15,9 @@ module Zerobounce
         response_body_json = JSON.parse(response_body) 
 
         raise (response_body_json['error']) if response_body_json.key?('error')
+        raise (response_body_json['Message']) \
+          if response_body_json.key?('Message') and \
+            response_body_json.length == 1
         raise (response_body_json['errors'][0]['error']) \
           if response_body_json.key?('errors') and \
             response_body_json['errors'].length > 0
@@ -37,7 +41,9 @@ module Zerobounce
 
         return response_body_json
       else
-        return response.body
+        content = StringIO.new(response.body)
+        content.set_encoding_by_bom
+        return content.string
       end
     end
 
