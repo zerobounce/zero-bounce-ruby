@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     zerobounce-sdk (1.1.1)
-      dotenv (~> 2.8.1)
+      dotenv
       rest-client (~> 2.1)
 
 GEM
@@ -101,6 +101,7 @@ GEM
     yard (0.9.32)
 
 PLATFORMS
+  arm64-darwin-24
   x86_64-linux
 
 DEPENDENCIES
