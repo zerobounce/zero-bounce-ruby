@@ -456,7 +456,19 @@ Zerobounce.guessformat("zerobounce.net")
 
 ## Development
 
-After checking out the repo run tests
+### Local setup
+```bash
+sudo apt install -y rbenv
+git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+rbenv install 3.2.1
+rbenv global 3.2.1
+rbenv rehash
+ruby -v
+gem install bundler -v "~>2.4.6"
+bundle install
+```
+
+### Run tests
 ```bash
 rspec --init # if needed
 bundle exec rspec
@@ -488,3 +500,11 @@ export TEST=unit
 A .env.sample file is provided.
 
 Mock tests were generated using webmock and vcr. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.sample file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
+
+### Publish
+```bash
+gem signin
+gem build zerobounce.spec
+gem push zerobounce-sdk-<version>.gem
+gem search zerobounce-sdk --remote
+```
