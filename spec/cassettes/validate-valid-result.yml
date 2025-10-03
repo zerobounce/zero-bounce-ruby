@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 05 Feb 2024 14:48:37 GMT
+      - Fri, 03 Oct 2025 15:45:50 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -36,14 +36,16 @@ http_interactions:
       - Content-Type
       X-Frame-Options:
       - SAMEORIGIN
-      Cf-Cache-Status:
-      - MISS
       Last-Modified:
-      - Mon, 05 Feb 2024 14:48:37 GMT
+      - Fri, 03 Oct 2025 15:39:47 GMT
+      Age:
+      - '362'
       Expires:
-      - Mon, 05 Feb 2024 18:48:37 GMT
+      - Fri, 03 Oct 2025 19:45:50 GMT
       Cache-Control:
       - public, max-age=14400
+      Cf-Cache-Status:
+      - HIT
       Vary:
       - Accept-Encoding
       Strict-Transport-Security:
@@ -53,12 +55,12 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 850bf4925e52284e-OTP
+      - 988d91a03f25ca1a-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"address":"valid@example.com","status":"valid","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":null,"domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2024-02-05
-        14:48:37.510"}'
-  recorded_at: Mon, 05 Feb 2024 14:48:37 GMT
+      string: '{"address":"valid@example.com","status":"valid","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
+        15:39:47.689"}'
+  recorded_at: Fri, 03 Oct 2025 15:45:50 GMT
 recorded_with: VCR 6.1.0
