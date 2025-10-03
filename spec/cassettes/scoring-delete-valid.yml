@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/scoring/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=08e04aeb-9248-47c1-aa16-b2295ce74a6b
+    uri: https://bulkapi.zerobounce.net/v2/scoring/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=e98abaa7-67b6-48b3-b09b-aa65f5a6c170
     body:
       encoding: US-ASCII
       string: ''
@@ -21,16 +21,18 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 05 Feb 2024 14:48:46 GMT
+      - Fri, 03 Oct 2025 15:46:02 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
       - chunked
       Connection:
       - keep-alive
+      Cf-Ray:
+      - 988d91eda95dc9e1-OTP
       Vary:
       - Accept-Encoding
-      - Origin
+      - origin
       Allow:
       - GET, HEAD, OPTIONS
       X-Frame-Options:
@@ -58,19 +60,16 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=DUYwiDZZECYnvIJEGvDoPZGDw8DzKKOFMnsT30nwO1I-1707144526-1-Aa2b9ukM9Zg5esDao/5ghO86TImvCKkf33/mw2TRA23Et6AFrMI0lXSiwowpNoNwvI04w1oIExuVCNtAQ+NmktM=;
-        path=/; expires=Mon, 05-Feb-24 15:18:46 GMT; domain=.zerobounce.net; HttpOnly;
-        Secure; SameSite=None
-      - __cflb=0H28w1bizUgZQBDMQe5FG6mi8A3cC8qY1hkWWZ7ww4p; SameSite=None; Secure;
-        path=/; expires=Tue, 06-Feb-24 13:48:46 GMT; HttpOnly
+      - __cflb=0H28w1bizUgZQBDMQcnqSLgBPqNFbgA61wogRZNRFBz; SameSite=None; Secure;
+        path=/; expires=Sat, 04-Oct-25 14:46:02 GMT; HttpOnly
+      Speculation-Rules:
+      - '"/cdn-cgi/speculation"'
       Server:
       - cloudflare
-      Cf-Ray:
-      - 850bf4c359e4989c-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"success":true,"message":"File Deleted","file_name":"scoring.csv","file_id":"08e04aeb-9248-47c1-aa16-b2295ce74a6b"}'
-  recorded_at: Mon, 05 Feb 2024 14:48:46 GMT
+      string: '{"success":true,"message":"File Deleted","file_name":"scoring.csv","file_id":"e98abaa7-67b6-48b3-b09b-aa65f5a6c170"}'
+  recorded_at: Fri, 03 Oct 2025 15:46:02 GMT
 recorded_with: VCR 6.1.0

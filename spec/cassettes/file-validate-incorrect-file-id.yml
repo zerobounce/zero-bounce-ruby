@@ -21,16 +21,18 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 05 Feb 2024 14:48:41 GMT
+      - Fri, 03 Oct 2025 15:45:57 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
       - chunked
       Connection:
       - keep-alive
+      Cf-Ray:
+      - 988d91d06bf8e410-OTP
       Vary:
       - Accept-Encoding
-      - Origin
+      - origin
       Allow:
       - GET, HEAD, OPTIONS
       X-Frame-Options:
@@ -58,19 +60,16 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=znuookVpPj_rdUkmDG26tGsDSIynrUZ2Mf1aweG9vTM-1707144521-1-ASp95JR4Yblt5jkdoc4RlTADMPDTJRnmZqrOCadW5zUZ0yqMs7ARl7dEJlXqTJqawmBE7sh/9X1pN/25kkWyQ84=;
-        path=/; expires=Mon, 05-Feb-24 15:18:41 GMT; domain=.zerobounce.net; HttpOnly;
-        Secure; SameSite=None
-      - __cflb=02DiuJXghHGgGEKfEQatRnNkJ2DwhNuMKBFSgGF31vib6; SameSite=None; Secure;
-        path=/; expires=Tue, 06-Feb-24 13:48:41 GMT; HttpOnly
+      - __cflb=02DiuJXghHGgGEKfEQatcZtvg2quVmFiddjE55sQHmPF2; SameSite=None; Secure;
+        path=/; expires=Sat, 04-Oct-25 14:45:57 GMT; HttpOnly
+      Speculation-Rules:
+      - '"/cdn-cgi/speculation"'
       Server:
       - cloudflare
-      Cf-Ray:
-      - 850bf4ad2ca770ca-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
       string: '{"success":false,"message":"File cannot be found."}'
-  recorded_at: Mon, 05 Feb 2024 14:48:41 GMT
+  recorded_at: Fri, 03 Oct 2025 15:45:58 GMT
 recorded_with: VCR 6.1.0
