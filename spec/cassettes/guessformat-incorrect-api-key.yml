@@ -21,7 +21,7 @@ http_interactions:
       message: Forbidden
     headers:
       Date:
-      - Fri, 03 Oct 2025 15:46:02 GMT
+      - Fri, 03 Oct 2025 16:07:10 GMT
       Content-Type:
       - text/html; charset=UTF-8
       Transfer-Encoding:
@@ -45,7 +45,7 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 988d91ee5f45e4b4-OTP
+      - 988db0e0196fe43b-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
@@ -99,11 +99,11 @@ http_interactions:
         <div class="cf-error-wrapper" id="error-details"><p class="cf-error-details-endpoint">I got an error when visiting api.zerobounce.net/v2/guessformat?domain=example.com&amp;first_name=John&amp;middle_name=Deere&amp;last_name=Doe&amp;api_key=thiskeyisinvalidorotherwiseincorrect.</p>
 
         <p>Error code: 1020</p>
-        <p>Ray ID: 988d91ee5f45e4b4</p>
+        <p>Ray ID: 988db0e0196fe43b</p>
         <p>Country: RO</p>
         <p>Data center: otp02</p>
         <p>IP: 2a02:2f00:210a:500:eac:e850:d72d:a8ae</p>
-        <p>Timestamp: 2025-10-03 15:46:02 UTC</p>
+        <p>Timestamp: 2025-10-03 16:07:10 UTC</p>
         </div>
                           <p class="cf-copy-label hidden" id="copy-label">Click to copy</p>
                        </button>
@@ -134,5 +134,5 @@ http_interactions:
            </div>
         </body>
         </html>
-  recorded_at: Fri, 03 Oct 2025 15:46:02 GMT
+  recorded_at: Fri, 03 Oct 2025 16:07:10 GMT
 recorded_with: VCR 6.1.0

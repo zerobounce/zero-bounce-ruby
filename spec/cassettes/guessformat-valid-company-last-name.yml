@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/guessformat?api_key=***REMOVED***&domain=zerobounce.net&first_name=John&last_name=Doe&middle_name=Deere
+    uri: https://api.zerobounce.net/v2/guessformat?api_key=***REMOVED***&company_name=Zero%20Bounce&last_name=Doe
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Fri, 03 Oct 2025 16:07:23 GMT
+      - Fri, 03 Oct 2025 16:07:26 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -45,11 +45,13 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 988db0f04f25ca29-OTP
+      - 988db13e493de4b6-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"email":"john.doe@zerobounce.net","email_confidence":"medium","domain":"zerobounce.net","company_name":"","did_you_mean":"","failure_reason":""}'
-  recorded_at: Fri, 03 Oct 2025 16:07:23 GMT
+      string: '{"email":"","email_confidence":"undetermined","domain":"","company_name":"Zero
+        Bounce","did_you_mean":"","failure_reason":"There is no domain assigned for
+        this company name."}'
+  recorded_at: Fri, 03 Oct 2025 16:07:26 GMT
 recorded_with: VCR 6.1.0

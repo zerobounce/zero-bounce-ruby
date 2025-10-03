@@ -412,9 +412,10 @@ When `has_header_row: false` is provided to `scoring_file_send()` method, column
 
 ### Email Finder
 
-Guess Format
+Guess Format by Domain
 ```ruby
-Zerobounce.guessformat("zerobounce.net")
+# New keyword argument syntax (recommended)
+Zerobounce.guessformat(domain: "zerobounce.net")
 =>
 {"email"=>"",
  "domain"=>"zerobounce.net",
@@ -451,7 +452,32 @@ Zerobounce.guessformat("zerobounce.net")
    {"format"=>"lastf", "confidence"=>"medium"},
    {"format"=>"l-first", "confidence"=>"low"},
    {"format"=>"l_first", "confidence"=>"low"}]}
-# Zerobounce.guessformat("zerobounce.net", first_name: "John", middle_name: 'Deere', last_name: "Doe")
+
+# With names for better accuracy (new syntax)
+Zerobounce.guessformat(domain: "zerobounce.net", first_name: "John", middle_name: 'Deere', last_name: "Doe")
+
+# Backwards compatible syntax (still supported)
+Zerobounce.guessformat("zerobounce.net")
+Zerobounce.guessformat("zerobounce.net", first_name: "John", middle_name: 'Deere', last_name: "Doe")
+```
+
+Guess Format by Company Name
+```ruby
+# New keyword argument syntax (recommended)
+Zerobounce.guessformat(company_name: "Zero Bounce")
+=>
+{"email"=>"",
+ "company_name"=>"Zero Bounce",
+ "format"=>"first.last",
+ "status"=>"",
+ "sub_status"=>"",
+ "confidence"=>"high",
+ "did_you_mean"=>"",
+ "failure_reason"=>"",
+ "other_domain_formats"=>[...]}
+
+# With names for better accuracy (new syntax)
+Zerobounce.guessformat(first_name: "John", last_name: "Doe", company_name: "Zero Bounce")
 ```
 
 ## Development
@@ -470,14 +496,12 @@ bundle install
 
 ### Run tests
 ```bash
-rspec --init # if needed
 bundle exec rspec
 ```
 
 You should see an output like this
 ```bash
-Run options: include {:focus=>true}
-running live tests
+running mock tests
 .....................................................
 
 Finished in 6.81 seconds (files took 0.40587 seconds to load)
@@ -486,20 +510,18 @@ Finished in 6.81 seconds (files took 0.40587 seconds to load)
 
 ### Test parameters
 The tests use the following environment parameters:
-TEST {unit|live} influences whether mocked unit tests are run or the live server is used (credits may be used if you choose to do this)
-ZEROBOUNCE_API_KEY {<zerobounce-api-key-value>} this key is used to make requests to the live server; it is also used in mock tests as a valid key sample (any value will work for mock tests)
+ZEROBOUNCE_API_KEY {<zerobounce-api-key-value>} this key is used in mock tests as a valid key sample (any value will work for mock tests)
 INCORRECT_API_KEY {any non whitespace string value that is not a valid key} used for tests where the requests are meant to fail due to the API key value.
 
 To set them
 ```bash
 export ZEROBOUNCE_API_KEY=99e7ef20ceea4480a173b07b1be75371
 export INCORRECT_API_KEY=thiskeyisinvalidorotherwiseincorrect
-export TEST=unit
 ```
 
 A .env.sample file is provided.
 
-Mock tests were generated using webmock and vcr. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.sample file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
+Tests use webmock and vcr for mocking HTTP requests. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.sample file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
 
 ### Publish
 ```bash

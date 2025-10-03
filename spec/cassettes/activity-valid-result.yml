@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/activity?api_key=99e7ef20ceea4480a173b07b1be75371&email=valid@example.com
+    uri: https://api.zerobounce.net/v2/activity?api_key=***REMOVED***&email=valid@example.com
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Fri, 03 Oct 2025 15:45:50 GMT
+      - Fri, 03 Oct 2025 16:06:55 GMT
       Content-Type:
       - application/json
       Content-Length:
@@ -29,7 +29,7 @@ http_interactions:
       Connection:
       - keep-alive
       Cf-Ray:
-      - 988d91a1582fca20-OTP
+      - 988db08508e1e40d-OTP
       Access-Control-Allow-Origin:
       - "*"
       Access-Control-Allow-Methods:
@@ -51,5 +51,5 @@ http_interactions:
     body:
       encoding: UTF-8
       string: '{"found":true,"active_in_days":"365+"}'
-  recorded_at: Fri, 03 Oct 2025 15:45:50 GMT
+  recorded_at: Fri, 03 Oct 2025 16:06:55 GMT
 recorded_with: VCR 6.1.0

@@ -5,7 +5,7 @@ http_interactions:
     uri: https://bulkapi.zerobounce.net/v2/validatebatch
     body:
       encoding: UTF-8
-      string: '{"email_batch":[{"email_address":"disposable@example.com","ip_address":null},{"email_address":"invalid@example.com","ip_address":null},{"email_address":"valid@example.com","ip_address":null},{"email_address":"toxic@example.com","ip_address":null},{"email_address":"donotmail@example.com","ip_address":null},{"email_address":"spamtrap@example.com","ip_address":null}],"api_key":"99e7ef20ceea4480a173b07b1be75371"}'
+      string: '{"email_batch":[{"email_address":"disposable@example.com","ip_address":null},{"email_address":"invalid@example.com","ip_address":null},{"email_address":"valid@example.com","ip_address":null},{"email_address":"toxic@example.com","ip_address":null},{"email_address":"donotmail@example.com","ip_address":null},{"email_address":"spamtrap@example.com","ip_address":null}],"api_key":"***REMOVED***"}'
     headers:
       Accept:
       - application/json
@@ -25,7 +25,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Fri, 03 Oct 2025 15:45:55 GMT
+      - Fri, 03 Oct 2025 16:07:00 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -57,20 +57,20 @@ http_interactions:
       Vary:
       - accept-encoding
       Set-Cookie:
-      - __cflb=0H28w1bizUgZQBDMQcnqSLgBPqNFbg9zrDAHV1zXbm6; SameSite=None; Secure;
-        path=/; expires=Sat, 04-Oct-25 14:45:55 GMT; HttpOnly
+      - __cflb=02DiuJXghHGgGEKfEQatcZtvg2quVmFidRCyERSSr7BbA; SameSite=None; Secure;
+        path=/; expires=Sat, 04-Oct-25 15:07:00 GMT; HttpOnly
       Server:
       - cloudflare
       Cf-Ray:
-      - 988d91c00c7fc9d1-OTP
+      - 988db0a49f1fe446-OTP
     body:
       encoding: ASCII-8BIT
       string: '{"email_batch":[{"address":"disposable@example.com","status":"do_not_mail","sub_status":"disposable","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
-        15:45:55.269"},{"address":"invalid@example.com","status":"invalid","sub_status":"mailbox_not_found","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
-        15:45:55.269"},{"address":"valid@example.com","status":"valid","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
-        15:45:55.269"},{"address":"toxic@example.com","status":"do_not_mail","sub_status":"toxic","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
-        15:45:55.269"},{"address":"donotmail@example.com","status":"do_not_mail","sub_status":"role_based","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
-        15:45:55.269"},{"address":"spamtrap@example.com","status":"spamtrap","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
-        15:45:55.269"}],"errors":[]}'
-  recorded_at: Fri, 03 Oct 2025 15:45:55 GMT
+        16:07:00.704"},{"address":"invalid@example.com","status":"invalid","sub_status":"mailbox_not_found","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
+        16:07:00.704"},{"address":"valid@example.com","status":"valid","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
+        16:07:00.704"},{"address":"toxic@example.com","status":"do_not_mail","sub_status":"toxic","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
+        16:07:00.704"},{"address":"donotmail@example.com","status":"do_not_mail","sub_status":"role_based","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
+        16:07:00.704"},{"address":"spamtrap@example.com","status":"spamtrap","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
+        16:07:00.704"}],"errors":[]}'
+  recorded_at: Fri, 03 Oct 2025 16:07:00 GMT
 recorded_with: VCR 6.1.0
