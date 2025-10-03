@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/validate?api_key=99e7ef20ceea4480a173b07b1be75371&email=valid@example.com&ip_address=127.0.0.1
+    uri: https://api.zerobounce.net/v2/validate?api_key=f1a18969819a4c5c9fbb58e368d947f1&email=valid@example.com&ip_address=127.0.0.1
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Fri, 03 Oct 2025 15:45:50 GMT
+      - Fri, 03 Oct 2025 16:06:55 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -37,13 +37,11 @@ http_interactions:
       X-Frame-Options:
       - SAMEORIGIN
       Last-Modified:
-      - Fri, 03 Oct 2025 15:39:47 GMT
+      - Fri, 03 Oct 2025 16:06:55 GMT
       Cf-Cache-Status:
-      - HIT
-      Age:
-      - '363'
+      - EXPIRED
       Expires:
-      - Fri, 03 Oct 2025 19:45:50 GMT
+      - Fri, 03 Oct 2025 20:06:55 GMT
       Cache-Control:
       - public, max-age=14400
       Vary:
@@ -55,12 +53,12 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 988d91a09dd5c9d0-OTP
+      - 988db08418f5e45e-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
       string: '{"address":"valid@example.com","status":"valid","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-03
-        15:39:47.800"}'
-  recorded_at: Fri, 03 Oct 2025 15:45:50 GMT
+        16:06:55.424"}'
+  recorded_at: Fri, 03 Oct 2025 16:06:55 GMT
 recorded_with: VCR 6.1.0

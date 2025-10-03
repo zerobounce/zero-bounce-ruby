@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/getcredits?api_key=99e7ef20ceea4480a173b07b1be75371
+    uri: https://api.zerobounce.net/v2/getcredits?api_key=f1a18969819a4c5c9fbb58e368d947f1
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Fri, 03 Oct 2025 15:45:50 GMT
+      - Fri, 03 Oct 2025 16:06:55 GMT
       Content-Type:
       - application/json
       Content-Length:
@@ -29,7 +29,7 @@ http_interactions:
       Connection:
       - keep-alive
       Cf-Ray:
-      - 988d91a2893ac9e0-OTP
+      - 988db0861c02e442-OTP
       Access-Control-Allow-Origin:
       - "*"
       Access-Control-Allow-Methods:
@@ -50,6 +50,6 @@ http_interactions:
       - h3=":443"; ma=86400
     body:
       encoding: UTF-8
-      string: '{"Credits":"496718"}'
-  recorded_at: Fri, 03 Oct 2025 15:45:50 GMT
+      string: '{"Credits":"496657"}'
+  recorded_at: Fri, 03 Oct 2025 16:06:55 GMT
 recorded_with: VCR 6.1.0

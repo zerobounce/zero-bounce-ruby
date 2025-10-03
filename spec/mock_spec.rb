@@ -1,18 +1,16 @@
 # frozen_string_literal: true
 
-require 'webmock/rspec' if ENV['TEST']=='unit'
-require 'vcr' if ENV['TEST']=='unit'
+require 'webmock/rspec'
+require 'vcr'
 
-if ENV['TEST']=='unit'
-	WebMock.disable_net_connect!(allow_localhost: true)
-	VCR.configure do |c|
-		c.cassette_library_dir = 'spec/cassettes'
-		c.hook_into :webmock
-		c.ignore_localhost = true
-	end
+WebMock.disable_net_connect!(allow_localhost: true)
+VCR.configure do |c|
+	c.cassette_library_dir = 'spec/cassettes'
+	c.hook_into :webmock
+	c.ignore_localhost = true
 end
 
-describe Zerobounce, :focus => ENV['TEST']=='unit' do
+describe Zerobounce do
 
 	let (:valid_api_key) { ENV['ZEROBOUNCE_API_KEY'] }
 	let (:invalid_api_key) { ENV['INCORRECT_API_KEY'] }
@@ -639,7 +637,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 		context 'given no API key' do
 			it 'should raise an API key error' do
 				expect{ described_class.guessformat(
-					'example.com',
+					domain: 'example.com',
 					first_name: 'John',
 					middle_name: 'Deere',
 					last_name: 'Doe'
@@ -654,7 +652,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 			it 'should raise a forbidden error' do
 				VCR.use_cassette 'guessformat-incorrect-api-key' do
 				expect{ described_class.guessformat(
-					'example.com',
+					domain: 'example.com',
 					first_name: 'John',
 					middle_name: 'Deere',
 					last_name: 'Doe')
@@ -694,17 +692,18 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 				described_class.config.apikey = valid_api_key
 			end
 			context 'given no domain' do
-				context 'given no names' do
+				context 'given no domain or company_name' do
 					it 'should raise an error' do
 						expect{ described_class.guessformat() }.to \
-							raise_error(ArgumentError)
+							raise_error(ArgumentError, /Either domain or company_name must be provided/)
 					end
 				end
-				context 'given first_name' do
+				context 'given both domain and company_name' do
 					it 'should raise an error' do
 						expect{ described_class.guessformat(
-							first_name: 'John') }.to \
-							raise_error(ArgumentError)
+							domain: 'example.com',
+							company_name: 'Example Corp') }.to \
+							raise_error(ArgumentError, /Only one of domain or company_name can be provided/)
 					end
 				end
 			end
@@ -713,7 +712,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 					it 'should return a valid result' do
 						VCR.use_cassette 'guessformat-valid-domain-no-names' do
 						result = described_class.guessformat(
-							'zerobounce.net')
+							domain: 'zerobounce.net')
 						expect(result).to be_a_kind_of(Hash)
 						expect(result).to include(*fields3)
 						end
@@ -723,7 +722,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 					it 'should return a valid result' do
 						VCR.use_cassette 'guessformat-valid-domain-first-name' do
 						result = described_class.guessformat(
-							'zerobounce.net',
+							domain: 'zerobounce.net',
 							first_name: 'John')
 						expect(result).to be_a_kind_of(Hash)
 						expect(result).to include(*fields2)
@@ -734,7 +733,7 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 					it 'should return a valid result' do
 						VCR.use_cassette 'guessformat-valid-domain-last-name' do
 						result = described_class.guessformat(
-							'zerobounce.net',
+							domain: 'zerobounce.net',
 							last_name: 'Doe')
 						expect(result).to be_a_kind_of(Hash)
 						expect(result).to include(*fields2)
@@ -745,7 +744,54 @@ describe Zerobounce, :focus => ENV['TEST']=='unit' do
 					it 'should return a valid result' do
 						VCR.use_cassette 'guessformat-valid-domain-all-names' do
 						result = described_class.guessformat(
-							'zerobounce.net',
+							domain: 'zerobounce.net',
+							first_name: 'John',
+							middle_name: 'Deere',
+							last_name: 'Doe')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields2)
+						end
+					end
+				end
+			end
+			context 'given a valid company name' do
+				context 'given no names' do
+					it 'should return a valid result' do
+						VCR.use_cassette 'guessformat-valid-company-no-names' do
+						result = described_class.guessformat(
+							company_name: 'Zero Bounce')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields3)
+						end
+					end
+				end
+				context 'given first name' do
+					it 'should return a valid result' do
+						VCR.use_cassette 'guessformat-valid-company-first-name' do
+						result = described_class.guessformat(
+							company_name: 'Zero Bounce',
+							first_name: 'John')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields2)
+						end
+					end
+				end
+				context 'given last name' do
+					it 'should return a valid result' do
+						VCR.use_cassette 'guessformat-valid-company-last-name' do
+						result = described_class.guessformat(
+							company_name: 'Zero Bounce',
+							last_name: 'Doe')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields2)
+						end
+					end
+				end
+				context 'given first, last, and, middle names' do
+					it 'should return a valid result' do
+						VCR.use_cassette 'guessformat-valid-company-all-names' do
+						result = described_class.guessformat(
+							company_name: 'Zero Bounce',
 							first_name: 'John',
 							middle_name: 'Deere',
 							last_name: 'Doe')

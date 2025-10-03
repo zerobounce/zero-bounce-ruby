@@ -426,10 +426,21 @@ module Zerobounce
     # 	    {"format"=>"l_first", "confidence"=>"low"}
     #    ]
     # }
-    def guessformat(domain, first_name: '', middle_name: '', last_name: '')
-      params = {
-        domain: domain
-      }
+    def guessformat(domain: nil, first_name: '', middle_name: '', last_name: '', company_name: nil)
+      # Validate that exactly one of domain or company_name is provided
+      if domain.nil? && company_name.nil?
+        raise ArgumentError, "Either domain or company_name must be provided"
+      elsif !domain.nil? && !company_name.nil?
+        raise ArgumentError, "Only one of domain or company_name can be provided"
+      end
+
+      params = {}
+      if domain
+        params[:domain] = domain
+      else
+        params[:company_name] = company_name
+      end
+
       unless first_name.empty?
         params['first_name'] = first_name
       end
