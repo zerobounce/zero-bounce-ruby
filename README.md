@@ -23,18 +23,127 @@ Import
 require 'zerobounce'
 ```
 
-Set a valid ZeroBounce API key.
+## Configuration
+
+### Setting API Key
+
+#### Method 1: Using configure block (recommended)
 ```ruby
 Zerobounce.configure do |config|
   config.apikey = '<zerobounce-api-key>'
-  ...
+  # Optional: Set custom API URLs
+  config.api_root_url = 'https://api.zerobounce.net/v2'
+  config.bulk_api_root_url = 'https://bulkapi.zerobounce.net/v2'
 end
 ```
-or
+
+#### Method 1a: Using ApiUrls constants (convenience)
+```ruby
+# Global API (default)
+Zerobounce.configure do |config|
+  config.apikey = '<zerobounce-api-key>'
+  config.api_root_url = Zerobounce::ApiUrls::DEFAULT_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
+
+# European API (convenience)
+Zerobounce.configure do |config|
+  config.apikey = '<zerobounce-api-key>'
+  config.api_root_url = Zerobounce::ApiUrls::EU_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
+
+# US API (convenience)
+Zerobounce.configure do |config|
+  config.apikey = '<zerobounce-api-key>'
+  config.api_root_url = Zerobounce::ApiUrls::US_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
 ```
+
+#### Method 2: Direct configuration
+```ruby
 Zerobounce.config.apikey = '<zerobounce-api-key>'
-...
+# Optional: Set custom API URLs
+Zerobounce.config.api_root_url = 'https://api.zerobounce.net/v2'
+Zerobounce.config.bulk_api_root_url = 'https://bulkapi.zerobounce.net/v2'
 ```
+
+#### Method 3: Using environment variables
+Create a `.env` file in your project root:
+```bash
+ZEROBOUNCE_API_KEY=your_api_key_here
+ZEROBOUNCE_API_URL=https://api.zerobounce.net/v2
+ZEROBOUNCE_BULK_API_URL=https://bulkapi.zerobounce.net/v2
+```
+
+The gem will automatically load these environment variables when initialized. No additional configuration needed in your code.
+
+#### Method 4: System environment variables
+Set environment variables in your system:
+```bash
+export ZEROBOUNCE_API_KEY=your_api_key_here
+export ZEROBOUNCE_API_URL=https://api.zerobounce.net/v2
+export ZEROBOUNCE_BULK_API_URL=https://bulkapi.zerobounce.net/v2
+```
+
+
+### API URL Configuration Details
+
+#### Default Behavior
+If you don't specify `api_root_url` or `bulk_api_root_url`, the gem will use the following defaults:
+- **Main API**: `https://api.zerobounce.net/v2`
+- **Bulk API**: `https://bulkapi.zerobounce.net/v2`
+
+These defaults are defined in the `Zerobounce::ApiUrls` class constants:
+- `Zerobounce::ApiUrls::DEFAULT_URL` - Main API URL (Global)
+- `Zerobounce::ApiUrls::EU_URL` - European API URL
+- `Zerobounce::ApiUrls::US_URL` - US API URL
+- `Zerobounce::ApiUrls::BULK_DEFAULT_URL` - Bulk API URL
+
+#### Using ApiUrls Constants
+You can use the predefined constants in your configuration. The EU and US URLs are provided as convenience options:
+
+```ruby
+# Global API (default)
+Zerobounce.configure do |config|
+  config.apikey = 'your-api-key'
+  config.api_root_url = Zerobounce::ApiUrls::DEFAULT_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
+
+# European API
+Zerobounce.configure do |config|
+  config.apikey = 'your-api-key'
+  config.api_root_url = Zerobounce::ApiUrls::EU_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
+
+# US API
+Zerobounce.configure do |config|
+  config.apikey = 'your-api-key'
+  config.api_root_url = Zerobounce::ApiUrls::US_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
+```
+
+#### Custom API URLs
+You can override the default URLs for custom deployments or testing:
+
+```ruby
+Zerobounce.configure do |config|
+  config.apikey = 'your-api-key'
+  # Use custom URLs (e.g., for testing or custom deployments)
+  config.api_root_url = 'https://custom-api.example.com/v2'
+  config.bulk_api_root_url = 'https://custom-bulk-api.example.com/v2'
+end
+```
+
+#### Environment Variable Priority
+The configuration follows this priority order (highest to lowest):
+1. Explicitly set in code (`config.api_root_url = '...'`)
+2. Environment variables (`ZEROBOUNCE_API_URL`, `ZEROBOUNCE_BULK_API_URL`)
+3. Default constants (`ApiUrls::DEFAULT_URL`, `ApiUrls::BULK_DEFAULT_URL`)
 
 Credits
 ```ruby
@@ -478,6 +587,108 @@ Zerobounce.guessformat(company_name: "Zero Bounce")
 
 # With names for better accuracy (new syntax)
 Zerobounce.guessformat(first_name: "John", last_name: "Doe", company_name: "Zero Bounce")
+```
+
+Find Email Address
+```ruby
+# Find email by domain
+Zerobounce.find_email("John", domain: "zerobounce.net")
+=>
+{
+  "email": "john@zerobounce.net",
+  "email_confidence": "medium",
+  "domain": "zerobounce.net",
+  "company_name": "ZeroBounce",
+  "did_you_mean": "",
+  "failure_reason": ""
+}
+
+# Find email by company name
+Zerobounce.find_email("John", company_name: "Zero Bounce")
+=>
+{
+  "email": "john@zerobounce.net",
+  "email_confidence": "medium",
+  "domain": "zerobounce.net",
+  "company_name": "ZeroBounce",
+  "did_you_mean": "",
+  "failure_reason": ""
+}
+
+# With additional name information for better accuracy
+Zerobounce.find_email("John", domain: "zerobounce.net", middle_name: "Deere", last_name: "Doe")
+```
+
+Find Domain Information
+```ruby
+# Find domain format by domain
+Zerobounce.find_domain(domain: "zerobounce.net")
+=>
+{
+  "domain": "zerobounce.net",
+  "company_name": "Hertza, LLC",
+  "format": "first.last",
+  "confidence": "high",
+  "did_you_mean": "",
+  "failure_reason": "",
+  "other_domain_formats": [
+    {"format": "first", "confidence": "high"},
+    {"format": "last.first", "confidence": "high"},
+    {"format": "lastfirst", "confidence": "high"},
+    {"format": "firstl", "confidence": "high"},
+    {"format": "lfirst", "confidence": "high"},
+    {"format": "firstlast", "confidence": "high"},
+    {"format": "last_middle_f", "confidence": "high"},
+    {"format": "last", "confidence": "high"},
+    {"format": "f.last", "confidence": "medium"},
+    {"format": "last-f", "confidence": "medium"},
+    {"format": "l.first", "confidence": "medium"},
+    {"format": "last_f", "confidence": "medium"},
+    {"format": "first.middle.last", "confidence": "medium"},
+    {"format": "first-last", "confidence": "medium"},
+    {"format": "last.f", "confidence": "medium"},
+    {"format": "last_first", "confidence": "medium"},
+    {"format": "f-last", "confidence": "medium"},
+    {"format": "first.l", "confidence": "medium"},
+    {"format": "first-l", "confidence": "medium"},
+    {"format": "first_l", "confidence": "medium"},
+    {"format": "first_last", "confidence": "medium"},
+    {"format": "f_last", "confidence": "medium"},
+    {"format": "last-first", "confidence": "medium"},
+    {"format": "flast", "confidence": "medium"},
+    {"format": "lastf", "confidence": "medium"},
+    {"format": "l_first", "confidence": "medium"},
+    {"format": "l-first", "confidence": "medium"},
+    {"format": "first-middle-last", "confidence": "low"},
+    {"format": "firstmlast", "confidence": "low"},
+    {"format": "last.middle.first", "confidence": "low"},
+    {"format": "last_middle_first", "confidence": "low"},
+    {"format": "first_middle_last", "confidence": "low"},
+    {"format": "last-middle-first", "confidence": "low"},
+    {"format": "first-m-last", "confidence": "low"},
+    {"format": "firstmiddlelast", "confidence": "low"},
+    {"format": "last.m.first", "confidence": "low"},
+    {"format": "lastmfirst", "confidence": "low"},
+    {"format": "lastmiddlefirst", "confidence": "low"},
+    {"format": "last_m_first", "confidence": "low"},
+    {"format": "first.m.last", "confidence": "low"},
+    {"format": "first_m_last", "confidence": "low"},
+    {"format": "last-m-first", "confidence": "low"}
+  ]
+}
+
+# Find domain format by company name
+Zerobounce.find_domain(company_name: "Zero Bounce")
+=>
+{
+  "domain": "zerobounce.net",
+  "company_name": "Zero Bounce",
+  "format": "first.last",
+  "confidence": "high",
+  "did_you_mean": "",
+  "failure_reason": "",
+  "other_domain_formats": [...]
+}
 ```
 
 ## Development
