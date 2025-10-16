@@ -34,7 +34,7 @@ module Zerobounce
       self.apikey = ENV['ZEROBOUNCE_API_KEY']
       self.api_root_url = ENV['ZEROBOUNCE_API_URL'] || ApiUrls::DEFAULT_URL
       self.bulk_api_root_url = ENV['ZEROBOUNCE_BULK_API_URL'] || ApiUrls::BULK_DEFAULT_URL
-      self.valid_statuses = %i[valid catch_all]
+      self.valid_statuses = %i[valid catch_all accept_all]
       self.headers = { user_agent: "ZerobounceRubyGem/#{Zerobounce::VERSION}" }
       self.mock = mock
     end
