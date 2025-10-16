@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/filestatus?api_key=***REMOVED***&file_id=8fc4ce03-dfd8-43d3-b684-f6ebebd6fef3
+    uri: https://bulkapi.zerobounce.net/v2/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=84946fc8-3f89-428a-9d0d-382fbe18cb24
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Fri, 03 Oct 2025 16:07:03 GMT
+      - Thu, 16 Oct 2025 08:28:42 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -29,7 +29,7 @@ http_interactions:
       Connection:
       - keep-alive
       Cf-Ray:
-      - 988db0b6cc44c9d8-OTP
+      - 98f62f2b0a2ae3d9-OTP
       Vary:
       - Accept-Encoding
       - origin
@@ -60,8 +60,8 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cflb=02DiuJXghHGgGEKfEQatcZtvg2quVmFidTRRo28PivB4Q; SameSite=None; Secure;
-        path=/; expires=Sat, 04-Oct-25 15:07:03 GMT; HttpOnly
+      - __cflb=02DiuJXghHGgGEKfEQcVFLLxyHphrFttYSH6Zie2wHi9r; SameSite=None; Secure;
+        path=/; expires=Fri, 17-Oct-25 07:28:42 GMT; HttpOnly
       Speculation-Rules:
       - '"/cdn-cgi/speculation"'
       Server:
@@ -70,6 +70,6 @@ http_interactions:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"success":true,"file_id":"8fc4ce03-dfd8-43d3-b684-f6ebebd6fef3","file_name":"validation.csv","upload_date":"2025-10-03T16:07:00Z","file_status":"Processing","complete_percentage":"0%","error_reason":null,"return_url":null}'
-  recorded_at: Fri, 03 Oct 2025 16:07:03 GMT
+      string: '{"success":true,"file_id":"84946fc8-3f89-428a-9d0d-382fbe18cb24","file_name":"validation.csv","upload_date":"2025-10-16T08:28:37Z","file_status":"Processing","complete_percentage":"0%","error_reason":null,"return_url":null}'
+  recorded_at: Thu, 16 Oct 2025 08:28:42 GMT
 recorded_with: VCR 6.1.0

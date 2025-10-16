@@ -5,14 +5,14 @@ http_interactions:
     uri: https://bulkapi.zerobounce.net/v2/sendfile
     body:
       encoding: ASCII-8BIT
-      string: "------RubyFormBoundary2C6dnrt1VFGzYOvh\r\nContent-Disposition: form-data;
-        name=\"email_address_column\"\r\n\r\n1\r\n------RubyFormBoundary2C6dnrt1VFGzYOvh\r\nContent-Disposition:
-        form-data; name=\"has_header_row\"\r\n\r\ntrue\r\n------RubyFormBoundary2C6dnrt1VFGzYOvh\r\nContent-Disposition:
-        form-data; name=\"first_name_column\"\r\n\r\n2\r\n------RubyFormBoundary2C6dnrt1VFGzYOvh\r\nContent-Disposition:
-        form-data; name=\"last_name_column\"\r\n\r\n3\r\n------RubyFormBoundary2C6dnrt1VFGzYOvh\r\nContent-Disposition:
-        form-data; name=\"gender_column\"\r\n\r\n4\r\n------RubyFormBoundary2C6dnrt1VFGzYOvh\r\nContent-Disposition:
-        form-data; name=\"api_key\"\r\n\r\n***REMOVED***\r\n------RubyFormBoundary2C6dnrt1VFGzYOvh\r\nContent-Disposition:
-        form-data; name=\"file\"; filename=\"validation.csv\"\r\nContent-Type: text/csv\r\n\r\nemail,first,last,gender,ip\r\ndisposable@example.com,First,Last,male,127.0.0.1\r\ninvalid@example.com,First,Last,male,127.0.0.1\r\nvalid@example.com,First,Last,male,127.0.0.1\r\ntoxic@example.com,First,Last,male,127.0.0.1\r\ndonotmail@example.com,First,Last,male,127.0.0.1\r\nspamtrap@example.com,First,Last,male,127.0.0.1\r\nabuse@example.com,First,Last,male,127.0.0.1\r\nunknown@example.com,First,Last,male,127.0.0.1\r\ncatch_all@example.com,First,Last,male,127.0.0.1\r\nantispam_system@example.com,First,Last,male,127.0.0.1\r\ndoes_not_accept_mail@example.com,First,Last,male,127.0.0.1\r\nexception_occurred@example.com,First,Last,male,127.0.0.1\r\nfailed_smtp_connection@example.com,First,Last,male,127.0.0.1\r\nfailed_syntax_check@example.com,First,Last,male,127.0.0.1\r\nforcible_disconnect@example.com,First,Last,male,127.0.0.1\r\nglobal_suppression@example.com,First,Last,male,127.0.0.1\r\ngreylisted@example.com,First,Last,male,127.0.0.1\r\nleading_period_removed@example.com,First,Last,male,127.0.0.1\r\nmail_server_did_not_respond@example.com,First,Last,male,127.0.0.1\r\nmail_server_temporary_error@example.com,First,Last,male,127.0.0.1\r\nmailbox_quota_exceeded@example.com,First,Last,male,127.0.0.1\r\nmailbox_not_found@example.com,First,Last,male,127.0.0.1\r\nno_dns_entries@example.com,First,Last,male,127.0.0.1\r\npossible_trap@example.com,First,Last,male,127.0.0.1\r\npossible_typo@example.com,First,Last,male,127.0.0.1\r\nrole_based@example.com,First,Last,male,127.0.0.1\r\ntimeout_exceeded@example.com,First,Last,male,127.0.0.1\r\nunroutable_ip_address@example.com,First,Last,male,127.0.0.1\r\nfree_email@example.com,First,Last,male,127.0.0.1\r\nrole_based_catch_all@example.com,First,Last,male,127.0.0.1\r\n------RubyFormBoundary2C6dnrt1VFGzYOvh--\r\n"
+      string: "------RubyFormBoundary6jszTNsq8UxVbIjM\r\nContent-Disposition: form-data;
+        name=\"email_address_column\"\r\n\r\n1\r\n------RubyFormBoundary6jszTNsq8UxVbIjM\r\nContent-Disposition:
+        form-data; name=\"has_header_row\"\r\n\r\ntrue\r\n------RubyFormBoundary6jszTNsq8UxVbIjM\r\nContent-Disposition:
+        form-data; name=\"first_name_column\"\r\n\r\n2\r\n------RubyFormBoundary6jszTNsq8UxVbIjM\r\nContent-Disposition:
+        form-data; name=\"last_name_column\"\r\n\r\n3\r\n------RubyFormBoundary6jszTNsq8UxVbIjM\r\nContent-Disposition:
+        form-data; name=\"gender_column\"\r\n\r\n4\r\n------RubyFormBoundary6jszTNsq8UxVbIjM\r\nContent-Disposition:
+        form-data; name=\"api_key\"\r\n\r\n99e7ef20ceea4480a173b07b1be75371\r\n------RubyFormBoundary6jszTNsq8UxVbIjM\r\nContent-Disposition:
+        form-data; name=\"file\"; filename=\"validation.csv\"\r\nContent-Type: text/csv\r\n\r\nemail,first,last,gender,ip\r\ndisposable@example.com,First,Last,male,127.0.0.1\r\ninvalid@example.com,First,Last,male,127.0.0.1\r\nvalid@example.com,First,Last,male,127.0.0.1\r\ntoxic@example.com,First,Last,male,127.0.0.1\r\ndonotmail@example.com,First,Last,male,127.0.0.1\r\nspamtrap@example.com,First,Last,male,127.0.0.1\r\nabuse@example.com,First,Last,male,127.0.0.1\r\nunknown@example.com,First,Last,male,127.0.0.1\r\ncatch_all@example.com,First,Last,male,127.0.0.1\r\nantispam_system@example.com,First,Last,male,127.0.0.1\r\ndoes_not_accept_mail@example.com,First,Last,male,127.0.0.1\r\nexception_occurred@example.com,First,Last,male,127.0.0.1\r\nfailed_smtp_connection@example.com,First,Last,male,127.0.0.1\r\nfailed_syntax_check@example.com,First,Last,male,127.0.0.1\r\nforcible_disconnect@example.com,First,Last,male,127.0.0.1\r\nglobal_suppression@example.com,First,Last,male,127.0.0.1\r\ngreylisted@example.com,First,Last,male,127.0.0.1\r\nleading_period_removed@example.com,First,Last,male,127.0.0.1\r\nmail_server_did_not_respond@example.com,First,Last,male,127.0.0.1\r\nmail_server_temporary_error@example.com,First,Last,male,127.0.0.1\r\nmailbox_quota_exceeded@example.com,First,Last,male,127.0.0.1\r\nmailbox_not_found@example.com,First,Last,male,127.0.0.1\r\nno_dns_entries@example.com,First,Last,male,127.0.0.1\r\npossible_trap@example.com,First,Last,male,127.0.0.1\r\npossible_typo@example.com,First,Last,male,127.0.0.1\r\nrole_based@example.com,First,Last,male,127.0.0.1\r\ntimeout_exceeded@example.com,First,Last,male,127.0.0.1\r\nunroutable_ip_address@example.com,First,Last,male,127.0.0.1\r\nfree_email@example.com,First,Last,male,127.0.0.1\r\nrole_based_catch_all@example.com,First,Last,male,127.0.0.1\r\n------RubyFormBoundary6jszTNsq8UxVbIjM--\r\n"
     headers:
       Accept:
       - "*/*"
@@ -21,7 +21,7 @@ http_interactions:
       Content-Length:
       - '2483'
       Content-Type:
-      - multipart/form-data; boundary=----RubyFormBoundary2C6dnrt1VFGzYOvh
+      - multipart/form-data; boundary=----RubyFormBoundary6jszTNsq8UxVbIjM
       Accept-Encoding:
       - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
       Host:
@@ -32,7 +32,7 @@ http_interactions:
       message: Created
     headers:
       Date:
-      - Fri, 03 Oct 2025 16:07:03 GMT
+      - Thu, 16 Oct 2025 08:28:39 GMT
       Content-Type:
       - application/json
       Content-Length:
@@ -40,7 +40,7 @@ http_interactions:
       Connection:
       - keep-alive
       Cf-Ray:
-      - 988db0a6990ae3e8-OTP
+      - 98f62f0adcb9e462-OTP
       Allow:
       - POST, OPTIONS
       X-Frame-Options:
@@ -70,14 +70,14 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cflb=02DiuJXghHGgGEKfEQatcZtvg2quVmFidRCyERSSr7BbA; SameSite=None; Secure;
-        path=/; expires=Sat, 04-Oct-25 15:07:03 GMT; HttpOnly
+      - __cflb=0H28w1bizUgZQBDMQcnqSLgBPqNFbgA1a51iA8rC1vU; SameSite=None; Secure;
+        path=/; expires=Fri, 17-Oct-25 07:28:39 GMT; HttpOnly
       Server:
       - cloudflare
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: UTF-8
-      string: '{"success":true,"message":"File Accepted","file_name":"validation.csv","file_id":"8fc4ce03-dfd8-43d3-b684-f6ebebd6fef3"}'
-  recorded_at: Fri, 03 Oct 2025 16:07:03 GMT
+      string: '{"success":true,"message":"File Accepted","file_name":"validation.csv","file_id":"84946fc8-3f89-428a-9d0d-382fbe18cb24"}'
+  recorded_at: Thu, 16 Oct 2025 08:28:39 GMT
 recorded_with: VCR 6.1.0

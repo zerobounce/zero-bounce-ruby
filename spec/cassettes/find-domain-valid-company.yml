@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/validate?api_key=99e7ef20ceea4480a173b07b1be75371&email=valid@example.com&ip_address=127.0.0.1
+    uri: https://api.zerobounce.net/v2/guessformat?api_key=99e7ef20ceea4480a173b07b1be75371&company_name=Zero%20Bounce
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Thu, 16 Oct 2025 08:28:31 GMT
+      - Thu, 16 Oct 2025 08:29:35 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -36,16 +36,8 @@ http_interactions:
       - Content-Type
       X-Frame-Options:
       - SAMEORIGIN
-      Last-Modified:
-      - Thu, 16 Oct 2025 08:28:31 GMT
       Cf-Cache-Status:
-      - EXPIRED
-      Expires:
-      - Thu, 16 Oct 2025 12:28:31 GMT
-      Cache-Control:
-      - public, max-age=14400
-      Vary:
-      - Accept-Encoding
+      - DYNAMIC
       Strict-Transport-Security:
       - max-age=15552000; includeSubDomains; preload
       X-Content-Type-Options:
@@ -53,12 +45,12 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 98f62ee76f86c9d0-OTP
+      - 98f6307a19b2e5ae-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"address":"valid@example.com","status":"valid","sub_status":"","free_email":false,"did_you_mean":null,"account":null,"domain":"example.com","domain_age_days":"9692","smtp_provider":"example","mx_found":"true","mx_record":"mx.example.com","firstname":"zero","lastname":"bounce","gender":"male","country":null,"region":null,"city":null,"zipcode":null,"processed_at":"2025-10-16
-        08:28:31.310"}'
-  recorded_at: Thu, 16 Oct 2025 08:28:31 GMT
+      string: '{"domain":"","company_name":"Zero Bounce","format":"unknown","confidence":"undetermined","did_you_mean":"","failure_reason":"There
+        is no domain assigned for this company name.","other_domain_formats":[]}'
+  recorded_at: Thu, 16 Oct 2025 08:29:35 GMT
 recorded_with: VCR 6.1.0

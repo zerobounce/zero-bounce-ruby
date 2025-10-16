@@ -16,10 +16,6 @@ describe Zerobounce do
 	let (:invalid_api_key) { ENV['INCORRECT_API_KEY'] }
 	let (:test_date) { Date.new(2023,9,4) }
 
-        it 'should run mock tests' do
-                puts 'running mock tests'
-        end
-
 	it 'should generate different keys' do
 		expect(valid_api_key).not_to equal(invalid_api_key)
 	end
@@ -637,7 +633,7 @@ describe Zerobounce do
 		context 'given no API key' do
 			it 'should raise an API key error' do
 				expect{ described_class.guessformat(
-					domain: 'example.com',
+					'example.com',
 					first_name: 'John',
 					middle_name: 'Deere',
 					last_name: 'Doe'
@@ -652,7 +648,7 @@ describe Zerobounce do
 			it 'should raise a forbidden error' do
 				VCR.use_cassette 'guessformat-incorrect-api-key' do
 				expect{ described_class.guessformat(
-					domain: 'example.com',
+					'example.com',
 					first_name: 'John',
 					middle_name: 'Deere',
 					last_name: 'Doe')
@@ -692,27 +688,16 @@ describe Zerobounce do
 				described_class.config.apikey = valid_api_key
 			end
 			context 'given no domain' do
-				context 'given no domain or company_name' do
-					it 'should raise an error' do
-						expect{ described_class.guessformat() }.to \
-							raise_error(ArgumentError, /Either domain or company_name must be provided/)
-					end
-				end
-				context 'given both domain and company_name' do
-					it 'should raise an error' do
-						expect{ described_class.guessformat(
-							domain: 'example.com',
-							company_name: 'Example Corp') }.to \
-							raise_error(ArgumentError, /Only one of domain or company_name can be provided/)
-					end
+				it 'should raise an error' do
+					expect{ described_class.guessformat() }.to \
+						raise_error(ArgumentError, /wrong number of arguments/)
 				end
 			end
 			context 'given a valid domain' do
 				context 'given no names' do
 					it 'should return a valid result' do
 						VCR.use_cassette 'guessformat-valid-domain-no-names' do
-						result = described_class.guessformat(
-							domain: 'zerobounce.net')
+						result = described_class.guessformat('zerobounce.net')
 						expect(result).to be_a_kind_of(Hash)
 						expect(result).to include(*fields3)
 						end
@@ -722,7 +707,7 @@ describe Zerobounce do
 					it 'should return a valid result' do
 						VCR.use_cassette 'guessformat-valid-domain-first-name' do
 						result = described_class.guessformat(
-							domain: 'zerobounce.net',
+							'zerobounce.net',
 							first_name: 'John')
 						expect(result).to be_a_kind_of(Hash)
 						expect(result).to include(*fields2)
@@ -733,7 +718,7 @@ describe Zerobounce do
 					it 'should return a valid result' do
 						VCR.use_cassette 'guessformat-valid-domain-last-name' do
 						result = described_class.guessformat(
-							domain: 'zerobounce.net',
+							'zerobounce.net',
 							last_name: 'Doe')
 						expect(result).to be_a_kind_of(Hash)
 						expect(result).to include(*fields2)
@@ -744,7 +729,7 @@ describe Zerobounce do
 					it 'should return a valid result' do
 						VCR.use_cassette 'guessformat-valid-domain-all-names' do
 						result = described_class.guessformat(
-							domain: 'zerobounce.net',
+							'zerobounce.net',
 							first_name: 'John',
 							middle_name: 'Deere',
 							last_name: 'Doe')
@@ -754,50 +739,220 @@ describe Zerobounce do
 					end
 				end
 			end
-			context 'given a valid company name' do
-				context 'given no names' do
-					it 'should return a valid result' do
-						VCR.use_cassette 'guessformat-valid-company-no-names' do
-						result = described_class.guessformat(
-							company_name: 'Zero Bounce')
-						expect(result).to be_a_kind_of(Hash)
-						expect(result).to include(*fields3)
-						end
-					end
+		end
+	end
+
+	describe '.find_email' do
+		context 'given no API key' do
+			before do
+				described_class.config.apikey = nil
+			end
+			it 'should raise an API key error' do
+				expect{ described_class.find_email(
+					'John',
+					domain: 'example.com',
+					middle_name: 'Deere',
+					last_name: 'Doe'
+				) }.to \
+					raise_error(RuntimeError, /API key must be assigned/)
+			end
+		end
+		context 'given incorrect API key' do
+			before do
+				described_class.config.apikey = invalid_api_key
+			end
+			it 'should raise a forbidden error' do
+				VCR.use_cassette 'find-email-incorrect-api-key' do
+				expect{ described_class.find_email(
+					'John',
+					domain: 'example.com',
+					middle_name: 'Deere',
+					last_name: 'Doe')
+				}.to raise_error(RestClient::Forbidden)
 				end
-				context 'given first name' do
+			end
+		end
+		context 'given correct API key' do
+			fields = [
+				'email', 
+				'domain', 
+				'format', 
+				'status',
+				'sub_status', 
+				'confidence', 
+				'did_you_mean',
+				'other_domain_formats'
+			]
+			fields2 = [
+				'company_name',
+				'did_you_mean',
+				'domain',
+				'email',
+				'email_confidence',
+				'failure_reason'
+			]
+			before do
+				described_class.config.apikey = valid_api_key
+			end
+			context 'given no domain or company_name' do
+				it 'should raise an error' do
+					expect{ described_class.find_email('John') }.to \
+						raise_error(ArgumentError, /Either domain or company_name must be provided/)
+				end
+			end
+			context 'given both domain and company_name' do
+				it 'should raise an error' do
+					expect{ described_class.find_email(
+						'John',
+						domain: 'example.com',
+						company_name: 'Example Corp') }.to \
+						raise_error(ArgumentError, /Only one of domain or company_name can be provided/)
+				end
+			end
+			context 'given a valid domain' do
+				context 'given first name only' do
 					it 'should return a valid result' do
-						VCR.use_cassette 'guessformat-valid-company-first-name' do
-						result = described_class.guessformat(
-							company_name: 'Zero Bounce',
-							first_name: 'John')
+						VCR.use_cassette 'find-email-valid-domain-first-name' do
+						result = described_class.find_email(
+							'John',
+							domain: 'zerobounce.net')
 						expect(result).to be_a_kind_of(Hash)
 						expect(result).to include(*fields2)
 						end
 					end
 				end
-				context 'given last name' do
+				context 'given first and last name' do
 					it 'should return a valid result' do
-						VCR.use_cassette 'guessformat-valid-company-last-name' do
-						result = described_class.guessformat(
-							company_name: 'Zero Bounce',
+						VCR.use_cassette 'find-email-valid-domain-first-last-name' do
+						result = described_class.find_email(
+							'John',
+							domain: 'zerobounce.net',
 							last_name: 'Doe')
 						expect(result).to be_a_kind_of(Hash)
 						expect(result).to include(*fields2)
 						end
 					end
 				end
-				context 'given first, last, and, middle names' do
+				context 'given first, middle, and last names' do
 					it 'should return a valid result' do
-						VCR.use_cassette 'guessformat-valid-company-all-names' do
-						result = described_class.guessformat(
-							company_name: 'Zero Bounce',
-							first_name: 'John',
+						VCR.use_cassette 'find-email-valid-domain-all-names' do
+						result = described_class.find_email(
+							'John',
+							domain: 'zerobounce.net',
 							middle_name: 'Deere',
 							last_name: 'Doe')
 						expect(result).to be_a_kind_of(Hash)
 						expect(result).to include(*fields2)
 						end
+					end
+				end
+			end
+			context 'given a valid company name' do
+				context 'given first name only' do
+					it 'should return a valid result' do
+						VCR.use_cassette 'find-email-valid-company-first-name' do
+						result = described_class.find_email(
+							'John',
+							company_name: 'Zero Bounce')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields2)
+						end
+					end
+				end
+				context 'given first and last name' do
+					it 'should return a valid result' do
+						VCR.use_cassette 'find-email-valid-company-first-last-name' do
+						result = described_class.find_email(
+							'John',
+							company_name: 'Zero Bounce',
+							last_name: 'Doe')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields2)
+						end
+					end
+				end
+				context 'given first, middle, and last names' do
+					it 'should return a valid result' do
+						VCR.use_cassette 'find-email-valid-company-all-names' do
+						result = described_class.find_email(
+							'John',
+							company_name: 'Zero Bounce',
+							middle_name: 'Deere',
+							last_name: 'Doe')
+						expect(result).to be_a_kind_of(Hash)
+						expect(result).to include(*fields2)
+						end
+					end
+				end
+			end
+		end
+	end
+
+	describe '.find_domain' do
+		context 'given no API key' do
+			it 'should raise an API key error' do
+				expect{ described_class.find_domain(
+					domain: 'example.com'
+				) }.to \
+					raise_error(RuntimeError, /API key must be assigned/)
+			end
+		end
+		context 'given incorrect API key' do
+			before do
+				described_class.config.apikey = invalid_api_key
+			end
+			it 'should raise a forbidden error' do
+				VCR.use_cassette 'find-domain-incorrect-api-key' do
+				expect{ described_class.find_domain(
+					domain: 'example.com')
+				}.to raise_error(RestClient::Forbidden)
+				end
+			end
+		end
+		context 'given correct API key' do
+			fields = [
+				'domain',
+				'company_name',
+				'format',
+				'confidence',
+				'did_you_mean',
+				'failure_reason',
+				'other_domain_formats'
+			]
+			before do
+				described_class.config.apikey = valid_api_key
+			end
+			context 'given no domain or company_name' do
+				it 'should raise an error' do
+					expect{ described_class.find_domain() }.to \
+						raise_error(ArgumentError, /Either domain or company_name must be provided/)
+				end
+			end
+			context 'given both domain and company_name' do
+				it 'should raise an error' do
+					expect{ described_class.find_domain(
+						domain: 'example.com',
+						company_name: 'Example Corp') }.to \
+						raise_error(ArgumentError, /Only one of domain or company_name can be provided/)
+				end
+			end
+			context 'given a valid domain' do
+				it 'should return a valid result' do
+					VCR.use_cassette 'find-domain-valid-domain' do
+					result = described_class.find_domain(
+						domain: 'zerobounce.net')
+					expect(result).to be_a_kind_of(Hash)
+					expect(result).to include(*fields)
+					end
+				end
+			end
+			context 'given a valid company name' do
+				it 'should return a valid result' do
+					VCR.use_cassette 'find-domain-valid-company' do
+					result = described_class.find_domain(
+						company_name: 'Zero Bounce')
+					expect(result).to be_a_kind_of(Hash)
+					expect(result).to include(*fields)
 					end
 				end
 			end
