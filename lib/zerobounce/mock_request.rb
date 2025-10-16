@@ -8,7 +8,7 @@ module Zerobounce
   class MockRequest < BaseRequest
 
     def self.get(path, params, content_type='application/json')
-      response = self._get(Zerobounce::API_ROOT_URL, path, params, content_type)
+      response = self._get(Zerobounce.configuration.api_root_url, path, params, content_type)
       if response.headers[:content_type] == 'application/json'
         response_body = response.body
         response_body_json = JSON.parse(response_body)
@@ -25,7 +25,7 @@ module Zerobounce
     end
 
     def self.bulk_get(path, params, content_type='application/json')
-      response = self._get(Zerobounce::BULK_API_ROOT_URL, path, params, content_type)
+      response = self._get(Zerobounce.configuration.bulk_api_root_url, path, params, content_type)
       if response.headers[:content_type] == 'application/json'
         response_body = response.body
         response_body_json = JSON.parse(response_body)
@@ -42,7 +42,7 @@ module Zerobounce
     end
 
     def self.bulk_post(path, params, content_type='application/json', filepath=nil)
-      response = self._post(Zerobounce::BULK_API_ROOT_URL, path, params, \
+      response = self._post(Zerobounce.configuration.bulk_api_root_url, path, params, \
           content_type, filepath)
       if response.headers[:content_type] == 'application/json'
         response_body = response.body

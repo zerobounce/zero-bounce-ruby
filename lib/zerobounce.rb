@@ -8,12 +8,10 @@ require 'zerobounce/version'
 require 'zerobounce/request'
 require 'zerobounce/mock_request'
 require 'zerobounce/configuration'
+require 'zerobounce/api_urls'
 
 # Validate an email address with Zerobounce.net
 module Zerobounce
-
-  API_ROOT_URL      = 'https://api.zerobounce.net/v2'
-  BULK_API_ROOT_URL = 'https://bulkapi.zerobounce.net/v2'
 
   class << self
     attr_writer :configuration
@@ -426,30 +424,58 @@ module Zerobounce
     # 	    {"format"=>"l_first", "confidence"=>"low"}
     #    ]
     # }
-    def guessformat(domain: nil, first_name: '', middle_name: '', last_name: '', company_name: nil)
+    def guessformat(domain, first_name: '', middle_name: '', last_name: '')
+      params = {domain: domain}
+      params[:first_name] = first_name unless first_name.nil? || first_name.empty?
+      params[:middle_name] = middle_name unless middle_name.nil? || middle_name.empty?
+      params[:last_name] = last_name unless last_name.nil? || last_name.empty?  
+      @@request.get('guessformat', params)
+    end
+
+
+    # Find email address format
+    #
+    # @option [String] domain Domain to search within (e.g. example.com). Required if company_name is not provided.
+    # @option [String] company_name Company name to search within (e.g. Example). Required if domain is not provided.
+    # @option [String] first_name First name of target.
+    # @option [String] middle_name Middle name of target.
+    # @option [String] last_name Last name of target.
+    #
+    # @return [Hash]
+    def find_email(first_name, domain: '', company_name: '', middle_name: '', last_name: '')
       # Validate that exactly one of domain or company_name is provided
-      if domain.nil? && company_name.nil?
+      if (domain.nil? || domain.empty?) && (company_name.nil? || company_name.empty?)
         raise ArgumentError, "Either domain or company_name must be provided"
-      elsif !domain.nil? && !company_name.nil?
+      elsif !(domain.nil? || domain.empty?) && !(company_name.nil? || company_name.empty?)
+        raise ArgumentError, "Only one of domain or company_name can be provided"
+      end
+
+      params = { first_name: first_name }
+      params[:domain] = domain unless domain.nil? || domain.empty?
+      params[:company_name] = company_name unless company_name.nil? || company_name.empty?
+      params[:middle_name] = middle_name unless middle_name.nil? || middle_name.empty?
+      params[:last_name] = last_name unless last_name.nil? || last_name.empty?
+
+      @@request.get('guessformat', params)
+    end
+
+    # Find domain format
+    # 
+    # @option [String] domain Domain to search within (e.g. example.com). Required if company_name is not provided.
+    # @option [String] company_name Company name to search within (e.g. Example). Required if domain is not provided.
+    # 
+    # @return [Hash]
+    def find_domain(domain: '', company_name: '')
+      # Validate that exactly one of domain or company_name is provided
+      if (domain.nil? || domain.empty?) && (company_name.nil? || company_name.empty?)
+        raise ArgumentError, "Either domain or company_name must be provided"
+      elsif !(domain.nil? || domain.empty?) && !(company_name.nil? || company_name.empty?)
         raise ArgumentError, "Only one of domain or company_name can be provided"
       end
 
       params = {}
-      if domain
-        params[:domain] = domain
-      else
-        params[:company_name] = company_name
-      end
-
-      unless first_name.empty?
-        params['first_name'] = first_name
-      end
-      unless middle_name.empty?
-        params['middle_name'] = middle_name
-      end
-      unless last_name.empty?
-        params['last_name'] = last_name
-      end
+      params[:domain] = domain unless domain.nil? || domain.empty?
+      params[:company_name] = company_name unless company_name.nil? || company_name.empty?
 
       @@request.get('guessformat', params)
     end

@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/guessformat?api_key=f1a18969819a4c5c9fbb58e368d947f1&domain=zerobounce.net&first_name=John&last_name=Doe&middle_name=Deere
+    uri: https://api.zerobounce.net/v2/guessformat?api_key=99e7ef20ceea4480a173b07b1be75371&domain=zerobounce.net&first_name=John&last_name=Doe&middle_name=Deere
     body:
       encoding: US-ASCII
       string: ''
@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Fri, 03 Oct 2025 16:07:23 GMT
+      - Thu, 16 Oct 2025 08:29:06 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -45,11 +45,12 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 988db0f04f25ca29-OTP
+      - 98f62f84e831c9f0-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"email":"john.doe@zerobounce.net","email_confidence":"medium","domain":"zerobounce.net","company_name":"","did_you_mean":"","failure_reason":""}'
-  recorded_at: Fri, 03 Oct 2025 16:07:23 GMT
+      string: '{"email":"john.doe@zerobounce.net","email_confidence":"medium","domain":"zerobounce.net","company_name":"Hertza,
+        LLC","did_you_mean":"","failure_reason":""}'
+  recorded_at: Thu, 16 Oct 2025 08:29:06 GMT
 recorded_with: VCR 6.1.0
