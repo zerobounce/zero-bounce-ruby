@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Thu, 16 Oct 2025 08:28:49 GMT
+      - Thu, 16 Oct 2025 08:29:35 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -45,11 +45,11 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 98f62f478a0ee5ae-OTP
+      - 98f6306878e3c9d1-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
       string: '{"domain":"zerobounce.net","company_name":"ZeroBounce","format":"first.last","confidence":"high","did_you_mean":"","failure_reason":"","other_domain_formats":[{"format":"first","confidence":"high"},{"format":"last.first","confidence":"high"},{"format":"lastfirst","confidence":"high"},{"format":"firstl","confidence":"high"},{"format":"lfirst","confidence":"high"},{"format":"firstlast","confidence":"high"},{"format":"last_middle_f","confidence":"high"},{"format":"last","confidence":"high"},{"format":"f.last","confidence":"medium"},{"format":"last-f","confidence":"medium"},{"format":"l.first","confidence":"medium"},{"format":"last_f","confidence":"medium"},{"format":"first.middle.last","confidence":"medium"},{"format":"first-last","confidence":"medium"},{"format":"last.f","confidence":"medium"},{"format":"last_first","confidence":"medium"},{"format":"f-last","confidence":"medium"},{"format":"first.l","confidence":"medium"},{"format":"first-l","confidence":"medium"},{"format":"first_l","confidence":"medium"},{"format":"first_last","confidence":"medium"},{"format":"f_last","confidence":"medium"},{"format":"last-first","confidence":"medium"},{"format":"flast","confidence":"medium"},{"format":"lastf","confidence":"medium"},{"format":"l_first","confidence":"medium"},{"format":"l-first","confidence":"medium"},{"format":"first-middle-last","confidence":"low"},{"format":"firstmlast","confidence":"low"},{"format":"last.middle.first","confidence":"low"},{"format":"last_middle_first","confidence":"low"},{"format":"first_middle_last","confidence":"low"},{"format":"last-middle-first","confidence":"low"},{"format":"first-m-last","confidence":"low"},{"format":"firstmiddlelast","confidence":"low"},{"format":"last.m.first","confidence":"low"},{"format":"lastmfirst","confidence":"low"},{"format":"lastmiddlefirst","confidence":"low"},{"format":"last_m_first","confidence":"low"},{"format":"first.m.last","confidence":"low"},{"format":"first_m_last","confidence":"low"},{"format":"last-m-first","confidence":"low"}]}'
-  recorded_at: Thu, 16 Oct 2025 08:28:49 GMT
+  recorded_at: Thu, 16 Oct 2025 08:29:35 GMT
 recorded_with: VCR 6.1.0

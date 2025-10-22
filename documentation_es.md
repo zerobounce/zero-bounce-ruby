@@ -412,6 +412,81 @@ Zerobounce.guessformat("zerobounce.net")
 # Zerobounce.guessformat("zerobounce.net", first_name: "John", middle_name: 'Deere', last_name: "Doe")
 ```
 
+Encontrar Dirección de Email
+```ruby
+Zerobounce.find_email("John", domain: "zerobounce.net")
+=>
+{
+  "email": "john@zerobounce.net",
+  "email_confidence": "medium",
+  "domain": "zerobounce.net",
+  "company_name": "ZeroBounce",
+  "did_you_mean": "",
+  "failure_reason": ""
+}
+
+# Con información adicional de nombres para mayor precisión
+Zerobounce.find_email("John", domain: "zerobounce.net", middle_name: "Deere", last_name: "Doe")
+```
+
+Encontrar Información del Dominio
+```ruby
+Zerobounce.find_domain(domain: "zerobounce.net")
+=>
+{
+  "domain": "zerobounce.net",
+  "company_name": "Hertza, LLC",
+  "format": "first.last",
+  "confidence": "high",
+  "did_you_mean": "",
+  "failure_reason": "",
+  "other_domain_formats": [
+    {"format": "first", "confidence": "high"},
+    {"format": "last.first", "confidence": "high"},
+    {"format": "lastfirst", "confidence": "high"},
+    {"format": "firstl", "confidence": "high"},
+    {"format": "lfirst", "confidence": "high"},
+    {"format": "firstlast", "confidence": "high"},
+    {"format": "last_middle_f", "confidence": "high"},
+    {"format": "last", "confidence": "high"},
+    {"format": "f.last", "confidence": "medium"},
+    {"format": "last-f", "confidence": "medium"},
+    {"format": "l.first", "confidence": "medium"},
+    {"format": "last_f", "confidence": "medium"},
+    {"format": "first.middle.last", "confidence": "medium"},
+    {"format": "first-last", "confidence": "medium"},
+    {"format": "last.f", "confidence": "medium"},
+    {"format": "last_first", "confidence": "medium"},
+    {"format": "f-last", "confidence": "medium"},
+    {"format": "first.l", "confidence": "medium"},
+    {"format": "first-l", "confidence": "medium"},
+    {"format": "first_l", "confidence": "medium"},
+    {"format": "first_last", "confidence": "medium"},
+    {"format": "f_last", "confidence": "medium"},
+    {"format": "last-first", "confidence": "medium"},
+    {"format": "flast", "confidence": "medium"},
+    {"format": "lastf", "confidence": "medium"},
+    {"format": "l_first", "confidence": "medium"},
+    {"format": "l-first", "confidence": "medium"},
+    {"format": "first-middle-last", "confidence": "low"},
+    {"format": "firstmlast", "confidence": "low"},
+    {"format": "last.middle.first", "confidence": "low"},
+    {"format": "last_middle_first", "confidence": "low"},
+    {"format": "first_middle_last", "confidence": "low"},
+    {"format": "last-middle-first", "confidence": "low"},
+    {"format": "first-m-last", "confidence": "low"},
+    {"format": "firstmiddlelast", "confidence": "low"},
+    {"format": "last.m.first", "confidence": "low"},
+    {"format": "lastmfirst", "confidence": "low"},
+    {"format": "lastmiddlefirst", "confidence": "low"},
+    {"format": "last_m_first", "confidence": "low"},
+    {"format": "first.m.last", "confidence": "low"},
+    {"format": "first_m_last", "confidence": "low"},
+    {"format": "last-m-first", "confidence": "low"}
+  ]
+}
+```
+
 
 #### Desarrollo
 

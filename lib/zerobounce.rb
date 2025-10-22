@@ -8,12 +8,10 @@ require 'zerobounce/version'
 require 'zerobounce/request'
 require 'zerobounce/mock_request'
 require 'zerobounce/configuration'
+require 'zerobounce/api_urls'
 
 # Validate an email address with Zerobounce.net
 module Zerobounce
-
-  API_ROOT_URL      = 'https://api.zerobounce.net/v2'
-  BULK_API_ROOT_URL = 'https://bulkapi.zerobounce.net/v2'
 
   class << self
     attr_writer :configuration
@@ -427,18 +425,117 @@ module Zerobounce
     #    ]
     # }
     def guessformat(domain, first_name: '', middle_name: '', last_name: '')
-      params = {
-        domain: domain
-      }
-      unless first_name.empty?
-        params['first_name'] = first_name
+      params = {domain: domain}
+      params[:first_name] = first_name unless first_name.nil? || first_name.empty?
+      params[:middle_name] = middle_name unless middle_name.nil? || middle_name.empty?
+      params[:last_name] = last_name unless last_name.nil? || last_name.empty?  
+      @@request.get('guessformat', params)
+    end
+
+
+    # Find email address format
+    #
+    # @option [String] domain Domain to search within (e.g. example.com). Required if company_name is not provided.
+    # @option [String] company_name Company name to search within (e.g. Example). Required if domain is not provided.
+    # @option [String] first_name First name of target.
+    # @option [String] middle_name Middle name of target.
+    # @option [String] last_name Last name of target.
+    #
+    # @return [Hash]
+    # {
+    #   "email": "john@zerobounce.net",
+    #   "email_confidence": "medium",
+    #   "domain": "zerobounce.net",
+    #   "company_name": "ZeroBounce",
+    #   "did_you_mean": "",
+    #   "failure_reason": ""
+    # }
+    def find_email(first_name, domain: '', company_name: '', middle_name: '', last_name: '')
+      # Validate that exactly one of domain or company_name is provided
+      if (domain.nil? || domain.empty?) && (company_name.nil? || company_name.empty?)
+        raise ArgumentError, "Either domain or company_name must be provided"
+      elsif !(domain.nil? || domain.empty?) && !(company_name.nil? || company_name.empty?)
+        raise ArgumentError, "Only one of domain or company_name can be provided"
       end
-      unless middle_name.empty?
-        params['middle_name'] = middle_name
+
+      params = { first_name: first_name }
+      params[:domain] = domain unless domain.nil? || domain.empty?
+      params[:company_name] = company_name unless company_name.nil? || company_name.empty?
+      params[:middle_name] = middle_name unless middle_name.nil? || middle_name.empty?
+      params[:last_name] = last_name unless last_name.nil? || last_name.empty?
+
+      @@request.get('guessformat', params)
+    end
+
+    # Find domain format
+    # 
+    # @option [String] domain Domain to search within (e.g. example.com). Required if company_name is not provided.
+    # @option [String] company_name Company name to search within (e.g. Example). Required if domain is not provided.
+    # 
+    # @return [Hash]
+    # {
+    #   "domain": "zerobounce.net",
+    #   "company_name": "Hertza, LLC",
+    #   "format": "first.last",
+    #   "confidence": "high",
+    #   "did_you_mean": "",
+    #   "failure_reason": "",
+    #   "other_domain_formats": [
+    #     {"format": "first", "confidence": "high"},
+    #     {"format": "last.first", "confidence": "high"},
+    #     {"format": "lastfirst", "confidence": "high"},
+    #     {"format": "firstl", "confidence": "high"},
+    #     {"format": "lfirst", "confidence": "high"},
+    #     {"format": "firstlast", "confidence": "high"},
+    #     {"format": "last_middle_f", "confidence": "high"},
+    #     {"format": "last", "confidence": "high"},
+    #     {"format": "f.last", "confidence": "medium"},
+    #     {"format": "last-f", "confidence": "medium"},
+    #     {"format": "l.first", "confidence": "medium"},
+    #     {"format": "last_f", "confidence": "medium"},
+    #     {"format": "first.middle.last", "confidence": "medium"},
+    #     {"format": "first-last", "confidence": "medium"},
+    #     {"format": "last.f", "confidence": "medium"},
+    #     {"format": "last_first", "confidence": "medium"},
+    #     {"format": "f-last", "confidence": "medium"},
+    #     {"format": "first.l", "confidence": "medium"},
+    #     {"format": "first-l", "confidence": "medium"},
+    #     {"format": "first_l", "confidence": "medium"},
+    #     {"format": "first_last", "confidence": "medium"},
+    #     {"format": "f_last", "confidence": "medium"},
+    #     {"format": "last-first", "confidence": "medium"},
+    #     {"format": "flast", "confidence": "medium"},
+    #     {"format": "lastf", "confidence": "medium"},
+    #     {"format": "l_first", "confidence": "medium"},
+    #     {"format": "l-first", "confidence": "medium"},
+    #     {"format": "first-middle-last", "confidence": "low"},
+    #     {"format": "firstmlast", "confidence": "low"},
+    #     {"format": "last.middle.first", "confidence": "low"},
+    #     {"format": "last_middle_first", "confidence": "low"},
+    #     {"format": "first_middle_last", "confidence": "low"},
+    #     {"format": "last-middle-first", "confidence": "low"},
+    #     {"format": "first-m-last", "confidence": "low"},
+    #     {"format": "firstmiddlelast", "confidence": "low"},
+    #     {"format": "last.m.first", "confidence": "low"},
+    #     {"format": "lastmfirst", "confidence": "low"},
+    #     {"format": "lastmiddlefirst", "confidence": "low"},
+    #     {"format": "last_m_first", "confidence": "low"},
+    #     {"format": "first.m.last", "confidence": "low"},
+    #     {"format": "first_m_last", "confidence": "low"},
+    #     {"format": "last-m-first", "confidence": "low"}
+    #   ]
+    # }
+    def find_domain(domain: '', company_name: '')
+      # Validate that exactly one of domain or company_name is provided
+      if (domain.nil? || domain.empty?) && (company_name.nil? || company_name.empty?)
+        raise ArgumentError, "Either domain or company_name must be provided"
+      elsif !(domain.nil? || domain.empty?) && !(company_name.nil? || company_name.empty?)
+        raise ArgumentError, "Only one of domain or company_name can be provided"
       end
-      unless last_name.empty?
-        params['last_name'] = last_name
-      end
+
+      params = {}
+      params[:domain] = domain unless domain.nil? || domain.empty?
+      params[:company_name] = company_name unless company_name.nil? || company_name.empty?
 
       @@request.get('guessformat', params)
     end

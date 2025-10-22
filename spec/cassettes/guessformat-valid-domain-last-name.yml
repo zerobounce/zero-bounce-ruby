@@ -21,7 +21,7 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 05 Feb 2024 14:48:49 GMT
+      - Thu, 16 Oct 2025 08:28:56 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
@@ -45,12 +45,11 @@ http_interactions:
       Server:
       - cloudflare
       Cf-Ray:
-      - 850bf4d5eef0b9cc-OTP
+      - 98f62f6a5d24e4ad-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"email":"","domain":"zerobounce.net","format":"unknown","status":"","sub_status":"","confidence":"undetermined","did_you_mean":"","failure_reason":"Cannot
-        identify email format.","other_domain_formats":[]}'
-  recorded_at: Mon, 05 Feb 2024 14:48:49 GMT
+      string: '{"email":"doe@zerobounce.net","email_confidence":"medium","domain":"zerobounce.net","company_name":"ZeroBounce","did_you_mean":"","failure_reason":""}'
+  recorded_at: Thu, 16 Oct 2025 08:28:56 GMT
 recorded_with: VCR 6.1.0

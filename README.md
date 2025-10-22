@@ -23,18 +23,127 @@ Import
 require 'zerobounce'
 ```
 
-Set a valid ZeroBounce API key.
+## Configuration
+
+### Setting API Key
+
+#### Method 1: Using configure block (recommended)
 ```ruby
 Zerobounce.configure do |config|
   config.apikey = '<zerobounce-api-key>'
-  ...
+  # Optional: Set custom API URLs
+  config.api_root_url = 'https://api.zerobounce.net/v2'
+  config.bulk_api_root_url = 'https://bulkapi.zerobounce.net/v2'
 end
 ```
-or
+
+#### Method 1a: Using ApiUrls constants (convenience)
+```ruby
+# Global API (default)
+Zerobounce.configure do |config|
+  config.apikey = '<zerobounce-api-key>'
+  config.api_root_url = Zerobounce::ApiUrls::DEFAULT_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
+
+# European API (convenience)
+Zerobounce.configure do |config|
+  config.apikey = '<zerobounce-api-key>'
+  config.api_root_url = Zerobounce::ApiUrls::EU_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
+
+# US API (convenience)
+Zerobounce.configure do |config|
+  config.apikey = '<zerobounce-api-key>'
+  config.api_root_url = Zerobounce::ApiUrls::US_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
 ```
+
+#### Method 2: Direct configuration
+```ruby
 Zerobounce.config.apikey = '<zerobounce-api-key>'
-...
+# Optional: Set custom API URLs
+Zerobounce.config.api_root_url = 'https://api.zerobounce.net/v2'
+Zerobounce.config.bulk_api_root_url = 'https://bulkapi.zerobounce.net/v2'
 ```
+
+#### Method 3: Using environment variables
+Create a `.env` file in your project root:
+```bash
+ZEROBOUNCE_API_KEY=your_api_key_here
+ZEROBOUNCE_API_URL=https://api.zerobounce.net/v2
+ZEROBOUNCE_BULK_API_URL=https://bulkapi.zerobounce.net/v2
+```
+
+The gem will automatically load these environment variables when initialized. No additional configuration needed in your code.
+
+#### Method 4: System environment variables
+Set environment variables in your system:
+```bash
+export ZEROBOUNCE_API_KEY=your_api_key_here
+export ZEROBOUNCE_API_URL=https://api.zerobounce.net/v2
+export ZEROBOUNCE_BULK_API_URL=https://bulkapi.zerobounce.net/v2
+```
+
+
+### API URL Configuration Details
+
+#### Default Behavior
+If you don't specify `api_root_url` or `bulk_api_root_url`, the gem will use the following defaults:
+- **Main API**: `https://api.zerobounce.net/v2`
+- **Bulk API**: `https://bulkapi.zerobounce.net/v2`
+
+These defaults are defined in the `Zerobounce::ApiUrls` class constants:
+- `Zerobounce::ApiUrls::DEFAULT_URL` - Main API URL (Global)
+- `Zerobounce::ApiUrls::EU_URL` - European API URL
+- `Zerobounce::ApiUrls::US_URL` - US API URL
+- `Zerobounce::ApiUrls::BULK_DEFAULT_URL` - Bulk API URL
+
+#### Using ApiUrls Constants
+You can use the predefined constants in your configuration. The EU and US URLs are provided as convenience options:
+
+```ruby
+# Global API (default)
+Zerobounce.configure do |config|
+  config.apikey = 'your-api-key'
+  config.api_root_url = Zerobounce::ApiUrls::DEFAULT_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
+
+# European API
+Zerobounce.configure do |config|
+  config.apikey = 'your-api-key'
+  config.api_root_url = Zerobounce::ApiUrls::EU_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
+
+# US API
+Zerobounce.configure do |config|
+  config.apikey = 'your-api-key'
+  config.api_root_url = Zerobounce::ApiUrls::US_URL
+  config.bulk_api_root_url = Zerobounce::ApiUrls::BULK_DEFAULT_URL
+end
+```
+
+#### Custom API URLs
+You can override the default URLs for custom deployments or testing:
+
+```ruby
+Zerobounce.configure do |config|
+  config.apikey = 'your-api-key'
+  # Use custom URLs (e.g., for testing or custom deployments)
+  config.api_root_url = 'https://custom-api.example.com/v2'
+  config.bulk_api_root_url = 'https://custom-bulk-api.example.com/v2'
+end
+```
+
+#### Environment Variable Priority
+The configuration follows this priority order (highest to lowest):
+1. Explicitly set in code (`config.api_root_url = '...'`)
+2. Environment variables (`ZEROBOUNCE_API_URL`, `ZEROBOUNCE_BULK_API_URL`)
+3. Default constants (`ApiUrls::DEFAULT_URL`, `ApiUrls::BULK_DEFAULT_URL`)
 
 Credits
 ```ruby
@@ -412,9 +521,10 @@ When `has_header_row: false` is provided to `scoring_file_send()` method, column
 
 ### Email Finder
 
-Guess Format
+Guess Format by Domain
 ```ruby
-Zerobounce.guessformat("zerobounce.net")
+# New keyword argument syntax (recommended)
+Zerobounce.guessformat(domain: "zerobounce.net")
 =>
 {"email"=>"",
  "domain"=>"zerobounce.net",
@@ -451,7 +561,134 @@ Zerobounce.guessformat("zerobounce.net")
    {"format"=>"lastf", "confidence"=>"medium"},
    {"format"=>"l-first", "confidence"=>"low"},
    {"format"=>"l_first", "confidence"=>"low"}]}
-# Zerobounce.guessformat("zerobounce.net", first_name: "John", middle_name: 'Deere', last_name: "Doe")
+
+# With names for better accuracy (new syntax)
+Zerobounce.guessformat(domain: "zerobounce.net", first_name: "John", middle_name: 'Deere', last_name: "Doe")
+
+# Backwards compatible syntax (still supported)
+Zerobounce.guessformat("zerobounce.net")
+Zerobounce.guessformat("zerobounce.net", first_name: "John", middle_name: 'Deere', last_name: "Doe")
+```
+
+Guess Format by Company Name
+```ruby
+# New keyword argument syntax (recommended)
+Zerobounce.guessformat(company_name: "Zero Bounce")
+=>
+{"email"=>"",
+ "company_name"=>"Zero Bounce",
+ "format"=>"first.last",
+ "status"=>"",
+ "sub_status"=>"",
+ "confidence"=>"high",
+ "did_you_mean"=>"",
+ "failure_reason"=>"",
+ "other_domain_formats"=>[...]}
+
+# With names for better accuracy (new syntax)
+Zerobounce.guessformat(first_name: "John", last_name: "Doe", company_name: "Zero Bounce")
+```
+
+Find Email Address
+```ruby
+# Find email by domain
+Zerobounce.find_email("John", domain: "zerobounce.net")
+=>
+{
+  "email": "john@zerobounce.net",
+  "email_confidence": "medium",
+  "domain": "zerobounce.net",
+  "company_name": "ZeroBounce",
+  "did_you_mean": "",
+  "failure_reason": ""
+}
+
+# Find email by company name
+Zerobounce.find_email("John", company_name: "Zero Bounce")
+=>
+{
+  "email": "john@zerobounce.net",
+  "email_confidence": "medium",
+  "domain": "zerobounce.net",
+  "company_name": "ZeroBounce",
+  "did_you_mean": "",
+  "failure_reason": ""
+}
+
+# With additional name information for better accuracy
+Zerobounce.find_email("John", domain: "zerobounce.net", middle_name: "Deere", last_name: "Doe")
+```
+
+Find Domain Information
+```ruby
+# Find domain format by domain
+Zerobounce.find_domain(domain: "zerobounce.net")
+=>
+{
+  "domain": "zerobounce.net",
+  "company_name": "Hertza, LLC",
+  "format": "first.last",
+  "confidence": "high",
+  "did_you_mean": "",
+  "failure_reason": "",
+  "other_domain_formats": [
+    {"format": "first", "confidence": "high"},
+    {"format": "last.first", "confidence": "high"},
+    {"format": "lastfirst", "confidence": "high"},
+    {"format": "firstl", "confidence": "high"},
+    {"format": "lfirst", "confidence": "high"},
+    {"format": "firstlast", "confidence": "high"},
+    {"format": "last_middle_f", "confidence": "high"},
+    {"format": "last", "confidence": "high"},
+    {"format": "f.last", "confidence": "medium"},
+    {"format": "last-f", "confidence": "medium"},
+    {"format": "l.first", "confidence": "medium"},
+    {"format": "last_f", "confidence": "medium"},
+    {"format": "first.middle.last", "confidence": "medium"},
+    {"format": "first-last", "confidence": "medium"},
+    {"format": "last.f", "confidence": "medium"},
+    {"format": "last_first", "confidence": "medium"},
+    {"format": "f-last", "confidence": "medium"},
+    {"format": "first.l", "confidence": "medium"},
+    {"format": "first-l", "confidence": "medium"},
+    {"format": "first_l", "confidence": "medium"},
+    {"format": "first_last", "confidence": "medium"},
+    {"format": "f_last", "confidence": "medium"},
+    {"format": "last-first", "confidence": "medium"},
+    {"format": "flast", "confidence": "medium"},
+    {"format": "lastf", "confidence": "medium"},
+    {"format": "l_first", "confidence": "medium"},
+    {"format": "l-first", "confidence": "medium"},
+    {"format": "first-middle-last", "confidence": "low"},
+    {"format": "firstmlast", "confidence": "low"},
+    {"format": "last.middle.first", "confidence": "low"},
+    {"format": "last_middle_first", "confidence": "low"},
+    {"format": "first_middle_last", "confidence": "low"},
+    {"format": "last-middle-first", "confidence": "low"},
+    {"format": "first-m-last", "confidence": "low"},
+    {"format": "firstmiddlelast", "confidence": "low"},
+    {"format": "last.m.first", "confidence": "low"},
+    {"format": "lastmfirst", "confidence": "low"},
+    {"format": "lastmiddlefirst", "confidence": "low"},
+    {"format": "last_m_first", "confidence": "low"},
+    {"format": "first.m.last", "confidence": "low"},
+    {"format": "first_m_last", "confidence": "low"},
+    {"format": "last-m-first", "confidence": "low"}
+  ]
+}
+
+# Find domain format by company name
+Zerobounce.find_domain(company_name: "Zero Bounce")
+=>
+{
+  "domain": "zerobounce.net",
+  "company_name": "Zero Bounce",
+  "format": "first.last",
+  "confidence": "high",
+  "did_you_mean": "",
+  "failure_reason": "",
+  "other_domain_formats": [...]
+}
 ```
 
 ## Development
@@ -470,14 +707,12 @@ bundle install
 
 ### Run tests
 ```bash
-rspec --init # if needed
 bundle exec rspec
 ```
 
 You should see an output like this
 ```bash
-Run options: include {:focus=>true}
-running live tests
+running mock tests
 .....................................................
 
 Finished in 6.81 seconds (files took 0.40587 seconds to load)
@@ -486,20 +721,18 @@ Finished in 6.81 seconds (files took 0.40587 seconds to load)
 
 ### Test parameters
 The tests use the following environment parameters:
-TEST {unit|live} influences whether mocked unit tests are run or the live server is used (credits may be used if you choose to do this)
-ZEROBOUNCE_API_KEY {<zerobounce-api-key-value>} this key is used to make requests to the live server; it is also used in mock tests as a valid key sample (any value will work for mock tests)
+ZEROBOUNCE_API_KEY {<zerobounce-api-key-value>} this key is used in mock tests as a valid key sample (any value will work for mock tests)
 INCORRECT_API_KEY {any non whitespace string value that is not a valid key} used for tests where the requests are meant to fail due to the API key value.
 
 To set them
 ```bash
 export ZEROBOUNCE_API_KEY=99e7ef20ceea4480a173b07b1be75371
 export INCORRECT_API_KEY=thiskeyisinvalidorotherwiseincorrect
-export TEST=unit
 ```
 
 A .env.sample file is provided.
 
-Mock tests were generated using webmock and vcr. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.sample file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
+Tests use webmock and vcr for mocking HTTP requests. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.sample file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
 
 ### Publish
 ```bash

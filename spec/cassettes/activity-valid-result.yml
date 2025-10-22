@@ -21,13 +21,15 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 05 Feb 2024 15:28:25 GMT
+      - Thu, 16 Oct 2025 08:28:31 GMT
       Content-Type:
       - application/json
       Content-Length:
-      - '37'
+      - '38'
       Connection:
       - keep-alive
+      Cf-Ray:
+      - 98f62ee86816e40d-OTP
       Access-Control-Allow-Origin:
       - "*"
       Access-Control-Allow-Methods:
@@ -44,12 +46,10 @@ http_interactions:
       - nosniff
       Server:
       - cloudflare
-      Cf-Ray:
-      - 850c2edfbce10531-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: UTF-8
-      string: '{"found":false,"active_in_days":null}'
-  recorded_at: Mon, 05 Feb 2024 15:28:25 GMT
+      string: '{"found":true,"active_in_days":"365+"}'
+  recorded_at: Thu, 16 Oct 2025 08:28:31 GMT
 recorded_with: VCR 6.1.0

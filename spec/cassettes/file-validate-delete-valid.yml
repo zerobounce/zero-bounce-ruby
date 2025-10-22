@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=b71c74dc-079e-4f3b-a44a-eb33dd14aa0b
+    uri: https://bulkapi.zerobounce.net/v2/deletefile?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=84946fc8-3f89-428a-9d0d-382fbe18cb24
     body:
       encoding: US-ASCII
       string: ''
@@ -21,16 +21,18 @@ http_interactions:
       message: OK
     headers:
       Date:
-      - Mon, 05 Feb 2024 15:24:38 GMT
+      - Thu, 16 Oct 2025 08:28:43 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
       - chunked
       Connection:
       - keep-alive
+      Cf-Ray:
+      - 98f62f328920e465-OTP
       Vary:
       - Accept-Encoding
-      - Origin
+      - origin
       Allow:
       - GET, HEAD, OPTIONS
       X-Frame-Options:
@@ -58,19 +60,16 @@ http_interactions:
       Cf-Cache-Status:
       - DYNAMIC
       Set-Cookie:
-      - __cf_bm=l3oODj7DXOMSAelDB1vL2e68NIjcolwYdLfgXZumqQQ-1707146678-1-AQ5WwhLciBpiqNIvBR+udCcybYp8qvNGWWzxQ7sjqxowwHgrc9Ic9lpon2q16EsJKhdlvMV6EsrGYaC+H5nFfeA=;
-        path=/; expires=Mon, 05-Feb-24 15:54:38 GMT; domain=.zerobounce.net; HttpOnly;
-        Secure; SameSite=None
-      - __cflb=02DiuJXghHGgGEKfEQbhUWr7g7HeZCiFx8bFtPx79yEo6; SameSite=None; Secure;
-        path=/; expires=Tue, 06-Feb-24 14:24:38 GMT; HttpOnly
+      - __cflb=02DiuJXghHGgGEKfEQatcZtvg2quVmFidi9BXWMmGn7rU; SameSite=None; Secure;
+        path=/; expires=Fri, 17-Oct-25 07:28:43 GMT; HttpOnly
+      Speculation-Rules:
+      - '"/cdn-cgi/speculation"'
       Server:
       - cloudflare
-      Cf-Ray:
-      - 850c2953dd642866-OTP
       Alt-Svc:
       - h3=":443"; ma=86400
     body:
       encoding: ASCII-8BIT
-      string: '{"success":true,"message":"File Deleted","file_name":"validation.csv","file_id":"b71c74dc-079e-4f3b-a44a-eb33dd14aa0b"}'
-  recorded_at: Mon, 05 Feb 2024 15:24:38 GMT
+      string: '{"success":false,"message":"File cannot be found."}'
+  recorded_at: Thu, 16 Oct 2025 08:28:43 GMT
 recorded_with: VCR 6.1.0
