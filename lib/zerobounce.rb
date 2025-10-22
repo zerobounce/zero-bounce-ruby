@@ -425,6 +425,8 @@ module Zerobounce
     #    ]
     # }
     def guessformat(domain, first_name: '', middle_name: '', last_name: '')
+      warn "[DEPRECATION] `guessformat` is deprecated and will be removed in a future version.\n" \
+           "Please use `find_email` or `find_domain` instead."
       params = {domain: domain}
       params[:first_name] = first_name unless first_name.nil? || first_name.empty?
       params[:middle_name] = middle_name unless middle_name.nil? || middle_name.empty?

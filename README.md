@@ -712,7 +712,7 @@ bundle exec rspec
 
 You should see an output like this
 ```bash
-running mock tests
+running tests
 .....................................................
 
 Finished in 6.81 seconds (files took 0.40587 seconds to load)
