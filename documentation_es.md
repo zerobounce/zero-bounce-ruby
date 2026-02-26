@@ -76,10 +76,13 @@ Zerobounce.api_usage(Date.today, Date.today)
  "sub_status_mailbox_quota_exceeded"=>0,
  "sub_status_forcible_disconnect"=>0,
  "sub_status_failed_smtp_connection"=>0,
+ "sub_status_accept_all"=>0,
  "sub_status_mx_forward"=>0,
  "sub_status_alternate"=>0,
- "sub_status_blocked"=>0,
  "sub_status_allowed"=>0,
+ "sub_status_blocked"=>0,
+ "sub_status_gold"=>0,
+ "sub_status_role_based_accept_all"=>0,
  "start_date"=>"4/28/2023",
  "end_date"=>"4/28/2023"}
 ```
@@ -508,17 +511,17 @@ Finished in 6.81 seconds (files took 0.40587 seconds to load)
 
 ##### Parámetros de prueba
 Las pruebas utilizan los siguientes parámetros de entorno:
-TEST {unit|live} influye en si se ejecutan las pruebas simuladas de unidad o se utiliza el servidor en vivo (se pueden utilizar créditos si eliges hacer esto)
-ZEROBOUNCE_API_KEY {<zerobounce-api-key-value>} esta clave se utiliza para realizar solicitudes al servidor en vivo; también se utiliza en las pruebas simuladas como un ejemplo de clave válida (cualquier valor funcionará para las pruebas simuladas)
-INCORRECT_API_KEY {cualquier cadena sin espacios en blanco que no sea una clave válida} se utiliza para pruebas en las que las solicitudes deben fallar debido al valor de la clave de la API.
+- **TEST** {unit|live} – Influye en si se ejecutan las pruebas simuladas de unidad o se utiliza el servidor en vivo (se pueden utilizar créditos si eliges hacer esto).
+- **ZEROBOUNCE_API_KEY** – Tu clave API; se utiliza para realizar solicitudes al servidor en vivo y en las pruebas simuladas como ejemplo de clave válida (cualquier valor funcionará para las pruebas simuladas).
+
+La clave API inválida para las pruebas de manejo de errores está codificada en el spec; no se requiere ninguna variable de entorno.
 
 Para configurarlos:
 ```bash
-export ZEROBOUNCE_API_KEY=99e7ef20ceea4480a173b07b1be75371
-export INCORRECT_API_KEY=thiskeyisinvalidorotherwiseincorrect
+export ZEROBOUNCE_API_KEY=your_api_key_here
 export TEST=unit
 ```
 
-Se proporciona un archivo .env.sample.
+Se proporciona un archivo .env.example.
 
-Las pruebas simuladas se generaron utilizando webmock y vcr. Esto significa que se realizaron solicitudes reales y se grabaron en los archivos .yml bajo spec/cassettes con una clave API válida en ese momento utilizada con fines de prueba. Sin embargo, esta clave se ha invalidado en el ínterin, pero se proporciona en el archivo .env.sample para que las pruebas simuladas funcionen. Si no desea utilizar esta clave para simulaciones, puede reemplazarla con cualquier valor en los archivos .yml bajo spec/cassettes o eliminarlos todos y volver a ejecutar las pruebas para que vcr los grabe con una nueva clave.
+Las pruebas simuladas se generaron utilizando webmock y vcr. Esto significa que se realizaron solicitudes reales y se grabaron en los archivos .yml bajo spec/cassettes con una clave API válida en ese momento utilizada con fines de prueba. Sin embargo, esta clave se ha invalidado en el ínterin, pero se proporciona en el archivo .env.example para que las pruebas simuladas funcionen. Si no desea utilizar esta clave para simulaciones, puede reemplazarla con cualquier valor en los archivos .yml bajo spec/cassettes o eliminarlos todos y volver a ejecutar las pruebas para que vcr los grabe con una nueva clave.

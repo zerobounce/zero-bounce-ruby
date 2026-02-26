@@ -21,7 +21,7 @@ module Zerobounce
       raise ("API key must be assigned") if not Zerobounce.config.apikey
 
       params[:api_key] = Zerobounce.config.apikey
-      url = "#{root}/#{path}"
+      url = "#{root.to_s.sub(%r{/+$}, '')}/#{path}"
 
       response = RestClient.get(url, {params: params})
       return response
@@ -32,7 +32,7 @@ module Zerobounce
       raise ("API key must be assigned") if not Zerobounce.config.apikey
 
       params[:api_key] = Zerobounce.config.apikey
-      url = "#{root}/#{path}"
+      url = "#{root.to_s.sub(%r{/+$}, '')}/#{path}"
       response = nil
 
       if filepath or content_type == 'multipart/form-data'

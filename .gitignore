@@ -62,3 +62,6 @@ build-iPhoneSimulator/
 # Log files
 output.err
 output.log
+
+.DS_Store
+.env

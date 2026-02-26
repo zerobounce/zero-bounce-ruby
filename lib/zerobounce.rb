@@ -2,9 +2,12 @@
 # frozen_string_literal: true
 
 require 'date'
+require 'tempfile'
 
 require 'zerobounce/error'
 require 'zerobounce/version'
+require 'zerobounce/validate_status'
+require 'zerobounce/validate_sub_status'
 require 'zerobounce/request'
 require 'zerobounce/mock_request'
 require 'zerobounce/configuration'
@@ -133,10 +136,13 @@ module Zerobounce
     #   "sub_status_mailbox_quota_exceeded": 0,
     #   "sub_status_forcible_disconnect": 0,
     #   "sub_status_failed_smtp_connection": 0,
+    #   "sub_status_accept_all": 0,
     #   "sub_status_mx_forward": 0,
     #   "sub_status_alternate": 0,
-    #   "sub_status_blocked": 0,
     #   "sub_status_allowed": 0,
+    #   "sub_status_blocked": 0,
+    #   "sub_status_gold": 0,
+    #   "sub_status_role_based_accept_all": 0,
     #   "start_date": "1/1/2018",
     #   "end_date": "12/12/2023"
     # }
@@ -254,6 +260,27 @@ module Zerobounce
       @@request.bulk_post('sendfile', params, 'multipart/form-data', filepath)
     end
 
+    # Validate CSV from a stream (IO or String).
+    #
+    # @param [IO, String] io Stream or string content to upload
+    # @param [String] file_name Filename for the upload (e.g. "emails.csv")
+    # @option [Int] :email_address_column (same as validate_file_send)
+    # @option [Int] :first_name_column
+    # @option [Int] :last_name_column
+    # @option [Int] :gender_column
+    # @option [Int] :has_header_row
+    # @option [Int] :return_url
+    # @return [Hash] same as validate_file_send
+    def validate_file_send_stream(io, file_name, **opts)
+      content = io.respond_to?(:read) ? io.read : io.to_s
+      Tempfile.create(['zb', File.extname(file_name)]) do |tmp|
+        tmp.binmode
+        tmp.write(content)
+        tmp.rewind
+        validate_file_send(tmp.path, **opts)
+      end
+    end
+
     # Get validate file status
     #
     # @param [String] :file_id Id of the file.
@@ -329,6 +356,24 @@ module Zerobounce
       }
       params[:return_url] = return_url if return_url
       @@request.bulk_post('scoring/sendfile', params, 'multipart/form-data', filepath)
+    end
+
+    # Score CSV from a stream (IO or String).
+    #
+    # @param [IO, String] io Stream or string content to upload
+    # @param [String] file_name Filename for the upload (e.g. "emails.csv")
+    # @option [Int] :email_address_column (same as scoring_file_send)
+    # @option [Int] :has_header_row
+    # @option [Int] :return_url
+    # @return [Hash] same as scoring_file_send
+    def scoring_file_send_stream(io, file_name, **opts)
+      content = io.respond_to?(:read) ? io.read : io.to_s
+      Tempfile.create(['zb', File.extname(file_name)]) do |tmp|
+        tmp.binmode
+        tmp.write(content)
+        tmp.rewind
+        scoring_file_send(tmp.path, **opts)
+      end
     end
 
     # Get validate results file

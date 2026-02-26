@@ -189,10 +189,13 @@ Zerobounce.api_usage(Date.today, Date.today)
  "sub_status_mailbox_quota_exceeded"=>0,
  "sub_status_forcible_disconnect"=>0,
  "sub_status_failed_smtp_connection"=>0,
+ "sub_status_accept_all"=>0,
  "sub_status_mx_forward"=>0,
  "sub_status_alternate"=>0,
- "sub_status_blocked"=>0,
  "sub_status_allowed"=>0,
+ "sub_status_blocked"=>0,
+ "sub_status_gold"=>0,
+ "sub_status_role_based_accept_all"=>0,
  "start_date"=>"4/28/2023",
  "end_date"=>"4/28/2023"}
 ```
@@ -705,7 +708,15 @@ gem install bundler -v "~>2.4.6"
 bundle install
 ```
 
-### Run tests
+### Run tests with Docker
+From the **parent repository root** (the folder that contains all SDKs and `docker-compose.yml`):
+
+```bash
+docker compose build ruby
+docker compose run --rm ruby
+```
+
+### Run tests (local)
 ```bash
 bundle exec rspec
 ```
@@ -720,19 +731,19 @@ Finished in 6.81 seconds (files took 0.40587 seconds to load)
 ```
 
 ### Test parameters
-The tests use the following environment parameters:
-ZEROBOUNCE_API_KEY {<zerobounce-api-key-value>} this key is used in mock tests as a valid key sample (any value will work for mock tests)
-INCORRECT_API_KEY {any non whitespace string value that is not a valid key} used for tests where the requests are meant to fail due to the API key value.
+The tests use the following environment parameter:
+- **ZEROBOUNCE_API_KEY** – Your API key; used in mock tests as the valid key sample (any value will work for mock tests).
 
-To set them
+An invalid API key for error-handling tests is hardcoded in the spec; no env var is required.
+
+To set your key:
 ```bash
-export ZEROBOUNCE_API_KEY=99e7ef20ceea4480a173b07b1be75371
-export INCORRECT_API_KEY=thiskeyisinvalidorotherwiseincorrect
+export ZEROBOUNCE_API_KEY=your_api_key_here
 ```
 
-A .env.sample file is provided.
+A .env.example file is provided.
 
-Tests use webmock and vcr for mocking HTTP requests. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.sample file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
+Tests use webmock and vcr for mocking HTTP requests. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.example file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
 
 ### Publish
 ```bash

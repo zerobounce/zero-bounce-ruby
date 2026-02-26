@@ -13,11 +13,12 @@ end
 describe Zerobounce do
 
 	let (:valid_api_key) { ENV['ZEROBOUNCE_API_KEY'] }
-	let (:invalid_api_key) { ENV['INCORRECT_API_KEY'] }
+	# Must match the api_key used when recording the "incorrect API key" cassettes
+	let (:invalid_api_key) { 'thiskeyisinvalidorotherwiseincorrect' }
 	let (:test_date) { Date.new(2023,9,4) }
 
 	it 'should generate different keys' do
-		expect(valid_api_key).not_to equal(invalid_api_key)
+		expect(valid_api_key).not_to eq(invalid_api_key)
 	end
 
 	it 'has a version number' do
@@ -208,7 +209,8 @@ describe Zerobounce do
 				expect(result).to be_a_kind_of(Hash)
 				expect(result).to include(
 					'total', 'status_valid', 'status_invalid', 'status_catch_all',
-					'status_do_not_mail', 'status_spamtrap', 'status_unknown'
+					'status_do_not_mail', 'status_spamtrap', 'status_unknown',
+					'sub_status_gold', 'sub_status_role_based_accept_all'
 				)
 				end
 			end

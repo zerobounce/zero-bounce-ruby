@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+require 'simplecov'
+SimpleCov.start do
+  add_filter '/spec/'
+  minimum_coverage 50
+end
+
 require 'zerobounce'
 
 require_relative 'support/reset_config'
