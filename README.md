@@ -745,10 +745,6 @@ A .env.example file is provided.
 
 Tests use webmock and vcr for mocking HTTP requests. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.example file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
 
-### Publish
-```bash
-gem signin
-gem build zerobounce.spec
-gem push zerobounce-sdk-<version>.gem
-gem search zerobounce-sdk --remote
-```
+## Publish
+
+See the [sdk-docs (RubyGems)](../sdk-docs/rubygems/) guide in the SDKs repo for build and `gem push` steps.
