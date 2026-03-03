@@ -13,6 +13,26 @@ module Zerobounce
 
     protected
 
+    # Resolves and validates filepath to prevent path traversal (e.g. ../../etc/passwd).
+    # Returns a canonical path only if the file is under the current directory and is a regular file.
+    def self.__safe_file_path__(filepath)
+      raise ArgumentError, 'File path is required' if filepath.nil? || filepath.to_s.empty?
+      expanded = File.expand_path(filepath)
+      base = File.realpath(Dir.pwd)
+      base_with_sep = base + File::SEPARATOR
+      unless expanded == base || expanded.start_with?(base_with_sep)
+        raise ArgumentError, 'File path must be under the current directory'
+      end
+      canonical = File.realpath(expanded)
+      unless canonical == base || canonical.start_with?(base_with_sep)
+        raise ArgumentError, 'File path must be under the current directory'
+      end
+      unless File.file?(canonical)
+        raise ArgumentError, 'File path must point to a regular file'
+      end
+      canonical
+    end
+
     def self._get(root, path, params, content_type='application/json')
 
       # puts path
@@ -36,7 +56,7 @@ module Zerobounce
       response = nil
 
       if filepath or content_type == 'multipart/form-data'
-        params[:file] = File.new(filepath, 'rb')
+        params[:file] = File.new(self.class.__safe_file_path__(filepath), 'rb')
         params[:multipart] = true
         response = RestClient.post(url, params)
 
