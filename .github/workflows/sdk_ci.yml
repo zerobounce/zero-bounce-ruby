@@ -7,6 +7,9 @@ on:
   push:
     branches: [main, master]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test
@@ -14,7 +17,7 @@ jobs:
     env:
       ZEROBOUNCE_API_KEY: "invalid_key_for_tests"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
