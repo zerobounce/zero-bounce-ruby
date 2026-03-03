@@ -8,6 +8,17 @@ VCR.configure do |c|
 	c.cassette_library_dir = 'spec/cassettes'
 	c.hook_into :webmock
 	c.ignore_localhost = true
+	# Match requests by method and URI but ignore api_key so cassettes work with any key
+	c.register_request_matcher :uri_ignoring_api_key do |request1, request2|
+		return false if request1.method != request2.method
+		uri1 = URI(request1.uri)
+		uri2 = URI(request2.uri)
+		return false unless uri1.scheme == uri2.scheme && uri1.host == uri2.host && uri1.path == uri2.path
+		q1 = URI.decode_www_form(uri1.query || '').reject { |k, _| k == 'api_key' }.sort
+		q2 = URI.decode_www_form(uri2.query || '').reject { |k, _| k == 'api_key' }.sort
+		q1 == q2
+	end
+	c.default_cassette_options = { match_requests_on: [:uri_ignoring_api_key] }
 end
 
 describe Zerobounce do
@@ -687,16 +698,6 @@ describe Zerobounce do
 			end
 		end
 		context 'given correct API key' do
-			fields = [
-				'email', 
-				'domain', 
-				'format', 
-				'status',
-				'sub_status', 
-				'confidence', 
-				'did_you_mean',
-				'other_domain_formats'
-			]
 			fields2 = [
 				'company_name',
 				'did_you_mean',
@@ -803,16 +804,6 @@ describe Zerobounce do
 			end
 		end
 		context 'given correct API key' do
-			fields = [
-				'email', 
-				'domain', 
-				'format', 
-				'status',
-				'sub_status', 
-				'confidence', 
-				'did_you_mean',
-				'other_domain_formats'
-			]
 			fields2 = [
 				'company_name',
 				'did_you_mean',
