@@ -13,10 +13,18 @@ module Zerobounce
 
     protected
 
+    # Strips trailing slashes from root URL without using a regex (avoids ReDoS).
+    def self.__root_without_trailing_slashes__(root)
+      s = root.to_s
+      s = s.chomp('/') while s.end_with?('/')
+      s
+    end
+
     # Resolves and validates filepath to prevent path traversal (e.g. ../../etc/passwd).
     # Returns a canonical path only if the file is under the current directory and is a regular file.
     def self.__safe_file_path__(filepath)
       raise ArgumentError, 'File path is required' if filepath.nil? || filepath.to_s.empty?
+      filepath = filepath.to_s
       expanded = File.expand_path(filepath)
       base = File.realpath(Dir.pwd)
       base_with_sep = base + File::SEPARATOR
@@ -41,7 +49,7 @@ module Zerobounce
       raise ("API key must be assigned") if not Zerobounce.config.apikey
 
       params[:api_key] = Zerobounce.config.apikey
-      url = "#{root.to_s.sub(%r{/+$}, '')}/#{path}"
+      url = "#{Zerobounce::BaseRequest.__root_without_trailing_slashes__(root)}/#{path}"
 
       response = RestClient.get(url, {params: params})
       return response
@@ -52,11 +60,11 @@ module Zerobounce
       raise ("API key must be assigned") if not Zerobounce.config.apikey
 
       params[:api_key] = Zerobounce.config.apikey
-      url = "#{root.to_s.sub(%r{/+$}, '')}/#{path}"
+      url = "#{Zerobounce::BaseRequest.__root_without_trailing_slashes__(root)}/#{path}"
       response = nil
 
       if filepath or content_type == 'multipart/form-data'
-        params[:file] = File.new(self.class.__safe_file_path__(filepath), 'rb')
+        params[:file] = File.new(Zerobounce::BaseRequest.__safe_file_path__(filepath), 'rb')
         params[:multipart] = true
         response = RestClient.post(url, params)
 

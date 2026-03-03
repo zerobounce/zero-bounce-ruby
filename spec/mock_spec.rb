@@ -304,6 +304,20 @@ describe Zerobounce do
 			before do
 				described_class.config.apikey = valid_api_key
 			end
+			context 'given invalid file path' do
+				it 'raises ArgumentError when filepath is nil' do
+					expect { described_class.validate_file_send(nil) }.to \
+						raise_error(ArgumentError, 'File path is required')
+				end
+				it 'raises ArgumentError when filepath is empty string' do
+					expect { described_class.validate_file_send('') }.to \
+						raise_error(ArgumentError, 'File path is required')
+				end
+				it 'raises ArgumentError for path traversal outside current directory' do
+					expect { described_class.validate_file_send('../../etc/passwd') }.to \
+						raise_error(ArgumentError, 'File path must be under the current directory')
+				end
+			end
 			context 'given incorrect file format' do
 				# todo:
 			end
@@ -478,6 +492,20 @@ describe Zerobounce do
 		context 'given correct API key' do
 			before do
 				described_class.config.apikey = valid_api_key
+			end
+			context 'given invalid file path' do
+				it 'raises ArgumentError when filepath is nil' do
+					expect { described_class.scoring_file_send(nil) }.to \
+						raise_error(ArgumentError, 'File path is required')
+				end
+				it 'raises ArgumentError when filepath is empty string' do
+					expect { described_class.scoring_file_send('') }.to \
+						raise_error(ArgumentError, 'File path is required')
+				end
+				it 'raises ArgumentError for path traversal outside current directory' do
+					expect { described_class.scoring_file_send('../../etc/passwd') }.to \
+						raise_error(ArgumentError, 'File path must be under the current directory')
+				end
 			end
 			context 'given incorrect file format' do
 				# todo:
