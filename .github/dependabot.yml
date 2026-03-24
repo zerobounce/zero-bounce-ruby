@@ -1,0 +1,35 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#versioning-strategy
+
+version: 2
+updates:
+  # Keep the Ruby dependencies up to date
+  - package-ecosystem: "bundler"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    target-branch: "develop"
+    labels:
+      - "ruby dependencies"
+    groups:
+      bundler:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  # Keep the Github Actions dependencies up to date
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    target-branch: "develop"
+    labels:
+      - "github dependencies"
+    groups:
+      github:
+        applies-to: version-updates
+        patterns:
+          - "*"
