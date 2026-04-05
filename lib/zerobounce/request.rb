@@ -2,6 +2,7 @@
 
 require 'stringio'
 require 'zerobounce/base_request'
+require 'zerobounce/get_file_helper'
 
 module Zerobounce
 
@@ -45,6 +46,12 @@ module Zerobounce
         content.set_encoding_by_bom
         return content.string
       end
+    end
+
+    # Bulk getfile only: treats non-2xx and JSON error payloads (including HTTP 200) as failures.
+    def self.bulk_getfile(path, params)
+      response = self._get(Zerobounce.configuration.bulk_api_root_url, path, params, 'application/json')
+      GetFileHelper.process_getfile_response(response)
     end
 
     def self.bulk_post(path, params, content_type='application/json', filepath=nil)

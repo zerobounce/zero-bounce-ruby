@@ -6,6 +6,9 @@ require 'tempfile'
 
 require 'zerobounce/error'
 require 'zerobounce/version'
+require 'zerobounce/download_type'
+require 'zerobounce/get_file_options'
+require 'zerobounce/get_file_helper'
 require 'zerobounce/validate_status'
 require 'zerobounce/validate_sub_status'
 require 'zerobounce/request'
@@ -28,6 +31,14 @@ module Zerobounce
       @configuration ||= Configuration.new
     end
     alias config configuration
+
+    # Whether a getfile response body looks like a JSON error payload (including HTTP 200).
+    #
+    # @param [String] body
+    # @return [Boolean]
+    def get_file_json_indicates_error?(body)
+      GetFileHelper.json_indicates_error?(body)
+    end
 
     # Configure Zerobounce inside a block.
     #
@@ -247,7 +258,8 @@ module Zerobounce
         last_name_column: 3,
         gender_column: 4,
         has_header_row: true,
-        return_url: nil
+        return_url: nil,
+        allow_phase_2: nil
       )
       params = {
         email_address_column: email_address_column,
@@ -257,6 +269,9 @@ module Zerobounce
       params[:last_name_column] = last_name_column if last_name_column
       params[:gender_column] = gender_column if gender_column
       params[:return_url] = return_url if return_url
+      unless allow_phase_2.nil?
+        params[:allow_phase_2] = allow_phase_2 ? 'true' : 'false'
+      end
       @@request.bulk_post('sendfile', params, 'multipart/form-data', filepath)
     end
 
@@ -270,6 +285,7 @@ module Zerobounce
     # @option [Int] :gender_column
     # @option [Int] :has_header_row
     # @option [Int] :return_url
+    # @option [Boolean] :allow_phase_2 When set, sends allow_phase_2 (validation bulk only).
     # @return [Hash] same as validate_file_send
     def validate_file_send_stream(io, file_name, **opts)
       content = io.respond_to?(:read) ? io.read : io.to_s
@@ -304,13 +320,20 @@ module Zerobounce
 
     # Get validate results file
     #
-    # @param [String] :file_id Id of the file.
+    # @param [String] file_id Id of the file.
+    # @param [Zerobounce::GetFileOptions, nil] options Optional +download_type+ and +activity_data+ (validation bulk only).
     #
-    # @return [String/File?]
-    def validate_file_get(file_id)
-      # todo:
-      params = {file_id: file_id}
-      @@request.bulk_get('getfile', params)
+    # @return [String] file body on success
+    # @raise [RuntimeError] on API/JSON error responses
+    def validate_file_get(file_id, options = nil)
+      params = { file_id: file_id }
+      if options
+        params[:download_type] = options.download_type if options.download_type
+        unless options.activity_data.nil?
+          params[:activity_data] = options.activity_data ? 'true' : 'false'
+        end
+      end
+      @@request.bulk_getfile('getfile', params)
     end
 
     # Delete validate file
@@ -376,15 +399,19 @@ module Zerobounce
       end
     end
 
-    # Get validate results file
+    # Get scoring bulk results file
     #
-    # @param [String] :file_id Id of the file.
+    # @param [String] file_id Id of the file.
+    # @param [Zerobounce::GetFileOptions, nil] options Optional +download_type+; +activity_data+ is not sent.
     #
-    # @return [String/File?]
-    def scoring_file_get(file_id)
-      # todo:
-      params = {file_id: file_id}
-      @@request.bulk_get('scoring/getfile', params)
+    # @return [String] file body on success
+    # @raise [RuntimeError] on API/JSON error responses
+    def scoring_file_get(file_id, options = nil)
+      params = { file_id: file_id }
+      if options && options.download_type
+        params[:download_type] = options.download_type
+      end
+      @@request.bulk_getfile('scoring/getfile', params)
     end
 
     # Get validate file status

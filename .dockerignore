@@ -1,0 +1,17 @@
+# Keep .git so gemspec `git ls-files` works during `bundle install` in the image.
+
+# Docs and tooling not needed to run specs in the image
+*.md
+documentation*.md
+.spec
+.rspec_status
+coverage/
+tmp/
+pkg/
+vendor/bundle
+
+# OS & env
+.DS_Store
+Thumbs.db
+.env
+.env.*

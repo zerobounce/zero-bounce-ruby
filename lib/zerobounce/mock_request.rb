@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'zerobounce/base_request'
+require 'zerobounce/get_file_helper'
 
 module Zerobounce
 
@@ -39,6 +40,11 @@ module Zerobounce
       else
         return response.body
       end
+    end
+
+    def self.bulk_getfile(path, params)
+      response = self._get(Zerobounce.configuration.bulk_api_root_url, path, params, 'application/json')
+      GetFileHelper.process_getfile_response(response)
     end
 
     def self.bulk_post(path, params, content_type='application/json', filepath=nil)

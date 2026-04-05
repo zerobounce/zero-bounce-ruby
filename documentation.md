@@ -268,9 +268,12 @@ Send file
     last_name_column: 3,
     gender_column: 4,
     has_header_row: true,
-    return_url: nil         ### results callback url
+    return_url: nil,        ### results callback url
+    allow_phase_2: true     ### optional; validation bulk sendfile only (omit or nil to skip)
  ### Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4)
 ```
+
+Bulk validation uses `https://bulkapi.zerobounce.net/v2`. See [v2 send file](https://www.zerobounce.net/docs/email-validation-api-quickstart/v2-send-file), [v2 file status](https://www.zerobounce.net/docs/email-validation-api-quickstart/v2-file-status), and [v2 get file](https://www.zerobounce.net/docs/email-validation-api-quickstart/v2-get-file).
 
 Check file
 ```ruby
@@ -284,6 +287,7 @@ Zerobounce.validate_file_check(file_id)
  "upload_date"=>"2023-04-28T15:25:41Z",
  "file_status"=>"Greylisted",
  "complete_percentage"=>"0%",
+ "file_phase_2_status"=>"N/A",  ### when present (validation bulk v2)
  "error_reason"=>nil,
  "return_url"=>nil}
 ```
@@ -294,6 +298,16 @@ file_id = "75d854a6-565c-49f9-b4c8-b3344480ec4c"
 => "75d854a6-565c-49f9-b4c8-b3344480ec4c"
 Zerobounce.validate_file_get(file_id)
 => "\"email\",\"first\",\"last\",\"gender\",\"ip\",\"ZB Status\",\"ZB Sub Status\",\"ZB Account\",\"ZB Domain\",\"ZB First Name\",\"ZB Last Name\",\"ZB Gender\",\"ZB Free Email\",\"ZB MX Found\",\"ZB MX Record\",\"ZB SMTP Provider\",\"ZB Did You Mean\"\n\"disposable@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"disposable\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"invalid@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"mailbox_not_found\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"valid@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"valid\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"toxic@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"toxic\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"donotmail@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"role_based\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"spamtrap@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"spamtrap\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"abuse@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"abuse\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"unknown@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"mail_server_temporary_error\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"catch_all@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"catch-all\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"antispam_system@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"antispam_system\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"does_not_accept_mail@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"does_not_accept_mail\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"exception_occurred@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"exception_occurred\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"failed_smtp_connection@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"failed_smtp_connection\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"failed_syntax_check@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"failed_syntax_check\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"forcible_disconnect@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"forcible_disconnect\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"global_suppression@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"global_suppression\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"greylisted@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"greylisted\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"leading_period_removed@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"valid\",\"leading_period_removed\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mail_server_did_not_respond@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"mail_server_did_not_respond\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mail_server_temporary_error@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"mail_server_temporary_error\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mailbox_quota_exceeded@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"mailbox_quota_exceeded\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mailbox_not_found@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"mailbox_not_found\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"no_dns_entries@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"no_dns_entries\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"possible_trap@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"possible_trap\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"possible_typo@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"possible_typo\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"role_based@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"role_based\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"timeout_exceeded@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"timeout_exceeded\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"unroutable_ip_address@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"unroutable_ip_address\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"free_email@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"valid\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"True\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"role_based_catch_all@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"role_based_catch_all\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n"
+```
+
+Optional [v2 get file](https://www.zerobounce.net/docs/email-validation-api-quickstart/v2-get-file) query parameters: `Zerobounce::GetFileOptions` and `Zerobounce::DownloadType` (`PHASE_1`, `PHASE_2`, `COMBINED`). Use `activity_data` on the options for validation `validate_file_get` only. JSON error bodies (including some HTTP 200 responses) raise `RuntimeError`; use `Zerobounce.get_file_json_indicates_error?(body)` on a raw string if needed.
+
+```ruby
+opts = Zerobounce::GetFileOptions.new(
+  download_type: Zerobounce::DownloadType::COMBINED,
+  activity_data: true
+)
+csv = Zerobounce.validate_file_get(file_id, opts)
 ```
 
 Delete file
@@ -349,13 +363,14 @@ file_id = "89fb7262-b845-4fa1-aa25-e486347ec64e"
 => "89fb7262-b845-4fa1-aa25-e486347ec64e"
 Zerobounce.scoring_file_get(file_id)
 => "\"email\",\"ZeroBounceQualityScore\"\r\n\"disposable@example.com\",\"0\"\r\n\"invalid@example.com\",\"10\"\r\n\"valid@example.com\",\"10\"\r\n\"toxic@example.com\",\"2\"\r\n\"donotmail@example.com\",\"0\"\r\n\"spamtrap@example.com\",\"0\"\r\n\"abuse@example.com\",\"10\"\r\n\"unknown@example.com\",\"10\"\r\n\"catch_all@example.com\",\"10\"\r\n\"antispam_system@example.com\",\"0\"\r\n\"does_not_accept_mail@example.com\",\"0\"\r\n\"exception_occurred@example.com\",\"0\"\r\n\"failed_smtp_connection@example.com\",\"0\"\r\n\"failed_syntax_check@example.com\",\"0\"\r\n\"forcible_disconnect@example.com\",\"0\"\r\n\"global_suppression@example.com\",\"0\"\r\n\"greylisted@example.com\",\"0\"\r\n\"leading_period_removed@example.com\",\"0\"\r\n\"mail_server_did_not_respond@example.com\",\"0\"\r\n\"mail_server_temporary_error@example.com\",\"0\"\r\n\"mailbox_quota_exceeded@example.com\",\"0\"\r\n\"mailbox_not_found@example.com\",\"0\"\r\n\"no_dns_entries@example.com\",\"0\"\r\n\"possible_trap@example.com\",\"0\"\r\n\"possible_typo@example.com\",\"0\"\r\n\"role_based@example.com\",\"0\"\r\n\"timeout_exceeded@example.com\",\"0\"\r\n\"unroutable_ip_address@example.com\",\"0\"\r\n\"free_email@example.com\",\"0\"\r\n\"role_based_catch_all@example.com\",\"0\""
+### Optional second argument: GetFileOptions with download_type only (activity_data is not sent for scoring getfile)
 ```
 
 Delete file
 ```ruby
 file_id = "89fb7262-b845-4fa1-aa25-e486347ec64e"
 => "89fb7262-b845-4fa1-aa25-e486347ec64e"
-Zerobounce.validate_file_delete(file_id)
+Zerobounce.scoring_file_delete(file_id)
 => {"success"=>false, "message"=>"File cannot be found."}
 ```
 

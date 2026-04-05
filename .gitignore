@@ -64,4 +64,7 @@ output.err
 output.log
 
 .DS_Store
+Thumbs.db
+.idea/
+.cursor/
 .env

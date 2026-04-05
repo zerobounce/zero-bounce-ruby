@@ -428,10 +428,10 @@ describe Zerobounce do
 				before do
 					described_class.config.apikey = valid_api_key
 				end
-				it 'should download file contents' do
+				it 'raises when API returns JSON error (e.g. file not processed)' do
 					VCR.use_cassette 'file-validate-get-valid' do
-					results = described_class.validate_file_get(validate_file_id)
-					expect(results.class).to be(Hash)
+						expect { described_class.validate_file_get(validate_file_id) }.to \
+							raise_error(RuntimeError, 'File not processed.')
 					end
 				end
 			end
