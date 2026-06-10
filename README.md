@@ -727,9 +727,10 @@ bundle install
 ```
 
 ### Run tests with Docker
-From the **parent repository root** (the folder that contains all SDKs and `docker-compose.yml`):
+From the **`sdk-docs/`** folder in the SDKs monorepo:
 
 ```bash
+cd sdk-docs
 docker compose build ruby
 docker compose run --rm ruby
 ```
@@ -772,4 +773,7 @@ Tests use webmock and vcr for mocking HTTP requests. This means that actual requ
 
 ## Publish
 
-See the [sdk-docs (RubyGems)](../sdk-docs/rubygems/) guide in the SDKs repo for build and `gem push` steps.
+1. Bump `VERSION` in `lib/zerobounce/version.rb`, commit, tag (`vX.Y.Z`), push tag.
+2. **Actions → Publish → Run workflow** with that tag.
+
+Registry: [zerobounce-sdk on RubyGems](https://rubygems.org/gems/zerobounce-sdk)
