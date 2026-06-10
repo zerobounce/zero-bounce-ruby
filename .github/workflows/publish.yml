@@ -1,0 +1,131 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        description: Tag to publish (e.g. v2.1.5)
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-tag:
+    name: Validate tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: Verify tag and gem version
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            echo "Error: Tag is required."
+            exit 1
+          fi
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Error: Tag '$TAG' does not exist."
+            exit 1
+          fi
+          TAG_VERSION="${TAG#v}"
+          PKG_VERSION=$(grep -E "VERSION\s*=" lib/zerobounce/version.rb | sed -E "s/.*'([^']+)'.*/\1/")
+          if [ -z "$PKG_VERSION" ]; then
+            echo "Error: Could not read version from lib/zerobounce/version.rb"
+            exit 1
+          fi
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Error: lib/zerobounce/version.rb ($PKG_VERSION) does not match tag ($TAG)."
+            exit 1
+          fi
+          echo "Publishing tag: $TAG (zerobounce-sdk@$PKG_VERSION)"
+
+  test:
+    name: Test
+    needs: [validate-tag]
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    runs-on: ubuntu-latest
+    env:
+      ZEROBOUNCE_API_KEY: "invalid_key_for_tests"
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Run specs
+        run: bundle exec rspec
+
+  publish:
+    name: Build and publish to RubyGems
+    needs: [test]
+    if: ${{ !cancelled() && !failure() }}
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Configure RubyGems credentials
+        uses: rubygems/configure-rubygems-credentials@main
+        with:
+          api-token: ${{ secrets.RUBYGEMS_API_TOKEN }}
+
+      - name: Build gem
+        run: gem build zerobounce.gemspec
+
+      - name: Publish to RubyGems
+        run: |
+          GEM_FILE=$(ls zerobounce-sdk-*.gem)
+          echo "Pushing $GEM_FILE"
+          gem push "$GEM_FILE"
+
+  release:
+    name: Create GitHub Release
+    needs: [publish]
+    if: ${{ !cancelled() && !failure() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.tag }}
+          fetch-depth: 0
+
+      - name: Create release if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "Release $TAG already exists, skipping."
+          else
+            gh release create "$TAG" \
+              --repo "${{ github.repository }}" \
+              --title "$TAG" \
+              --generate-notes
+          fi
