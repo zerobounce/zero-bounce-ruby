@@ -232,7 +232,7 @@ module Zerobounce
         })
       end
       params = {email_batch: email_batch}
-      results = @@request.bulk_post('validatebatch', params)
+      results = @@request.post('validatebatch', params)
       return results['email_batch']
     end
 

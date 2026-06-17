@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: post
-    uri: https://bulkapi.zerobounce.net/v2/validatebatch
+    uri: https://api.zerobounce.net/v2/validatebatch
     body:
       encoding: UTF-8
       string: '{"email_batch":[{"email_address":"disposable@example.com","ip_address":null},{"email_address":"invalid@example.com","ip_address":null},{"email_address":"valid@example.com","ip_address":null},{"email_address":"toxic@example.com","ip_address":null},{"email_address":"donotmail@example.com","ip_address":null},{"email_address":"spamtrap@example.com","ip_address":null}],"api_key":"thiskeyisinvalidorotherwiseincorrect"}'
@@ -18,7 +18,7 @@ http_interactions:
       Accept-Encoding:
       - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
       Host:
-      - bulkapi.zerobounce.net
+      - api.zerobounce.net
   response:
     status:
       code: 403
