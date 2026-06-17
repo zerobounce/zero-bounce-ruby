@@ -54,6 +54,23 @@ module Zerobounce
       GetFileHelper.process_getfile_response(response)
     end
 
+    def self.post(path, params, content_type='application/json', filepath=nil)
+      response = self._post(Zerobounce.configuration.api_root_url, path, params, \
+          content_type, filepath)
+      if response.headers[:content_type] == 'application/json'
+        response_body = response.body
+        response_body_json = JSON.parse(response_body)
+
+        raise (response_body_json['error']) if response_body_json.key?('error')
+        raise (response_body_json['errors'][0]['error']) \
+          if response_body_json.key?('errors') and \
+            response_body_json['errors'].length > 0
+
+        return response_body_json
+      end
+      return response.body
+    end
+
     def self.bulk_post(path, params, content_type='application/json', filepath=nil)
       response = self._post(Zerobounce.configuration.bulk_api_root_url, path, params, \
           content_type, filepath)

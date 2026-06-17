@@ -1,3 +1,7 @@
+# 2.1.6
+
+* Route `validatebatch` requests to `api.zerobounce.net` instead of `bulkapi.zerobounce.net`.
+
 # 2.1.1
 
 * Raise development and transitive dependency floors to address security advisories for REXML, Addressable, and YARD (updated `Gemfile.lock`; see `Gemfile` and `zerobounce.gemspec`).
