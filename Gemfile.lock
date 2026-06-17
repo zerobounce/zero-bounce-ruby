@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    zerobounce-sdk (2.1.6)
+    zerobounce-sdk (2.1.7)
       dotenv
       rest-client (~> 2.1)
 

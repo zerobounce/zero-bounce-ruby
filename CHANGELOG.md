@@ -1,3 +1,7 @@
+# 2.1.7
+
+* Update Gemfile.lock for v2.1.6 release.
+
 # 2.1.6
 
 * Route `validatebatch` requests to `api.zerobounce.net` instead of `bulkapi.zerobounce.net`.
