@@ -89,7 +89,7 @@ jobs:
           bundler-cache: true
 
       - name: Configure RubyGems credentials
-        uses: rubygems/configure-rubygems-credentials@main
+        uses: rubygems/configure-rubygems-credentials@v2.1.0
         with:
           api-token: ${{ secrets.RUBYGEMS_API_TOKEN }}
 

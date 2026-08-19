@@ -7,6 +7,18 @@ RSpec.describe Zerobounce::BaseRequest do
   # Test protected helpers via send
   let(:strip_trailing_slashes) { described_class.method(:__root_without_trailing_slashes__) }
   let(:safe_file_path) { described_class.method(:__safe_file_path__) }
+  let(:require_https) { described_class.method(:__require_https__) }
+
+  describe '.__require_https__' do
+    it 'allows https URLs' do
+      expect { require_https.call('https://api.zerobounce.net/v2') }.not_to raise_error
+    end
+
+    it 'rejects http and other schemes' do
+      expect { require_https.call('http://example.com') }.to raise_error(ArgumentError, /https:\/\//)
+      expect { require_https.call('file:///etc/passwd') }.to raise_error(ArgumentError, /https:\/\//)
+    end
+  end
 
   describe '.__root_without_trailing_slashes__' do
     it 'returns the string unchanged when there is no trailing slash' do

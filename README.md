@@ -2,6 +2,13 @@
 # Zerobounce
 Ruby client for Zerobounce.net API. Developed based on [this version](https://github.com/afrase/zerobounce) by Aaron Frase.
 
+
+## Security
+
+- Keep API keys on a trusted server. Do not embed them in mobile apps or browser JavaScript that untrusted users can inspect.
+- Custom API base URLs (when supported) must use `https://`. Do not pass end-user-controlled hosts into those settings.
+- Request URLs include `api_key` as a query parameter (ZeroBounce API contract). Do not log full request URLs or enable payload debug logging in production.
+
 ## Usage
 Add this line to your application's Gemfile:
 ```ruby

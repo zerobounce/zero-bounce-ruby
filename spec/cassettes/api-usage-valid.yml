@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/getapiusage?api_key=99e7ef20ceea4480a173b07b1be75371&end_date=2023-09-04&start_date=2023-09-04
+    uri: https://api.zerobounce.net/v2/getapiusage?api_key=REDACTED&end_date=2023-09-04&start_date=2023-09-04
     body:
       encoding: US-ASCII
       string: ''

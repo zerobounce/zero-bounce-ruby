@@ -8,6 +8,8 @@ VCR.configure do |c|
 	c.cassette_library_dir = 'spec/cassettes'
 	c.hook_into :webmock
 	c.ignore_localhost = true
+	c.filter_sensitive_data('<API_KEY>') { ENV['ZEROBOUNCE_API_KEY'] }
+	c.filter_sensitive_data('<API_KEY>') { 'REDACTED' }
 	# Match requests by method and URI but ignore api_key so cassettes work with any key
 	c.register_request_matcher :uri_ignoring_api_key do |request1, request2|
 		return false if request1.method != request2.method

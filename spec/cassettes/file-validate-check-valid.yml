@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://bulkapi.zerobounce.net/v2/filestatus?api_key=99e7ef20ceea4480a173b07b1be75371&file_id=84946fc8-3f89-428a-9d0d-382fbe18cb24
+    uri: https://bulkapi.zerobounce.net/v2/filestatus?api_key=REDACTED&file_id=84946fc8-3f89-428a-9d0d-382fbe18cb24
     body:
       encoding: US-ASCII
       string: ''
