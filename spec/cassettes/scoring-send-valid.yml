@@ -8,7 +8,7 @@ http_interactions:
       string: "------RubyFormBoundary1HTDnvzcDRpRzA0D\r\nContent-Disposition: form-data;
         name=\"email_address_column\"\r\n\r\n1\r\n------RubyFormBoundary1HTDnvzcDRpRzA0D\r\nContent-Disposition:
         form-data; name=\"has_header_row\"\r\n\r\ntrue\r\n------RubyFormBoundary1HTDnvzcDRpRzA0D\r\nContent-Disposition:
-        form-data; name=\"api_key\"\r\n\r\n99e7ef20ceea4480a173b07b1be75371\r\n------RubyFormBoundary1HTDnvzcDRpRzA0D\r\nContent-Disposition:
+        form-data; name=\"api_key\"\r\n\r\nREDACTED\r\n------RubyFormBoundary1HTDnvzcDRpRzA0D\r\nContent-Disposition:
         form-data; name=\"file\"; filename=\"scoring.csv\"\r\nContent-Type: text/csv\r\n\r\nemail\r\ndisposable@example.com\r\ninvalid@example.com\r\nvalid@example.com\r\ntoxic@example.com\r\ndonotmail@example.com\r\nspamtrap@example.com\r\nabuse@example.com\r\nunknown@example.com\r\ncatch_all@example.com\r\nantispam_system@example.com\r\ndoes_not_accept_mail@example.com\r\nexception_occurred@example.com\r\nfailed_smtp_connection@example.com\r\nfailed_syntax_check@example.com\r\nforcible_disconnect@example.com\r\nglobal_suppression@example.com\r\ngreylisted@example.com\r\nleading_period_removed@example.com\r\nmail_server_did_not_respond@example.com\r\nmail_server_temporary_error@example.com\r\nmailbox_quota_exceeded@example.com\r\nmailbox_not_found@example.com\r\nno_dns_entries@example.com\r\npossible_trap@example.com\r\npossible_typo@example.com\r\nrole_based@example.com\r\ntimeout_exceeded@example.com\r\nunroutable_ip_address@example.com\r\nfree_email@example.com\r\nrole_based_catch_all@example.com\r\n------RubyFormBoundary1HTDnvzcDRpRzA0D--\r\n"
     headers:
       Accept:

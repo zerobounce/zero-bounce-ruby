@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/guessformat?api_key=99e7ef20ceea4480a173b07b1be75371&domain=zerobounce.net
+    uri: https://api.zerobounce.net/v2/guessformat?api_key=REDACTED&domain=zerobounce.net
     body:
       encoding: US-ASCII
       string: ''

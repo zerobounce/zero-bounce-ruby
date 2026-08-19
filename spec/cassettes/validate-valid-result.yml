@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: https://api.zerobounce.net/v2/validate?api_key=99e7ef20ceea4480a173b07b1be75371&email=valid@example.com&ip_address
+    uri: https://api.zerobounce.net/v2/validate?api_key=REDACTED&email=valid@example.com&ip_address
     body:
       encoding: US-ASCII
       string: ''

@@ -41,6 +41,13 @@ module Zerobounce
       canonical
     end
 
+    def self.__require_https__(url)
+      unless url.to_s.downcase.start_with?('https://')
+        raise ArgumentError, 'API URL must be an https:// URL'
+      end
+      url
+    end
+
     def self._get(root, path, params, content_type='application/json')
 
       # puts path
@@ -50,8 +57,9 @@ module Zerobounce
 
       params[:api_key] = Zerobounce.config.apikey
       url = "#{Zerobounce::BaseRequest.__root_without_trailing_slashes__(root)}/#{path}"
+      Zerobounce::BaseRequest.__require_https__(url)
 
-      response = RestClient.get(url, {params: params})
+      response = RestClient::Request.execute(method: :get, url: url, timeout: 120, headers: { params: params })
       return response
     end
 
@@ -61,16 +69,22 @@ module Zerobounce
 
       params[:api_key] = Zerobounce.config.apikey
       url = "#{Zerobounce::BaseRequest.__root_without_trailing_slashes__(root)}/#{path}"
+      Zerobounce::BaseRequest.__require_https__(url)
       response = nil
 
       if filepath or content_type == 'multipart/form-data'
         params[:file] = File.new(Zerobounce::BaseRequest.__safe_file_path__(filepath), 'rb')
         params[:multipart] = true
-        response = RestClient.post(url, params)
+        response = RestClient::Request.execute(method: :post, url: url, payload: params, timeout: 120)
 
       elsif content_type == 'application/json'
-        response = RestClient.post(url, params.to_json, \
-                      content_type: :json, accept: :json)
+        response = RestClient::Request.execute(
+          method: :post,
+          url: url,
+          payload: params.to_json,
+          timeout: 120,
+          headers: { content_type: :json, accept: :json }
+        )
       else
         # this shouldn't happen
         raise Error.new('Unknown content type specified in request.'\
