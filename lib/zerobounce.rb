@@ -82,7 +82,7 @@ module Zerobounce
     #   "zipcode": null,
     #   "processed_at": "2023-04-18 12:09:39.074"
     # }
-    def validate(email, ip_address=nil, timeout: nil, activity_data: nil, verify_plus: nil)
+    def validate(email, ip_address=nil, timeout: nil, activity_data: nil, verify_plus: nil, use_post: false)
       params = {email: email, ip_address: ip_address}
       params[:timeout] = timeout unless timeout.nil?
       unless activity_data.nil?
@@ -91,7 +91,11 @@ module Zerobounce
       unless verify_plus.nil?
         params[:verify_plus] = verify_plus ? 'true' : 'false'
       end
-      @@request.get('validate', params)
+      if use_post
+        @@request.post('validate', params, 'application/x-www-form-urlencoded')
+      else
+        @@request.get('validate', params)
+      end
     end
 
     # Get the number of remaining credits on the account.

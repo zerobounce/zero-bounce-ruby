@@ -85,6 +85,13 @@ module Zerobounce
       zb_request.post('filters/delete', { rule: rule, target: target, value: value }, 'application/x-www-form-urlencoded')
     end
 
+    def list_s3_files(bucket: nil, search: nil)
+      params = {}
+      params[:bucket] = bucket unless bucket.nil? || bucket.to_s.empty?
+      params[:search] = search unless search.nil? || search.to_s.empty?
+      zb_request.bulk_get('listS3files', params)
+    end
+
     def validate_s3_file(file_name:, **options)
       raise ArgumentError, 'file_name is required' if file_name.nil? || file_name.to_s.empty?
 
