@@ -190,6 +190,21 @@ module Zerobounce
       @@request.get('activity', params)
     end
 
+    # Real-time AI scoring for a single email (GET /scoring by default).
+    #
+    # @param [String] :email Email to score
+    # @param [Boolean] :use_post When true, uses POST /scoring with form body
+    #
+    # @return [Hash] e.g. {"email"=>"mark@gmail.com", "score"=>10}
+    def score_email(email, use_post: false)
+      params = { email: email }
+      if use_post
+        @@request.post('scoring', params, 'application/x-www-form-urlencoded')
+      else
+        @@request.get('scoring', params)
+      end
+    end
+
     # Validate email batch
     #
     # @param [Array] :emails List of email addresses to validate.
