@@ -48,6 +48,18 @@ module Zerobounce
       url
     end
 
+    def self.__redact_api_key__(message)
+      key = Zerobounce.config.apikey
+      return message if key.nil? || key.to_s.empty?
+      message.to_s.gsub(key.to_s, '***')
+    end
+
+    def self.__execute_request__(**kwargs)
+      RestClient::Request.execute(**kwargs)
+    rescue StandardError => e
+      raise e.class, __redact_api_key__(e.message)
+    end
+
     def self._get(root, path, params, content_type='application/json')
 
       # puts path
@@ -59,7 +71,7 @@ module Zerobounce
       url = "#{Zerobounce::BaseRequest.__root_without_trailing_slashes__(root)}/#{path}"
       Zerobounce::BaseRequest.__require_https__(url)
 
-      response = RestClient::Request.execute(method: :get, url: url, timeout: 120, headers: { params: params })
+      response = __execute_request__(method: :get, url: url, timeout: 120, headers: { params: params })
       return response
     end
 
@@ -75,10 +87,10 @@ module Zerobounce
       if filepath or content_type == 'multipart/form-data'
         params[:file] = File.new(Zerobounce::BaseRequest.__safe_file_path__(filepath), 'rb')
         params[:multipart] = true
-        response = RestClient::Request.execute(method: :post, url: url, payload: params, timeout: 120)
+        response = __execute_request__(method: :post, url: url, payload: params, timeout: 120)
 
       elsif content_type == 'application/json'
-        response = RestClient::Request.execute(
+        response = __execute_request__(
           method: :post,
           url: url,
           payload: params.to_json,
