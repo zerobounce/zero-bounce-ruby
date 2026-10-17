@@ -80,8 +80,15 @@ module Zerobounce
     #   "zipcode": null,
     #   "processed_at": "2023-04-18 12:09:39.074"
     # }
-    def validate(email, ip_address=nil)
+    def validate(email, ip_address=nil, timeout: nil, activity_data: nil, verify_plus: nil)
       params = {email: email, ip_address: ip_address}
+      params[:timeout] = timeout unless timeout.nil?
+      unless activity_data.nil?
+        params[:activity_data] = activity_data ? 'true' : 'false'
+      end
+      unless verify_plus.nil?
+        params[:verify_plus] = verify_plus ? 'true' : 'false'
+      end
       @@request.get('validate', params)
     end
 
@@ -217,7 +224,7 @@ module Zerobounce
     #   },
     #   ...
     # ]
-    def validate_batch(emails, ip_addresses=[])
+    def validate_batch(emails, ip_addresses=[], timeout: nil, activity_data: nil, verify_plus: nil)
 
       raise ArgumentError.new if emails.class != Array
       emails.each do |email|
@@ -232,6 +239,9 @@ module Zerobounce
         })
       end
       params = {email_batch: email_batch}
+      params[:timeout] = timeout unless timeout.nil?
+      params[:activity_data] = activity_data unless activity_data.nil?
+      params[:verify_plus] = verify_plus unless verify_plus.nil?
       results = @@request.post('validatebatch', params)
       return results['email_batch']
     end
