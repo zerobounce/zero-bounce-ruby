@@ -15,9 +15,7 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.homepage      = 'https://zerobounce.net'
   spec.license       = 'MIT'
 
-  spec.files = `git ls-files -z`.split("\x0").reject do |f|
-    f.match(%r{^(test|spec|features)/})
-  end
+  spec.files = Dir['lib/**/*', 'README.md', 'LICENSE*', 'CHANGELOG*'].select { |f| File.file?(f) }
   spec.bindir        = 'exe'
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
@@ -27,8 +25,8 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.required_ruby_version = '>= 2.5'
 
   spec.add_dependency 'rest-client', '~>2.1'
-  spec.add_dependency 'dotenv'
 
+  spec.add_development_dependency 'dotenv'
   spec.add_development_dependency 'base64' # stdlib gem on Ruby 3.4+
   spec.add_development_dependency 'bigdecimal' # required by crack (webmock) on Ruby 3.4+
   spec.add_development_dependency 'ostruct' # stdlib gem on Ruby 3.5+ (json/simplecov load chain)
