@@ -70,13 +70,14 @@ jobs:
     needs: [validate-tag]
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     runs-on: ubuntu-latest
+    environment: release
     env:
       ZEROBOUNCE_API_KEY: "invalid_key_for_tests"
     steps:
       - name: Checkout tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.validate-tag.outputs.tag_sha }}
+          ref: refs/tags/${{ github.event.inputs.tag }}
           persist-credentials: false
       - name: Set up Ruby
         uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1
@@ -127,6 +128,7 @@ jobs:
     needs: [validate-tag, publish]
     if: ${{ !cancelled() && !failure() }}
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: write
     steps:
