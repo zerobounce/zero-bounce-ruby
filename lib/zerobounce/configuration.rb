@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'rest-client'
-require 'dotenv'
 require_relative 'api_urls'
 
 module Zerobounce
@@ -30,13 +29,21 @@ module Zerobounce
     attr_accessor :headers, :apikey, :api_root_url, :bulk_api_root_url, :valid_statuses, :mock
 
     def initialize(mock = false)
-      File.file?('.env') ? Dotenv.load('.env') : Dotenv.load
       self.apikey = ENV['ZEROBOUNCE_API_KEY']
       self.api_root_url = ENV['ZEROBOUNCE_API_URL'] || ApiUrls::DEFAULT_URL
       self.bulk_api_root_url = ENV['ZEROBOUNCE_BULK_API_URL'] || ApiUrls::BULK_DEFAULT_URL
       self.valid_statuses = %i[valid catch_all accept_all]
       self.headers = { user_agent: "ZerobounceRubyGem/#{Zerobounce::VERSION}" }
       self.mock = mock
+    end
+
+    # Keep the API key out of logs, consoles and error pages that call #inspect.
+    def inspect
+      vars = instance_variables.map do |var|
+        value = var == :@apikey && apikey ? '[FILTERED]' : instance_variable_get(var).inspect
+        "#{var}=#{value}"
+      end
+      "#<#{self.class.name} #{vars.join(', ')}>"
     end
   end
 end

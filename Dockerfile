@@ -14,4 +14,7 @@ RUN gem install bundler -v 2.4.22 && \
 # Dummy key for VCR/cassette-based specs; override with env for live API
 ENV ZEROBOUNCE_API_KEY="${ZEROBOUNCE_API_KEY:-invalid_key_for_tests}"
 
+
+USER 65532:65532
+
 CMD ["bundle", "_2.4.22_", "exec", "rspec"]
