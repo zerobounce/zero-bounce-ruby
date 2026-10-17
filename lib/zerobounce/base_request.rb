@@ -97,12 +97,29 @@ module Zerobounce
           timeout: 120,
           headers: { content_type: :json, accept: :json }
         )
+      elsif content_type == 'application/x-www-form-urlencoded'
+        response = __execute_request__(method: :post, url: url, payload: params, timeout: 120)
       else
         # this shouldn't happen
         raise Error.new('Unknown content type specified in request.'\
           ' Must be either multipart/form-data or application/json.')
       end
       return response
+    end
+
+    def self.bulk_api_root_without_v2
+      root = Zerobounce.configuration.bulk_api_root_url.to_s.sub(%r{/v2/?$}, '')
+      __root_without_trailing_slashes__(root)
+    end
+
+    def self.__parse_json_response__(response)
+      response_body = response.body
+      response_body_json = JSON.parse(response_body)
+      raise(response_body_json['error']) if response_body_json.key?('error')
+      if response_body_json.key?('errors') && response_body_json['errors'].length > 0
+        raise(response_body_json['errors'][0]['error'])
+      end
+      response_body_json
     end
 
   end

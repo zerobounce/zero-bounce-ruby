@@ -15,11 +15,13 @@ require 'zerobounce/request'
 require 'zerobounce/mock_request'
 require 'zerobounce/configuration'
 require 'zerobounce/api_urls'
+require 'zerobounce/priority3'
 
 # Validate an email address with Zerobounce.net
 module Zerobounce
 
   class << self
+    include Priority3
     attr_writer :configuration
 
     @@request = ENV['TEST']=='unit' ? MockRequest : Request
