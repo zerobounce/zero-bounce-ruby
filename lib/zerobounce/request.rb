@@ -34,6 +34,7 @@ module Zerobounce
       if response.headers[:content_type] == 'application/json'
         response_body = response.body
         response_body_json = JSON.parse(response_body)
+        return response_body_json unless response_body_json.is_a?(Hash)
 
         raise (response_body_json['error']) if response_body_json.key?('error')
         raise (response_body_json['errors'][0]['error']) \

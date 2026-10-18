@@ -37,4 +37,17 @@ describe Zerobounce do
     result = Zerobounce.validate_s3_file(file_name: 'bucket/key.csv')
     expect(result['success']).to be true
   end
+
+  it 'list_s3_files gets bulk listS3files' do
+    stub_request(:get, %r{\Ahttps://bulkapi\.zerobounce\.net/v2/listS3files})
+      .to_return(
+        status: 200,
+        body: '[{"file_name":"bucket/key.csv"}]',
+        headers: { 'Content-Type' => 'application/json' }
+      )
+
+    result = Zerobounce.list_s3_files(bucket: 'my-bucket', search: 'key')
+    expect(result).to be_an(Array)
+    expect(result.first['file_name']).to eq('bucket/key.csv')
+  end
 end
