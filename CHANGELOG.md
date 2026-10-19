@@ -1,33 +1,136 @@
-# 2.1.7
+# Changelog
 
-* Update Gemfile.lock for v2.1.6 release.
+All notable changes to this project will be documented in this file.
 
-# 2.1.6
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-* Route `validatebatch` requests to `api.zerobounce.net` instead of `bulkapi.zerobounce.net`.
+## [Unreleased]
 
-# 2.1.1
+### Added
 
-* Raise development and transitive dependency floors to address security advisories for REXML, Addressable, and YARD (updated `Gemfile.lock`; see `Gemfile` and `zerobounce.gemspec`).
+- `validate` options `timeout`, `activity_data`, `verify_plus`, and `use_post` (form-encoded `POST /validate`).
+- `validate_batch` options `timeout`, `activity_data`, and `verify_plus`.
+- `score_email` for `GET` and `POST /scoring`.
+- Bulk email finder, bulk domain search, list evaluator, filters, and S3 (`validate_s3_file`, `score_s3_file`, `export_s3_file`, `list_s3_files`).
+- `Zerobounce::Client` so each API key stays on its own thread. Module methods still share `Zerobounce.config`.
 
-# 0.3.0
-* Update ruby and bundler version
+### Changed
 
-# 0.2.0
+- `validate_batch` returns the full response hash (`email_batch` and `errors`). A per-address error stays on that hash.
+- API requests time out after 120 seconds and do not follow redirects.
+- Multipart booleans are sent as `true` or `false`.
 
-* Update faraday and faraday_middleware dependency requirements.
-* Update rubocop dev dependencies and fixed failures.
-* Updated minimum ruby version to 2.5.
+### Fixed
 
-# 0.1.2
+- An HTML "Access denied" page is a short `RuntimeError`. An HTML page with status 200 is an error as well, including `validate_file_get`, instead of file text or a JSON parse.
+- Empty and non-JSON bodies are a short error. A repeated `Error:` / `[Error]:` prefix is removed.
+- `validate_batch` raises for an account-level failure (HTTP 200, error for address `all`, such as an invalid API key or no credits).
+- Bulk email finder and domain search send `has_header_row` when it is false. A column index of `0` is sent when the caller passes it.
+- An empty API key is rejected before a request is sent.
+- `validate` timeout must be 3–60 seconds. `validate_batch` timeout must be 10–120 seconds.
 
-* Removed the double quote from the body check since it appears a space is added after the colon.
-* Added changelog file.
+### Security
 
-# 0.1.1
+- Redirects are disabled, so a 3xx response cannot send the API key to another host.
+- Error messages no longer include the raw HTML access-denied page.
+- RestClient error text is redacted of the API key.
 
-* Removed safe accessor usage to work with older versions of Ruby.
+## [2.1.8] - 2026-08-14
 
-# 0.1.0
+### Fixed
 
-* Added support for V2 of Zerobounce API.
+- `Gemfile.lock` matches the gemspec version, so a frozen install can resolve the gem.
+
+## [2.1.6] - 2026-06-18
+
+### Fixed
+
+- `validate_batch` posts to `api.zerobounce.net` instead of `bulkapi.zerobounce.net`.
+
+## [2.1.5] - 2026-06-10
+
+### Added
+
+- `catchall_domain` on validation results.
+
+## [2.1.1] - 2026-04-08
+
+### Security
+
+- Development and transitive dependency floors were raised for REXML, Addressable, and YARD.
+
+## [2.1.0] - 2026-04-08
+
+### Added
+
+- Optional bulk get-file parameters, including download type and activity data.
+
+## [2.0.12] - 2026-03-03
+
+### Changed
+
+- License the project under MIT.
+
+## [2.0.1] - 2026-03-03
+
+### Security
+
+- Uploaded file paths must stay under the current directory.
+
+## [2.0.0] - 2026-03-03
+
+### Changed
+
+- Release the 2.0 line of the gem.
+
+## [1.3.0] - 2025-10-22
+
+### Added
+
+- `find_email` and `find_domain`.
+
+### Deprecated
+
+- `guessformat`. Use `find_email` or `find_domain`.
+
+## [0.3.0] - 2023-09-18
+
+### Changed
+
+- Ruby and Bundler version requirements.
+
+## [0.2.0] - 2023-09-12
+
+### Changed
+
+- Faraday requirements, and the minimum Ruby version is 2.5.
+
+## [0.1.2] - 2023-04-18
+
+### Fixed
+
+- Error-body detection no longer depends on a quote immediately after the colon.
+
+## [0.1.1] - 2023-04-12
+
+### Fixed
+
+- Removed safe-navigation calls so the client runs on older Ruby.
+
+## [0.1.0] - 2023-04-07
+
+### Added
+
+- Initial client for ZeroBounce API v2.
+
+[Unreleased]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.8...HEAD
+[2.1.8]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.6...v2.1.8
+[2.1.6]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.5...v2.1.6
+[2.1.5]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.1...v2.1.5
+[2.1.1]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.0...v2.1.1
+[2.1.0]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.0.12...v2.1.0
+[2.0.12]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.0.1...v2.0.12
+[2.0.1]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/zerobounce/zero-bounce-ruby/compare/v1.3.0...v2.0.0
+[1.3.0]: https://github.com/zerobounce/zero-bounce-ruby/releases/tag/v1.3.0

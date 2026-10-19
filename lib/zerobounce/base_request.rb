@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'zerobounce/response_error'
 
 # https://github.com/rest-client/rest-client
 require 'rest-client'
@@ -54,8 +55,18 @@ module Zerobounce
       message.to_s.gsub(key.to_s, '***')
     end
 
+    def self.current_api_key
+      key = Thread.current[:zerobounce_api_key]
+      key.nil? ? Zerobounce.config.apikey : key
+    end
+
     def self.__execute_request__(**kwargs)
+      kwargs[:max_redirects] = 0
+      user_agent = Zerobounce.config.headers && Zerobounce.config.headers[:user_agent]
+      kwargs[:headers] = (kwargs[:headers] || {}).merge(user_agent: user_agent) if user_agent
       RestClient::Request.execute(**kwargs)
+    rescue RestClient::ExceptionWithResponse => e
+      raise ResponseError.message_from(e.response)
     rescue StandardError => e
       raise e.class, __redact_api_key__(e.message)
     end
@@ -65,9 +76,10 @@ module Zerobounce
       # puts path
       # puts Zerobounce.config.apikey
 
-      raise ("API key must be assigned") if not Zerobounce.config.apikey
+      api_key = current_api_key
+      raise ('API key must be assigned') if api_key.nil? || api_key.to_s.strip.empty?
 
-      params[:api_key] = Zerobounce.config.apikey
+      params[:api_key] = api_key
       url = "#{Zerobounce::BaseRequest.__root_without_trailing_slashes__(root)}/#{path}"
       Zerobounce::BaseRequest.__require_https__(url)
 
@@ -77,14 +89,18 @@ module Zerobounce
 
     def self._post(root, path, params, content_type='application/json', filepath=nil)
 
-      raise ("API key must be assigned") if not Zerobounce.config.apikey
+      api_key = current_api_key
+      raise ('API key must be assigned') if api_key.nil? || api_key.to_s.strip.empty?
 
-      params[:api_key] = Zerobounce.config.apikey
+      params[:api_key] = api_key
       url = "#{Zerobounce::BaseRequest.__root_without_trailing_slashes__(root)}/#{path}"
       Zerobounce::BaseRequest.__require_https__(url)
       response = nil
 
       if filepath or content_type == 'multipart/form-data'
+        params.each do |key, value|
+          params[key] = value ? 'true' : 'false' if value == true || value == false
+        end
         params[:file] = File.new(Zerobounce::BaseRequest.__safe_file_path__(filepath), 'rb')
         params[:multipart] = true
         response = __execute_request__(method: :post, url: url, payload: params, timeout: 120)
@@ -113,13 +129,23 @@ module Zerobounce
     end
 
     def self.__parse_json_response__(response)
-      response_body = response.body
-      response_body_json = JSON.parse(response_body)
-      raise(response_body_json['error']) if response_body_json.key?('error')
-      if response_body_json.key?('errors') && response_body_json['errors'].length > 0
-        raise(response_body_json['errors'][0]['error'])
+      body = response.body.to_s
+      content_type = (response.headers[:content_type] || '').to_s
+      if ResponseError.html?(body, content_type) || body.strip.empty?
+        raise ResponseError.message_from_parts(response.code, content_type, body)
       end
-      response_body_json
+      begin
+        parsed = JSON.parse(body)
+      rescue JSON::ParserError
+        raise 'ZeroBounce returned a response that is not valid JSON.'
+      end
+      return parsed unless parsed.is_a?(Hash)
+
+      raise ResponseError.strip_prefix(parsed['error']) if parsed.key?('error') && !parsed['error'].nil?
+      if parsed.key?('errors') && parsed['errors'].is_a?(Array) && !parsed['errors'].empty?
+        raise ResponseError.strip_prefix(parsed['errors'][0]['error'])
+      end
+      parsed
     end
 
   end

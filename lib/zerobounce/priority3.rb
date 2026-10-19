@@ -14,11 +14,11 @@ module Zerobounce
       raise ArgumentError, 'domain_column is required' if domain_column.nil? || domain_column.to_i < 1
 
       params = { domain_column: domain_column }
-      params[:has_header_row] = true if has_header_row
-      params[:first_name_column] = first_name_column if first_name_column
-      params[:last_name_column] = last_name_column if last_name_column
-      params[:middle_name_column] = middle_name_column if middle_name_column
-      params[:full_name_column] = full_name_column if full_name_column
+      params[:has_header_row] = has_header_row ? 'true' : 'false' unless has_header_row.nil?
+      params[:first_name_column] = first_name_column unless first_name_column.nil?
+      params[:last_name_column] = last_name_column unless last_name_column.nil?
+      params[:middle_name_column] = middle_name_column unless middle_name_column.nil?
+      params[:full_name_column] = full_name_column unless full_name_column.nil?
       zb_request.bulk_root_post("#{EMAIL_FINDER_BULK_BASE}/sendfile", params, 'multipart/form-data', filepath)
     end
 
@@ -38,7 +38,7 @@ module Zerobounce
       raise ArgumentError, 'domain_column is required' if domain_column.nil? || domain_column.to_i < 1
 
       params = { domain_column: domain_column }
-      params[:has_header_row] = true if has_header_row
+      params[:has_header_row] = has_header_row ? 'true' : 'false' unless has_header_row.nil?
       zb_request.bulk_root_post("#{DOMAIN_SEARCH_BULK_BASE}/sendfile", params, 'multipart/form-data', filepath)
     end
 
