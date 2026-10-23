@@ -2,6 +2,7 @@
 
 require 'json'
 require 'stringio'
+require 'zerobounce/response_error'
 
 module Zerobounce
   # Bulk getfile response handling (v2): HTTP errors, JSON error bodies (including HTTP 200).
@@ -69,13 +70,8 @@ module Zerobounce
       body_str = response.body.to_s
       ct = (response.headers[:content_type] || response.headers['Content-Type'] || '').to_s
 
-      if code > 299
-        msg = if body_str.lstrip.start_with?('{')
-                format_error_message(body_str)
-              else
-                body_str.empty? ? "HTTP #{code}" : body_str
-              end
-        raise msg
+      if code > 299 || ResponseError.html?(body_str, ct)
+        raise ResponseError.message_from_parts(code, ct, body_str)
       end
 
       if should_treat_as_error?(body_str, ct)

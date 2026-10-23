@@ -73,7 +73,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'validate-incorrect-api-key' do
 				expect{ described_class.validate('valid@example.com') }.to \
-					raise_error(RestClient::Forbidden)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -128,7 +128,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'activity-incorrect-api-key' do
 				expect{ described_class.activity('ss@gmail.com') }.to \
-					raise_error(RestClient::Forbidden)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -169,7 +169,7 @@ describe Zerobounce do
 			end
 			it 'should raise a forbidden error' do
 				VCR.use_cassette 'credits-incorrect-api-key' do
-				expect{ described_class.credits }.to raise_error(RestClient::Forbidden)
+				expect{ described_class.credits }.to raise_error(RuntimeError)
 				end
 			end
 		end
@@ -208,7 +208,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'api-usage-incorrect-api-key' do
 				expect{ described_class.api_usage(test_date, test_date) }.to \
-					raise_error(RestClient::Forbidden)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -253,7 +253,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'batch-validate-incorrect-api-key' do
 				expect{ described_class.validate_batch(emails) }.to \
-					raise_error(RestClient::Forbidden)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -279,8 +279,8 @@ describe Zerobounce do
 				it 'should return valid results' do
 					VCR.use_cassette 'batch-validate-valid' do
 					results = described_class.validate_batch(emails)
-					expect(results.length).to be(6)
-					results.each do |result|
+					expect(results['email_batch'].length).to be(6)
+					results['email_batch'].each do |result|
 						expect(result).to include(
 							'address', 'status', 'sub_status', 'domain_age_days',
 							'smtp_provider', 'mx_found', 'mx_record'
@@ -309,7 +309,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'file-validate-send-incorrect-api-key' do
 				expect{ described_class.validate_file_send(validate_file_path) }.to \
-					raise_error(RestClient::Unauthorized)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -364,7 +364,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'file-validate-check-incorrect-api-key' do
 				expect{ described_class.validate_file_check(validate_file_id) }.to \
-					raise_error(RestClient::Forbidden)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -410,7 +410,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'file-validate-get-incorrect-api-key' do
 				expect{ described_class.validate_file_get(validate_file_id) }.to \
-					raise_error(RestClient::Forbidden)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -422,7 +422,7 @@ describe Zerobounce do
 				it 'should raise a forbidden error' do
 					VCR.use_cassette 'file-validate-get-incorrect-file-id' do
 						expect{ described_class.validate_file_get('invalid-file-id') 
-							}.to raise_error(RestClient::Forbidden)
+							}.to raise_error(RuntimeError)
 					end
 				end
 			end
@@ -454,7 +454,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'file-validate-delete-incorrect-api-key' do
 				expect{ described_class.validate_file_delete(validate_file_id) }.to \
-					raise_error(RestClient::Forbidden)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -466,7 +466,7 @@ describe Zerobounce do
 				it 'should raise a forbidden error' do
 					VCR.use_cassette 'file-validate-delete-incorrect-file-id' do
 					expect{ described_class.validate_file_delete('invalid-file-id') 
-						}.to raise_error(RestClient::Forbidden)
+						}.to raise_error(RuntimeError)
 					end
 				end
 			end
@@ -498,7 +498,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'scoring-send-incorrect-api-key' do
 				expect{ described_class.scoring_file_send(scoring_file_path) }.to \
-					raise_error(RestClient::Unauthorized)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -553,7 +553,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'scoring-check-incorrect-api-key' do
 				expect{ described_class.scoring_file_check(scoring_file_id) }.to \
-					raise_error(RestClient::Forbidden)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -565,7 +565,7 @@ describe Zerobounce do
 				it 'should raise a forbidden error' do
 					VCR.use_cassette 'scoring-check-incorrect-file-id' do
 					expect{ described_class.scoring_file_check('invalid-file-id') 
-						}.to raise_error(RestClient::Forbidden)
+						}.to raise_error(RuntimeError)
 					end
 				end
 			end
@@ -598,7 +598,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'scoring-get-icorrect-api-key' do
 				expect{ described_class.scoring_file_get(scoring_file_id) }.to \
-					raise_error(RestClient::Forbidden)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -610,7 +610,7 @@ describe Zerobounce do
 				it 'should raise a forbidden error' do
 					VCR.use_cassette 'scoring-get-incorrect-file-id' do
 					expect{ described_class.scoring_file_get('invalid-file-id') 
-						}.to raise_error(RestClient::Forbidden)
+						}.to raise_error(RuntimeError)
 					end
 				end
 			end
@@ -642,7 +642,7 @@ describe Zerobounce do
 			it 'should raise an API key error' do
 				VCR.use_cassette 'scoring-delete-incorrect-api-key' do
 				expect{ described_class.scoring_file_delete(scoring_file_id) }.to \
-					raise_error(RestClient::Forbidden)
+					raise_error(RuntimeError)
 				end
 			end
 		end
@@ -654,7 +654,7 @@ describe Zerobounce do
 				it 'should raise a forbidden error' do
 					VCR.use_cassette 'scoring-delete-incorrect-file-id' do
 					expect{ described_class.scoring_file_delete('invalid-file-id') 
-						}.to raise_error(RestClient::Forbidden)
+						}.to raise_error(RuntimeError)
 					end
 				end
 			end
@@ -695,7 +695,7 @@ describe Zerobounce do
 					first_name: 'John',
 					middle_name: 'Deere',
 					last_name: 'Doe')
-				}.to raise_error(RestClient::Forbidden)
+				}.to raise_error(RuntimeError)
 				end
 			end
 		end
@@ -801,7 +801,7 @@ describe Zerobounce do
 					domain: 'example.com',
 					middle_name: 'Deere',
 					last_name: 'Doe')
-				}.to raise_error(RestClient::Forbidden)
+				}.to raise_error(RuntimeError)
 				end
 			end
 		end
@@ -928,7 +928,7 @@ describe Zerobounce do
 				VCR.use_cassette 'find-domain-incorrect-api-key' do
 				expect{ described_class.find_domain(
 					domain: 'example.com')
-				}.to raise_error(RestClient::Forbidden)
+				}.to raise_error(RuntimeError)
 				end
 			end
 		end

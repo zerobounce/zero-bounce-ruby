@@ -5,6 +5,8 @@ require 'date'
 require 'tempfile'
 
 require 'zerobounce/error'
+require 'zerobounce/response_error'
+require 'zerobounce/client'
 require 'zerobounce/version'
 require 'zerobounce/download_type'
 require 'zerobounce/get_file_options'
@@ -15,11 +17,13 @@ require 'zerobounce/request'
 require 'zerobounce/mock_request'
 require 'zerobounce/configuration'
 require 'zerobounce/api_urls'
+require 'zerobounce/priority3'
 
 # Validate an email address with Zerobounce.net
 module Zerobounce
 
   class << self
+    include Priority3
     attr_writer :configuration
 
     @@request = ENV['TEST']=='unit' ? MockRequest : Request
@@ -52,6 +56,15 @@ module Zerobounce
       yield configuration
     end
 
+    # Run a block with an API key that is visible only on this thread.
+    def with_api_key(api_key)
+      previous = Thread.current[:zerobounce_api_key]
+      Thread.current[:zerobounce_api_key] = api_key
+      yield
+    ensure
+      Thread.current[:zerobounce_api_key] = previous
+    end
+
     # Validates the email address and gets geoip information for an IP if provided.
     #
     # @param [String] :email The email address to validate.
@@ -80,9 +93,26 @@ module Zerobounce
     #   "zipcode": null,
     #   "processed_at": "2023-04-18 12:09:39.074"
     # }
-    def validate(email, ip_address=nil)
+    def validate(email, ip_address=nil, timeout: nil, activity_data: nil, verify_plus: nil, use_post: false)
+      unless timeout.nil?
+        timeout_i = Integer(timeout)
+        if timeout_i < 3 || timeout_i > 60
+          raise ArgumentError, 'Invalid parameter: timeout (must be between 3 and 60 seconds)'
+        end
+      end
       params = {email: email, ip_address: ip_address}
-      @@request.get('validate', params)
+      params[:timeout] = timeout unless timeout.nil?
+      unless activity_data.nil?
+        params[:activity_data] = activity_data ? 'true' : 'false'
+      end
+      unless verify_plus.nil?
+        params[:verify_plus] = verify_plus ? 'true' : 'false'
+      end
+      if use_post
+        @@request.post('validate', params, 'application/x-www-form-urlencoded')
+      else
+        @@request.get('validate', params)
+      end
     end
 
     # Get the number of remaining credits on the account.
@@ -183,6 +213,21 @@ module Zerobounce
       @@request.get('activity', params)
     end
 
+    # Real-time AI scoring for a single email (GET /scoring by default).
+    #
+    # @param [String] :email Email to score
+    # @param [Boolean] :use_post When true, uses POST /scoring with form body
+    #
+    # @return [Hash] e.g. {"email"=>"mark@gmail.com", "score"=>10}
+    def score_email(email, use_post: false)
+      params = { email: email }
+      if use_post
+        @@request.post('scoring', params, 'application/x-www-form-urlencoded')
+      else
+        @@request.get('scoring', params)
+      end
+    end
+
     # Validate email batch
     #
     # @param [Array] :emails List of email addresses to validate.
@@ -217,7 +262,13 @@ module Zerobounce
     #   },
     #   ...
     # ]
-    def validate_batch(emails, ip_addresses=[])
+    def validate_batch(emails, ip_addresses=[], timeout: nil, activity_data: nil, verify_plus: nil)
+      unless timeout.nil?
+        timeout_i = Integer(timeout)
+        if timeout_i < 10 || timeout_i > 120
+          raise ArgumentError, 'Invalid parameter: timeout (must be between 10 and 120 seconds)'
+        end
+      end
 
       raise ArgumentError.new if emails.class != Array
       emails.each do |email|
@@ -232,8 +283,11 @@ module Zerobounce
         })
       end
       params = {email_batch: email_batch}
+      params[:timeout] = timeout unless timeout.nil?
+      params[:activity_data] = activity_data unless activity_data.nil?
+      params[:verify_plus] = verify_plus unless verify_plus.nil?
       results = @@request.post('validatebatch', params)
-      return results['email_batch']
+      results
     end
 
     # Validate CSV file
@@ -267,10 +321,10 @@ module Zerobounce
         email_address_column: email_address_column,
         has_header_row: has_header_row,
       }
-      params[:first_name_column] = first_name_column if first_name_column
-      params[:last_name_column] = last_name_column if last_name_column
-      params[:gender_column] = gender_column if gender_column
-      params[:return_url] = return_url if return_url
+      params[:first_name_column] = first_name_column unless first_name_column.nil?
+      params[:last_name_column] = last_name_column unless last_name_column.nil?
+      params[:gender_column] = gender_column unless gender_column.nil?
+      params[:return_url] = return_url unless return_url.nil? || return_url.to_s.empty?
       unless allow_phase_2.nil?
         params[:allow_phase_2] = allow_phase_2 ? 'true' : 'false'
       end
