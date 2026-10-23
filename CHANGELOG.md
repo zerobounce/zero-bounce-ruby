@@ -1,3 +1,12 @@
+# Unreleased
+
+* `validate` accepts `domain_info`, `greylist_processing` and `callback_url`. An option left out is not sent; booleans go on the wire as the strings `true`/`false`. `callback_url` is where the greylist retry posts its result, so it is rejected without `greylist_processing`, and when blank, before any request is sent.
+* Add the rest of the documented bulk surface: `email_finder_s3_file`, `domain_search_s3_file`, and the SFTP/FTP jobs `validate_sftp_file`, `score_sftp_file`, `email_finder_sftp_file`, `domain_search_sftp_file` and `export_sftp_file`. These are on the bulkapi host **without** `/v2`. `validate_sftp_file`'s file name is optional - passing `nil` uses the input bucket from your ZeroBounce settings - and `export_sftp_file` takes `export_path`, not the `export_bucket` `export_s3_file` sends.
+* Add the Inbox Placement Tester: the API key goes on the query string, bodies are camelCase JSON, and unset fields are left out.
+* `Configuration` gains `bulk_root_url`, `list_evaluator_root_url` and `inbox_placement_root_url`. These are separate base URLs rather than paths built from `bulk_api_root_url`, so overriding that alone leaves them pointing at the live API.
+* `get_list_evaluator_result` uses the list evaluator's own base URL, encodes the file id as a single path segment, and rejects a blank id before a request is sent.
+* An error body carrying a `detail` key (the Inbox Placement Tester is a Django REST framework app) is now raised with that text.
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
