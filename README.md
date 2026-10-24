@@ -719,6 +719,48 @@ Zerobounce.find_domain(company_name: "Zero Bounce")
 }
 ```
 
+## Warmup API
+
+The Warmup API is a separate product. It has its own host, its own team-scoped key, and its own client; your validation key will not work with it.
+
+```ruby
+warmup = Zerobounce::Warmup.new('<YOUR_WARMUP_API_KEY>')
+
+warmup.list_sending_accounts
+warmup.progress_today
+warmup.download_seeds          # CSV text, columns seed,provider
+```
+
+Add a from-address you run yourself, with one of the five standard engagement rules (0 Default, 1 Slow Pace, 2 Repair, 3 Boost, 4 Protect):
+
+```ruby
+warmup.add_sending_account('sender@example.com', 'self_managed', engagement_rule_id: 0)
+```
+
+Or have ZeroBounce provision the mailbox. A 200 means the request was accepted; provisioning happens afterwards.
+
+```ruby
+warmup.add_sending_account(
+  'sender@example.com', 'zb_managed',
+  email_content: { types_of_emails: %w[newsletter marketing] },
+  managed_sending: { timezone_offset: -5, warmup_start_date: Date.new(2026, 3, 4) }
+)
+```
+
+A custom engagement rule can be changed only once every seven days; inside that window the API answers 429.
+
+```ruby
+warmup.create_custom_engagement('sender@example.com', 20, 20, 35)  # reply, important, click %
+```
+
+`check_domain_dmarc` takes an **email address**, not a domain — the live API rejects a bare domain even though the docs describe one:
+
+```ruby
+warmup.check_domain_dmarc('sender@example.com')
+```
+
+Every documented empty success (204, or an empty 200) comes back as `nil`, and a payload that is not a JSON object — `/seeds` is an array, `/seed-count` a bare number — comes back as the parsed value itself. Failures raise `Zerobounce::ApiResponseError`, whose `#status_code` gives the HTTP status. Nothing is stored by `test_smtp_configuration`, and the credentials you pass it are masked out of any error it raises.
+
 ## Development
 
 ### Local setup
@@ -777,6 +819,27 @@ export ZEROBOUNCE_API_KEY=your_api_key_here
 A .env.example file is provided.
 
 Tests use webmock and vcr for mocking HTTP requests. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.example file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
+
+### Live API suite
+
+`rspec` never touches the network: the live suite lives outside `spec/`, so CI does not even load it. It needs real keys, which come from the environment and are never written anywhere:
+
+```bash
+export ZEROBOUNCE_API_KEY=...          # validation API
+export ZEROBOUNCE_WARMUP_API_KEY=...   # Warmup API
+ruby -Ilib live/live_api.rb
+```
+
+By default it only makes free calls: sandbox addresses, reads, and requests that are expected to fail but still prove the API accepts the payload. It checks that the credit balance did not move. Two flags opt in to more:
+
+| Flag | What it adds |
+| --- | --- |
+| `ZEROBOUNCE_LIVE_SPEND=1` | billable calls (scoring, activity, email finder) and a bulk round trip that deletes its own job |
+| `ZEROBOUNCE_LIVE_CHANGES=1` | reversible account changes — a test filter and a self-managed Warmup sending account — each undone in cleanup even when a check fails |
+
+It never creates an Inbox Placement test, sets the Inbox Placement webhook, or starts ZB-managed Warmup onboarding, because the API cannot undo any of those.
+
+Run it by hand before every release: the offline suite proves the SDK sends what we think it sends, and only the live suite proves the API accepts it.
 
 ## Publish
 
