@@ -68,7 +68,9 @@ module Zerobounce
             # A validation error list: [{"loc" => [...], "msg" => "..."}].
             if value[0].is_a?(Hash) && value[0]['msg']
               loc = value[0]['loc']
-              field = loc.is_a?(Array) && loc.length > 1 ? loc[1..].join('.') : ''
+              # loc[1..] is an endless range, which needs Ruby 2.6; the gemspec
+              # supports 2.5, where it is a syntax error that stops the gem loading.
+              field = loc.is_a?(Array) && loc.length > 1 ? loc[1..-1].join('.') : ''
               return field.empty? ? value[0]['msg'].to_s : "#{field}: #{value[0]['msg']}"
             end
           end

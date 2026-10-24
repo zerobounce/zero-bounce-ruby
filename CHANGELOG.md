@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `Zerobounce::ResponseError` used `loc[1..]` to build a validation-error field name. An endless range needs Ruby 2.6, but the gemspec supports 2.5, where the file is a syntax error and the gem will not load at all. Changed to `loc[1..-1]`.
+
 - An HTML "Access denied" page is a short `RuntimeError`. An HTML page with status 200 is an error as well, including `validate_file_get`, instead of file text or a JSON parse.
 - Empty and non-JSON bodies are a short error. A repeated `Error:` / `[Error]:` prefix is removed.
 - `validate_batch` raises for an account-level failure (HTTP 200, error for address `all`, such as an invalid API key or no credits).
