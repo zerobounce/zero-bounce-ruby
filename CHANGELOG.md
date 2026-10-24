@@ -1,3 +1,23 @@
+# Unreleased
+
+* `validate` accepts `domain_info`, `greylist_processing` and `callback_url`. An option left out is not sent; booleans go on the wire as the strings `true`/`false`. `callback_url` is where the greylist retry posts its result, so it is rejected without `greylist_processing`, and when blank, before any request is sent.
+* Add the rest of the documented bulk surface: `email_finder_s3_file`, `domain_search_s3_file`, and the SFTP/FTP jobs `validate_sftp_file`, `score_sftp_file`, `email_finder_sftp_file`, `domain_search_sftp_file` and `export_sftp_file`. These are on the bulkapi host **without** `/v2`. `validate_sftp_file`'s file name is optional - passing `nil` uses the input bucket from your ZeroBounce settings - and `export_sftp_file` takes `export_path`, not the `export_bucket` `export_s3_file` sends.
+* Add the Inbox Placement Tester: the API key goes on the query string, bodies are camelCase JSON, and unset fields are left out.
+* `Configuration` gains `bulk_root_url`, `list_evaluator_root_url` and `inbox_placement_root_url`. These are separate base URLs rather than paths built from `bulk_api_root_url`, so overriding that alone leaves them pointing at the live API.
+* `get_list_evaluator_result` uses the list evaluator's own base URL, encodes the file id as a single path segment, and rejects a blank id before a request is sent.
+* An error body carrying a `detail` key (the Inbox Placement Tester is a Django REST framework app) is now raised with that text.
+* Add `Zerobounce::Warmup`, a client for the Warmup API. It is a separate product with its own host (`https://warmup-api.zerobounce.net`), its own team-scoped key sent in an `API-Key` header, and all 26 documented endpoints, including the seed-list and statistics CSV downloads.
+* Add `Zerobounce::ApiResponseError`, which carries the HTTP status through `#status_code`, so callers can tell a Cloudflare 403 from an API 400/404 and a Warmup 429. The Warmup client raises it.
+* Add an opt-in live API suite (`ruby -Ilib live/live_api.rb`). It lives outside `spec/`, so `rspec` and CI never load it, and it only spends credits or changes the account behind `ZEROBOUNCE_LIVE_SPEND=1` and `ZEROBOUNCE_LIVE_CHANGES=1`.
+* Verified against the live API; where the API and the docs disagree, the API wins:
+  * `validate_batch` sends `timeout` as a JSON **string**. Sent as a number the API rejects the whole batch with an account-level error.
+  * The Inbox Placement Tester authenticates with an `Authorization: Bearer` header, not an `api_key` parameter, so the key no longer reaches a query string that gets logged. Its listing is `GET /tests`; `/test` answers `Method "GET" not allowed`.
+  * `send_evaluated_file` takes the list evaluator's `file_id` as a form field, not a file upload, so its argument is now a file id.
+  * The S3 and SFTP jobs require `file_name` and `return_url`, `validate_sftp_file` included, although the docs list `file_name` as optional for that one.
+* Fixed: `add_filter`, `delete_filter` and `list_filters` raised on success. They answer with a bare `{"Message": "..."}` body, which everywhere else means the request was rejected.
+* Fixed: `{"success": false}` on an HTTP 200 raises instead of being returned as a result. The API answers an unknown bulk file id that way.
+* Security: a Warmup API key with surrounding whitespace or control characters is rejected, because the transport would otherwise quote it unredacted in its own error; a Warmup base URL must be `https://`; and the Warmup SMTP test masks the username and password out of every error it raises.
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -22,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multipart booleans are sent as `true` or `false`.
 
 ### Fixed
+
+- `Zerobounce::ResponseError` used `loc[1..]` to build a validation-error field name. An endless range needs Ruby 2.6, but the gemspec supports 2.5, where the file is a syntax error and the gem will not load at all. Changed to `loc[1..-1]`.
 
 - An HTML "Access denied" page is a short `RuntimeError`. An HTML page with status 200 is an error as well, including `validate_file_get`, instead of file text or a JSON parse.
 - Empty and non-JSON bodies are a short error. A repeated `Error:` / `[Error]:` prefix is removed.

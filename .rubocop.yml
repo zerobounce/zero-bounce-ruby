@@ -1,0 +1,16 @@
+# RuboCop runs in CI (`bundle exec rubocop`). This codebase predates the lint
+# step, so existing offences are baselined in .rubocop_todo.yml and only new
+# code has to be clean. Work through the todo file over time; do not add to it.
+inherit_from: .rubocop_todo.yml
+
+require:
+  - rubocop-performance
+
+AllCops:
+  TargetRubyVersion: 2.5
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - 'vendor/**/*'
+    - 'bin/**/*'
+    - 'live/**/*'

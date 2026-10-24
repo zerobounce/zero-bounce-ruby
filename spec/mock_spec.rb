@@ -373,11 +373,12 @@ describe Zerobounce do
 				described_class.config.apikey = valid_api_key
 			end
 			context 'given incorrect file id' do
-				it 'should return error message' do
+				it 'should raise, because success:false on an HTTP 200 is a failure' do
+					# LIVE: the API answers an unknown file id with an HTTP 200
+					# whose body says the call failed.
 					VCR.use_cassette 'file-validate-incorrect-file-id' do
-					results = described_class.validate_file_check('invalid-file-id')
-					expect(results['success']).to be(false)
-					expect(results['message']).to eql('File cannot be found.')
+					expect { described_class.validate_file_check('invalid-file-id') }.to \
+						raise_error(/File cannot be found/)
 					end
 				end
 			end
@@ -471,11 +472,10 @@ describe Zerobounce do
 				end
 			end
 			context 'given correct file id' do
-				it 'should return file not found error' do
+				it 'should raise, because success:false on an HTTP 200 is a failure' do
 					VCR.use_cassette 'file-validate-delete-valid' do
-					results = described_class.validate_file_delete(validate_file_id)
-					expect(results['success']).to be(false)
-					expect(results['message']).to eql('File cannot be found.')
+					expect { described_class.validate_file_delete(validate_file_id) }.to \
+						raise_error(/File cannot be found/)
 					end
 				end
 			end
@@ -979,6 +979,50 @@ describe Zerobounce do
 					end
 				end
 			end
+		end
+	end
+
+
+	describe 'sub_status ai_agent_mailbox (RD-66)' do
+		before do
+			described_class.config.apikey = valid_api_key
+		end
+
+		# Stubbed directly rather than via a cassette: these responses are about
+		# a sub_status value, not about any recorded API interaction.
+		def stub_validate_with(status, sub_status)
+			stub_request(:get, /api\.zerobounce\.net\/v2\/validate/)
+				.to_return(
+					status: 200,
+					headers: { 'Content-Type' => 'application/json' },
+					body: {
+						address: 'agent@example.com',
+						status: status,
+						sub_status: sub_status
+					}.to_json
+				)
+		end
+
+		it 'returns ai_agent_mailbox under the valid status' do
+			stub_validate_with('valid', 'ai_agent_mailbox')
+			result = described_class.validate('agent@example.com')
+			expect(result['status']).to eq('valid')
+			expect(result['sub_status']).to eq(Zerobounce::ValidateSubStatus::AI_AGENT_MAILBOX)
+		end
+
+		it 'returns ai_agent_mailbox under the catch-all status' do
+			stub_validate_with('catch-all', 'ai_agent_mailbox')
+			result = described_class.validate('agent@example.com')
+			expect(result['status']).to eq('catch-all')
+			expect(result['sub_status']).to eq(Zerobounce::ValidateSubStatus::AI_AGENT_MAILBOX)
+		end
+
+		it 'passes an unknown sub_status through untouched' do
+			# sub_status is read straight off the parsed JSON, so a value this
+			# SDK predates reaches the caller rather than being dropped.
+			stub_validate_with('valid', 'some_future_sub_status')
+			result = described_class.validate('agent@example.com')
+			expect(result['sub_status']).to eq('some_future_sub_status')
 		end
 	end
 

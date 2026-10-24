@@ -26,12 +26,18 @@ module Zerobounce
   # @attr [Array<Symbol>] valid_statues
   #   The statuses that are considered valid by {Response#valid?}.
   class Configuration
-    attr_accessor :headers, :apikey, :api_root_url, :bulk_api_root_url, :valid_statuses, :mock
+    attr_accessor :headers, :apikey, :api_root_url, :bulk_api_root_url, :bulk_root_url,
+                  :list_evaluator_root_url, :inbox_placement_root_url, :valid_statuses, :mock
 
     def initialize(mock = false)
       self.apikey = ENV['ZEROBOUNCE_API_KEY']
       self.api_root_url = ENV['ZEROBOUNCE_API_URL'] || ApiUrls::DEFAULT_URL
       self.bulk_api_root_url = ENV['ZEROBOUNCE_BULK_API_URL'] || ApiUrls::BULK_DEFAULT_URL
+      # These three are separate base URLs rather than paths built from
+      # bulk_api_root_url, so overriding that alone leaves them on the live API.
+      self.bulk_root_url = ENV['ZEROBOUNCE_BULK_ROOT_URL'] || ApiUrls::BULK_ROOT_URL
+      self.list_evaluator_root_url = ENV['ZEROBOUNCE_LIST_EVALUATOR_URL'] || ApiUrls::LIST_EVALUATOR_URL
+      self.inbox_placement_root_url = ENV['ZEROBOUNCE_INBOX_PLACEMENT_URL'] || ApiUrls::INBOX_PLACEMENT_URL
       self.valid_statuses = %i[valid catch_all accept_all]
       self.headers = { user_agent: "ZerobounceRubyGem/#{Zerobounce::VERSION}" }
       self.mock = mock

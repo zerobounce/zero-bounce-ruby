@@ -18,6 +18,7 @@ require 'zerobounce/mock_request'
 require 'zerobounce/configuration'
 require 'zerobounce/api_urls'
 require 'zerobounce/priority3'
+require 'zerobounce/warmup'
 
 # Validate an email address with Zerobounce.net
 module Zerobounce
@@ -93,11 +94,21 @@ module Zerobounce
     #   "zipcode": null,
     #   "processed_at": "2023-04-18 12:09:39.074"
     # }
-    def validate(email, ip_address=nil, timeout: nil, activity_data: nil, verify_plus: nil, use_post: false)
+    def validate(email, ip_address=nil, timeout: nil, activity_data: nil, verify_plus: nil,
+                 domain_info: nil, greylist_processing: nil, callback_url: nil, use_post: false)
       unless timeout.nil?
         timeout_i = Integer(timeout)
         if timeout_i < 3 || timeout_i > 60
           raise ArgumentError, 'Invalid parameter: timeout (must be between 3 and 60 seconds)'
+        end
+      end
+      unless callback_url.nil?
+        raise ArgumentError, 'Empty parameter: callback_url' if callback_url.to_s.strip.empty?
+
+        # The callback is where the greylist retry posts its result, so it is
+        # meaningless - and rejected by the API - without the retry itself.
+        unless greylist_processing
+          raise ArgumentError, 'callback_url requires greylist_processing to be true'
         end
       end
       params = {email: email, ip_address: ip_address}
@@ -108,6 +119,13 @@ module Zerobounce
       unless verify_plus.nil?
         params[:verify_plus] = verify_plus ? 'true' : 'false'
       end
+      unless domain_info.nil?
+        params[:domain_info] = domain_info ? 'true' : 'false'
+      end
+      unless greylist_processing.nil?
+        params[:greylist_processing] = greylist_processing ? 'true' : 'false'
+      end
+      params[:callback_url] = callback_url unless callback_url.nil?
       if use_post
         @@request.post('validate', params, 'application/x-www-form-urlencoded')
       else
@@ -283,7 +301,10 @@ module Zerobounce
         })
       end
       params = {email_batch: email_batch}
-      params[:timeout] = timeout unless timeout.nil?
+      # LIVE: validatebatch takes timeout as a JSON *string*. Sent as a number
+      # the API rejects the whole batch with the account-level "Invalid API Key
+      # or your account ran out of credits".
+      params[:timeout] = timeout.to_s unless timeout.nil?
       params[:activity_data] = activity_data unless activity_data.nil?
       params[:verify_plus] = verify_plus unless verify_plus.nil?
       results = @@request.post('validatebatch', params)

@@ -59,11 +59,26 @@ module Zerobounce
           if access && parsed['cloudflare_error'] == true
             return title
           end
-          %w[error message error_message Message].each do |key|
+          %w[error message error_message Message detail].each do |key|
             value = parsed[key]
             return strip_prefix(value) if value.is_a?(String) && !value.strip.empty?
-            return strip_prefix(value[0]) if value.is_a?(Array) && value[0].is_a?(String) && !value[0].strip.empty?
+            next unless value.is_a?(Array) && !value.empty?
+            return strip_prefix(value[0]) if value[0].is_a?(String) && !value[0].strip.empty?
+
+            # A validation error list: [{"loc" => [...], "msg" => "..."}].
+            if value[0].is_a?(Hash) && value[0]['msg']
+              loc = value[0]['loc']
+              # loc[1..] is an endless range, which needs Ruby 2.6; the gemspec
+              # supports 2.5, where it is a syntax error that stops the gem loading.
+              field = loc.is_a?(Array) && loc.length > 1 ? loc[1..-1].join('.') : ''
+              return field.empty? ? value[0]['msg'].to_s : "#{field}: #{value[0]['msg']}"
+            end
           end
+        end
+        # A top-level list of strings, e.g. ["In-progress tests cannot be deleted."].
+        if parsed.is_a?(Array)
+          first = parsed.find { |item| item.is_a?(String) && !item.strip.empty? }
+          return strip_prefix(first) if first
         end
         return 'ZeroBounce returned a response that is not valid JSON.' if trimmed.length > 1000
 

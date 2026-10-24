@@ -54,6 +54,22 @@ module Zerobounce
     end
   end
 
+  # A failed API response.
+  #
+  # Carries the HTTP status so callers can tell a 403 (Cloudflare) from a
+  # 400/404 (API) or a 429 (the Warmup rate limit). The Warmup client raises
+  # it; the validation client still raises a RuntimeError with the same short
+  # message, which this is compatible with through #message.
+  class ApiResponseError < StandardError
+    # @return [Integer] the HTTP status of the failed response, or 0
+    attr_reader :status_code
+
+    def initialize(message, status_code = 0)
+      super(message)
+      @status_code = status_code.to_i
+    end
+  end
+
   # Server returned a 500 error.
   #
   # @author Aaron Frase
