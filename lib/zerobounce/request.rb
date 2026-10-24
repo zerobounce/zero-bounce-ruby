@@ -9,6 +9,10 @@ module Zerobounce
   # Sends the HTTP request.
   class Request < BaseRequest
 
+    # LIVE: these answer a success with a bare {"Message": "..."} body, which
+    # everywhere else means the request was rejected.
+    FILTER_PATHS = %w[filters/add filters/delete filters/list].freeze
+
     def self.get(path, params, content_type='application/json')
       response = self._get(Zerobounce.configuration.api_root_url, path, params, content_type)
       interpret_json_response(response, path)
@@ -107,7 +111,10 @@ module Zerobounce
       return parsed unless parsed.is_a?(Hash)
 
       raise ResponseError.strip_prefix(parsed['error']) if parsed.key?('error') && !parsed['error'].nil?
-      if parsed.key?('Message') && parsed.length == 1
+      # A body that is nothing but "Message" is how the validate endpoints
+      # report a rejected request. The filters endpoints use the same shape for
+      # a *success* ("Filter successfully added"), so they are left out.
+      if parsed.key?('Message') && parsed.length == 1 && !FILTER_PATHS.include?(path)
         raise ResponseError.strip_prefix(parsed['Message'])
       end
       if parsed.key?('errors') && parsed['errors'].is_a?(Array) && !parsed['errors'].empty?

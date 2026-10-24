@@ -193,6 +193,28 @@ describe 'Validate WHOIS and greylist options, SFTP bulk and the Inbox Placement
     end
   end
 
+  describe 'filters' do
+    it 'treats a bare Message body as the success the API means it to be' do
+      # LIVE: /filters/add answers a success with {"Message": "Filter
+      # successfully added"}, the same shape the validate endpoints use for a
+      # rejected request.
+      stub_request(:post, %r{\Ahttps://api\.zerobounce\.net/v2/filters/add})
+        .to_return(status: 200, body: '{"Message":"Filter successfully added"}',
+                   headers: { 'Content-Type' => 'application/json' })
+
+      result = Zerobounce.add_filter(rule: 'allow', target: 'domain', value: 'example.com')
+      expect(result).to eq('Message' => 'Filter successfully added')
+    end
+
+    it 'still treats a bare Message body on validate as an error' do
+      stub_request(:get, %r{\Ahttps://api\.zerobounce\.net/v2/validate})
+        .to_return(status: 200, body: '{"Message":"Missing parameter: email."}',
+                   headers: { 'Content-Type' => 'application/json' })
+
+      expect { Zerobounce.validate('a@example.com') }.to raise_error(/Missing parameter/)
+    end
+  end
+
   describe 'success:false on an HTTP 200' do
     it 'is an error, not a result' do
       # LIVE: the API answers an unknown bulk file id with an HTTP 200 whose
