@@ -7,6 +7,9 @@ module Zerobounce
   module ResponseError
     module_function
 
+    # A <title> sits in the head; anything past this is not one worth scanning.
+    TITLE_SCAN_LIMIT = 64 * 1024
+
     def html?(body, content_type = '')
       sample = body.to_s[0, 2000].to_s.downcase
       content_type.to_s.downcase.include?('text/html') ||
@@ -31,9 +34,23 @@ module Zerobounce
       end
     end
 
+    # Walked with String#index instead of one <title[^>]*>(.*?)</title> match:
+    # that pattern retries [^>]* from every "<title" in the body, which is
+    # quadratic on a page built from repeated "<title" and was reported as a
+    # polynomial ReDoS. Each step below scans forward once, and the body is
+    # capped first because a title only ever lives in the head.
     def html_title(body)
-      match = body.to_s.match(%r{<title[^>]*>(.*?)</title>}im)
-      match ? match[1].strip : ''
+      text = body.to_s[0, TITLE_SCAN_LIMIT].to_s
+      open_tag = text.index(/<title[\s>]/i)
+      return '' unless open_tag
+
+      open_end = text.index('>', open_tag)
+      return '' unless open_end
+
+      close_tag = text.index(%r{</title\s*>}i, open_end + 1)
+      return '' unless close_tag
+
+      text[(open_end + 1)...close_tag].strip
     end
 
     def message_from_parts(status, content_type, body)
