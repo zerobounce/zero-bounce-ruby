@@ -76,8 +76,18 @@ module Zerobounce
       )
     end
 
-    def send_evaluated_file(filepath)
-      zb_request.bulk_post('send-evaluated-file/', {}, 'multipart/form-data', filepath)
+    # Submits a finished evaluation for validation. POST /v2/send-evaluated-file/
+    #
+    # LIVE: this takes the list evaluator's file_id as a form field, not the
+    # file upload the docs describe - an upload is rejected with
+    # "file_id: This field is required". It returns a new validation job's
+    # file_id, which answers "File cannot be found" for a short while after it
+    # is accepted.
+    def send_evaluated_file(file_id)
+      raise ArgumentError, 'file_id is required' if file_id.nil? || file_id.to_s.strip.empty?
+
+      zb_request.bulk_post('send-evaluated-file/', { file_id: file_id.to_s.strip },
+                           'application/x-www-form-urlencoded')
     end
 
     def add_filter(rule:, target:, value:)
@@ -148,11 +158,10 @@ module Zerobounce
       bulk_root_file_job('domainSearchS3file', file_name, has_header_row, **options)
     end
 
-    # This is the one job whose file_name the docs list as optional: pass nil to
-    # use the input bucket from your ZeroBounce settings.
+    # LIVE: file_name is required here too, although the docs list it as
+    # optional for this one endpoint.
     def validate_sftp_file(file_name, has_header_row, **options)
-      bulk_root_file_job('validateSFTPfile', file_name, has_header_row,
-                         file_name_required: false, **options)
+      bulk_root_file_job('validateSFTPfile', file_name, has_header_row, **options)
     end
 
     def score_sftp_file(file_name, has_header_row, **options)
@@ -183,7 +192,7 @@ module Zerobounce
 
     # Inbox Placement Tester (/api/ipt).
     #
-    # Its own host, the API key on the query string, camelCase JSON bodies, and
+    # Its own host, an Authorization: Bearer header, camelCase JSON bodies, and
     # errors under a "detail" key. Spends the account's inbox-test credits.
 
     def inbox_placement_providers
@@ -219,7 +228,9 @@ module Zerobounce
       params[:status] = options[:status] if options.key?(:status)
       params[:page] = options[:page] if options.key?(:page)
       params[:pageSize] = options[:page_size] if options.key?(:page_size)
-      zb_request.ipt_request(:get, 'test', params)
+      # LIVE: the listing is GET /tests (plural). /test is the single-test path
+      # and answers 'Method "GET" not allowed'.
+      zb_request.ipt_request(:get, 'tests', params)
     end
 
     def delete_inbox_placement_test(test_id)
@@ -240,20 +251,28 @@ module Zerobounce
 
     # POSTs one of the six documented S3 / SFTP file jobs on the bulkapi root.
     #
-    # Booleans go on the wire as the strings 'true'/'false', and an option that
-    # was not given is not sent at all.
-    def bulk_root_file_job(path, file_name, has_header_row, file_name_required: true, **options)
-      blank = !file_name.nil? && file_name.to_s.strip.empty?
-      if (file_name.nil? && file_name_required) || blank
+    # Booleans go on the wire as the strings 'true'/'false'.
+    #
+    # LIVE: file_name and return_url are required on every one of these jobs,
+    # validateSFTPfile included, although the docs list file_name as optional
+    # for that one. Without either the API answers "This field is required".
+    def bulk_root_file_job(path, file_name, has_header_row, **options)
+      if file_name.nil? || file_name.to_s.strip.empty?
         raise ArgumentError, 'file_name is required'
       end
+      return_url = options[:return_url]
+      if return_url.nil? || return_url.to_s.strip.empty?
+        raise ArgumentError, 'return_url is required'
+      end
 
-      params = { has_header_row: has_header_row ? 'true' : 'false' }
-      params[:file_name] = file_name unless file_name.nil?
+      params = {
+        has_header_row: has_header_row ? 'true' : 'false',
+        file_name: file_name,
+        return_url: return_url
+      }
       if options.key?(:remove_duplicates)
         params[:remove_duplicates] = options[:remove_duplicates] ? 'true' : 'false'
       end
-      params[:return_url] = options[:return_url] if options.key?(:return_url)
 
       zb_request.bulk_root_form_post(path, params)
     end

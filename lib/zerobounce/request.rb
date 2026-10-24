@@ -25,6 +25,14 @@ module Zerobounce
         raise (response_body_json['errors'][0]['error']) \
           if response_body_json.key?('errors') and \
             response_body_json['errors'].length > 0
+        # LIVE: {"success": false} on an HTTP 200 is a failure, not a result.
+        # The API answers an unknown bulk file id that way.
+        if response_body_json.key?('success') &&
+           __success_means_failure__(response_body_json['success'])
+          raise ResponseError.message_from_parts(
+            response.code, response.headers[:content_type].to_s, response_body
+          )
+        end
 
         return response_body_json
       else

@@ -91,13 +91,14 @@ describe 'Validate WHOIS and greylist options, SFTP bulk and the Inbox Placement
     end
 
     it 'posts to the bulkapi root, without /v2' do
-      Zerobounce.email_finder_s3_file('lists/leads.csv', true)
+      Zerobounce.email_finder_s3_file('lists/leads.csv', true,
+                                      return_url: 'https://example.com/done')
       expect(last_request.method).to eq(:post)
       expect(last_request.uri.path).to eq('/emailFinderS3file')
-      expect(last_form).to include('file_name' => 'lists/leads.csv', 'has_header_row' => 'true')
+      expect(last_form).to include('file_name' => 'lists/leads.csv', 'has_header_row' => 'true',
+                                   'return_url' => 'https://example.com/done')
       # Unset options stay off the request entirely.
       expect(last_form).not_to have_key('remove_duplicates')
-      expect(last_form).not_to have_key('return_url')
     end
 
     it 'sends remove_duplicates and return_url only when given' do
@@ -112,15 +113,27 @@ describe 'Validate WHOIS and greylist options, SFTP bulk and the Inbox Placement
       )
     end
 
-    it 'treats file_name as optional for validateSFTPfile alone' do
-      # Without it the input bucket from the account's settings is used.
-      Zerobounce.validate_sftp_file(nil, true)
-      expect(last_request.uri.path).to eq('/validateSFTPfile')
-      expect(last_form).not_to have_key('file_name')
-      expect(last_form['has_header_row']).to eq('true')
+    it 'requires file_name on validateSFTPfile too' do
+      # LIVE: the docs list it as optional for this one endpoint, but the API
+      # answers "This field is required" without it.
+      expect do
+        Zerobounce.validate_sftp_file(nil, true, return_url: 'https://example.com/done')
+      end.to raise_error(ArgumentError, /file_name/)
 
-      Zerobounce.validate_sftp_file('my_file.txt', true)
+      Zerobounce.validate_sftp_file('my_file.txt', true, return_url: 'https://example.com/done')
+      expect(last_request.uri.path).to eq('/validateSFTPfile')
       expect(last_form['file_name']).to eq('my_file.txt')
+      expect(last_form['has_header_row']).to eq('true')
+    end
+
+    it 'requires return_url on every job' do
+      # LIVE: without it the API answers "This field is required".
+      %i[email_finder_s3_file domain_search_s3_file validate_sftp_file
+         score_sftp_file email_finder_sftp_file domain_search_sftp_file].each do |method|
+        expect do
+          Zerobounce.public_send(method, 'f.csv', true)
+        end.to raise_error(ArgumentError, /return_url/)
+      end
     end
 
     it 'posts each remaining job to its documented path' do
@@ -129,7 +142,7 @@ describe 'Validate WHOIS and greylist options, SFTP bulk and the Inbox Placement
         'emailFinderSFTPfile' => :email_finder_sftp_file,
         'domainSearchSFTPfile' => :domain_search_sftp_file
       }.each do |path, method|
-        Zerobounce.public_send(method, 'my_file.txt', true)
+        Zerobounce.public_send(method, 'my_file.txt', true, return_url: 'https://example.com/done')
         expect(last_request.uri.path).to eq("/#{path}")
       end
     end
@@ -180,6 +193,20 @@ describe 'Validate WHOIS and greylist options, SFTP bulk and the Inbox Placement
     end
   end
 
+  describe 'success:false on an HTTP 200' do
+    it 'is an error, not a result' do
+      # LIVE: the API answers an unknown bulk file id with an HTTP 200 whose
+      # body says the call failed.
+      stub_request(:get, %r{\Ahttps://bulkapi\.zerobounce\.net/v2/filestatus})
+        .to_return(status: 200, body: '{"success":false,"message":"File cannot be found."}',
+                   headers: { 'Content-Type' => 'application/json' })
+
+      expect do
+        Zerobounce.validate_file_check('0d1b7a4e-1111-2222-3333-444455556666')
+      end.to raise_error(/File cannot be found/)
+    end
+  end
+
   describe 'Inbox Placement Tester' do
     before do
       stub_request(:any, %r{\Ahttps://bulkapi\.zerobounce\.net/api/ipt})
@@ -187,10 +214,13 @@ describe 'Validate WHOIS and greylist options, SFTP bulk and the Inbox Placement
                    headers: { 'Content-Type' => 'application/json' })
     end
 
-    it 'uses its own host and puts the API key on the query string' do
+    it 'uses its own host and authenticates with a Bearer header' do
       Zerobounce.inbox_placement_providers
       expect(last_request.uri.path).to eq('/api/ipt/providers')
-      expect(last_query['api_key']).to eq(api_key)
+      # LIVE: the key goes in an Authorization header, not a query parameter
+      # that gets logged.
+      expect(last_request.headers['Authorization']).to eq("Bearer #{api_key}")
+      expect(last_query).not_to have_key('api_key')
 
       Zerobounce.inbox_placement_test_types
       expect(last_request.uri.path).to eq('/api/ipt/test-types')
@@ -212,10 +242,13 @@ describe 'Validate WHOIS and greylist options, SFTP bulk and the Inbox Placement
 
     it 'sends only the list filters that are given' do
       Zerobounce.list_inbox_placement_tests(status: 'finished', page: 1, page_size: 25)
+      # LIVE: the listing is GET /tests (plural); /test answers
+      # 'Method "GET" not allowed'.
+      expect(last_request.uri.path).to eq('/api/ipt/tests')
       expect(last_query).to include('status' => 'finished', 'page' => '1', 'pageSize' => '25')
 
       Zerobounce.list_inbox_placement_tests
-      expect(last_query.keys).to eq(['api_key'])
+      expect(last_query.keys).to eq([])
     end
 
     it 'deletes a test and sets the webhook' do

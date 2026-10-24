@@ -300,7 +300,10 @@ module Zerobounce
         })
       end
       params = {email_batch: email_batch}
-      params[:timeout] = timeout unless timeout.nil?
+      # LIVE: validatebatch takes timeout as a JSON *string*. Sent as a number
+      # the API rejects the whole batch with the account-level "Invalid API Key
+      # or your account ran out of credits".
+      params[:timeout] = timeout.to_s unless timeout.nil?
       params[:activity_data] = activity_data unless activity_data.nil?
       params[:verify_plus] = verify_plus unless verify_plus.nil?
       results = @@request.post('validatebatch', params)

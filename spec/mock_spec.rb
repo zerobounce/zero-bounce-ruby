@@ -373,11 +373,12 @@ describe Zerobounce do
 				described_class.config.apikey = valid_api_key
 			end
 			context 'given incorrect file id' do
-				it 'should return error message' do
+				it 'should raise, because success:false on an HTTP 200 is a failure' do
+					# LIVE: the API answers an unknown file id with an HTTP 200
+					# whose body says the call failed.
 					VCR.use_cassette 'file-validate-incorrect-file-id' do
-					results = described_class.validate_file_check('invalid-file-id')
-					expect(results['success']).to be(false)
-					expect(results['message']).to eql('File cannot be found.')
+					expect { described_class.validate_file_check('invalid-file-id') }.to \
+						raise_error(/File cannot be found/)
 					end
 				end
 			end
@@ -471,11 +472,10 @@ describe Zerobounce do
 				end
 			end
 			context 'given correct file id' do
-				it 'should return file not found error' do
+				it 'should raise, because success:false on an HTTP 200 is a failure' do
 					VCR.use_cassette 'file-validate-delete-valid' do
-					results = described_class.validate_file_delete(validate_file_id)
-					expect(results['success']).to be(false)
-					expect(results['message']).to eql('File cannot be found.')
+					expect { described_class.validate_file_delete(validate_file_id) }.to \
+						raise_error(/File cannot be found/)
 					end
 				end
 			end

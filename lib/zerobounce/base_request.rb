@@ -128,21 +128,31 @@ module Zerobounce
     # The endpoints ported from the Python SDK need shapes _get and _post cannot
     # express: a form-encoded POST on an arbitrary base URL, and the Inbox
     # Placement Tester's PUT and DELETE with the API key on the query string.
-    def self.__execute_with_method__(method, url, params, form: nil, json: nil)
-      raise ('API key must be assigned') if not Zerobounce.config.apikey
+    # +bearer+ sends the key in an Authorization header instead of a query
+    # parameter, which the Inbox Placement Tester requires and which keeps the
+    # key out of request logs.
+    def self.__execute_with_method__(method, url, params, form: nil, json: nil, bearer: false)
+      api_key = current_api_key
+      raise ('API key must be assigned') if api_key.nil? || api_key.to_s.strip.empty?
 
-      params = (params || {}).merge(api_key: Zerobounce.config.apikey)
+      params = (params || {}).dup
+      extra = {}
+      if bearer
+        extra[:authorization] = "Bearer #{api_key}"
+      else
+        params = params.merge(api_key: api_key)
+      end
       Zerobounce::BaseRequest.__require_https__(url)
 
       options = { method: method, url: url, timeout: 120 }
       if form
         options[:payload] = form
-        options[:headers] = { params: params, content_type: 'application/x-www-form-urlencoded' }
+        options[:headers] = extra.merge(params: params, content_type: 'application/x-www-form-urlencoded')
       elsif json
         options[:payload] = json.to_json
-        options[:headers] = { params: params, content_type: :json, accept: :json }
+        options[:headers] = extra.merge(params: params, content_type: :json, accept: :json)
       else
-        options[:headers] = { params: params }
+        options[:headers] = extra.merge(params: params)
       end
 
       __execute_request__(**options)
@@ -159,7 +169,9 @@ module Zerobounce
     def self.ipt_request(method, path, params = {}, json: nil)
       root = Zerobounce.configuration.inbox_placement_root_url
       url = "#{__root_without_trailing_slashes__(root)}/#{path.to_s.sub(%r{\A/}, '')}"
-      response = __execute_with_method__(method, url, params, json: json)
+      # LIVE: the Inbox Placement Tester authenticates with a Bearer header.
+      # Sent as an api_key parameter the request is rejected as unauthorized.
+      response = __execute_with_method__(method, url, params, json: json, bearer: true)
       return nil if response.body.to_s.strip.empty?
 
       __parse_json_response__(response)
@@ -168,6 +180,14 @@ module Zerobounce
     def self.bulk_api_root_without_v2
       root = Zerobounce.configuration.bulk_api_root_url.to_s.sub(%r{/v2/?$}, '')
       __root_without_trailing_slashes__(root)
+    end
+
+    # Whether a "success" field means failure. The API sends it as a JSON
+    # false, "false" or "False" depending on the endpoint.
+    def self.__success_means_failure__(value)
+      return !value if value == true || value == false
+
+      value.is_a?(String) && value.strip.casecmp('false').zero?
     end
 
     def self.__parse_json_response__(response)
@@ -182,6 +202,12 @@ module Zerobounce
         raise 'ZeroBounce returned a response that is not valid JSON.'
       end
       return parsed unless parsed.is_a?(Hash)
+
+      # LIVE: {"success": false} on an HTTP 200 is a failure, not a result. The
+      # API answers an unknown bulk file id that way.
+      if parsed.key?('success') && __success_means_failure__(parsed['success'])
+        raise ResponseError.message_from_parts(response.code, content_type, body)
+      end
 
       raise ResponseError.strip_prefix(parsed['error']) if parsed.key?('error') && !parsed['error'].nil?
       # The Inbox Placement Tester is a Django REST framework app and reports
