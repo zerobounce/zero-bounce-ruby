@@ -18,6 +18,7 @@ require 'zerobounce/mock_request'
 require 'zerobounce/configuration'
 require 'zerobounce/api_urls'
 require 'zerobounce/priority3'
+require 'zerobounce/warmup'
 
 # Validate an email address with Zerobounce.net
 module Zerobounce
