@@ -263,14 +263,55 @@ describe 'Validate WHOIS and greylist options, SFTP bulk and the Inbox Placement
     end
 
     it 'sends only the list filters that are given' do
-      Zerobounce.list_inbox_placement_tests(status: 'finished', page: 1, page_size: 25)
+      Zerobounce.list_inbox_placement_tests(status: 'finished', page: 1, page_size: 25,
+                                            created_after: '2026-01-01', created_before: '2026-02-01')
       # LIVE: the listing is GET /tests (plural); /test answers
       # 'Method "GET" not allowed'.
       expect(last_request.uri.path).to eq('/api/ipt/tests')
-      expect(last_query).to include('status' => 'finished', 'page' => '1', 'pageSize' => '25')
+      # LIVE: the page size parameter is page_size. pageSize is accepted and
+      # then ignored - page_size=1 paginates, pageSize=1 returns the full list.
+      expect(last_query).to include('status' => 'finished', 'page' => '1', 'page_size' => '25',
+                                    'createdAfter' => '2026-01-01', 'createdBefore' => '2026-02-01')
+      expect(last_query).not_to have_key('pageSize')
 
       Zerobounce.list_inbox_placement_tests
       expect(last_query.keys).to eq([])
+    end
+
+    it 'bounds page_size to 1-100 before any request' do
+      [0, -1, 101, 'many'].each do |page_size|
+        expect { Zerobounce.list_inbox_placement_tests(page_size: page_size) }
+          .to raise_error(ArgumentError, /page_size must be between 1 and 100/)
+      end
+      expect(WebMock).not_to have_requested(:any, %r{zerobounce\.net})
+
+      [1, 100].each do |page_size|
+        Zerobounce.list_inbox_placement_tests(page_size: page_size)
+        expect(last_query).to include('page_size' => page_size.to_s)
+      end
+    end
+
+    it 'enforces the documented bounds on a new test before it spends credits' do
+      expect { Zerobounce.create_inbox_placement_test('n' * 65) }
+        .to raise_error(ArgumentError, /64 characters/)
+      expect { Zerobounce.create_inbox_placement_test('Launch', test_type: 4) }
+        .to raise_error(ArgumentError, /test_type must be one of 1, 2, 3/)
+      expect { Zerobounce.create_inbox_placement_test('Launch', test_type: 0) }
+        .to raise_error(ArgumentError, /test_type must be one of 1, 2, 3/)
+      # testType 1 is the seed-list test, which has nowhere to send from
+      # without a sender address.
+      expect { Zerobounce.create_inbox_placement_test('Launch', test_type: 1) }
+        .to raise_error(ArgumentError, /sender_email is required when test_type is 1/)
+      expect { Zerobounce.create_inbox_placement_test('Launch', test_type: 1, sender_email: ' ') }
+        .to raise_error(ArgumentError, /sender_email is required when test_type is 1/)
+
+      expect(WebMock).not_to have_requested(:any, %r{zerobounce\.net})
+
+      # A name of exactly 64 and the test types that need no sender are fine.
+      Zerobounce.create_inbox_placement_test('n' * 64, test_type: 2)
+      expect(JSON.parse(last_request.body)).to eq('name' => 'n' * 64, 'testType' => 2)
+      Zerobounce.create_inbox_placement_test('Launch', test_type: 3)
+      expect(JSON.parse(last_request.body)).to eq('name' => 'Launch', 'testType' => 3)
     end
 
     it 'deletes a test and sets the webhook' do

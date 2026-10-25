@@ -20,7 +20,7 @@ module Zerobounce
 
     def self.bulk_get(path, params, content_type='application/json')
       response = self._get(Zerobounce.configuration.bulk_api_root_url, path, params, content_type)
-      if response.headers[:content_type] == 'application/json'
+      if __json_content_type__(response.headers[:content_type])
         response_body = response.body
         response_body_json = JSON.parse(response_body)
         return response_body_json unless response_body_json.is_a?(Hash)
@@ -64,7 +64,7 @@ module Zerobounce
     def self.bulk_post(path, params, content_type='application/json', filepath=nil)
       response = self._post(Zerobounce.configuration.bulk_api_root_url, path, params, \
           content_type, filepath)
-      if response.headers[:content_type] == 'application/json'
+      if __json_content_type__(response.headers[:content_type])
         return __parse_json_response__(response)
       end
       return response.body
@@ -72,7 +72,7 @@ module Zerobounce
 
     def self.bulk_root_get(path, params, content_type='application/json')
       response = self._get(bulk_api_root_without_v2, path, params, content_type)
-      if response.headers[:content_type] == 'application/json'
+      if __json_content_type__(response.headers[:content_type])
         return __parse_json_response__(response)
       end
       response.body
@@ -85,7 +85,7 @@ module Zerobounce
 
     def self.bulk_root_post(path, params, content_type='application/json', filepath=nil)
       response = self._post(bulk_api_root_without_v2, path, params, content_type, filepath)
-      if response.headers[:content_type] == 'application/json'
+      if __json_content_type__(response.headers[:content_type])
         return __parse_json_response__(response)
       end
       response.body

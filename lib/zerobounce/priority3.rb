@@ -7,6 +7,12 @@ module Zerobounce
     EMAIL_FINDER_BULK_BASE = 'email-finder'
     DOMAIN_SEARCH_BULK_BASE = 'domain-search'
 
+    # Inbox Placement Tester bounds, as documented and as the API enforces them.
+    INBOX_PLACEMENT_NAME_MAX = 64
+    INBOX_PLACEMENT_TEST_TYPES = [1, 2, 3].freeze
+    INBOX_PLACEMENT_PAGE_SIZE_MIN = 1
+    INBOX_PLACEMENT_PAGE_SIZE_MAX = 100
+
     def zb_request
       Zerobounce.class_variable_get(:@@request)
     end
@@ -14,6 +20,11 @@ module Zerobounce
     def send_email_finder_file(filepath, domain_column:, first_name_column: nil, last_name_column: nil,
                                middle_name_column: nil, full_name_column: nil, has_header_row: nil)
       raise ArgumentError, 'domain_column is required' if domain_column.nil? || domain_column.to_i < 1
+      # One of the two name columns tells the finder what to look for; with
+      # neither there is nothing to build a local part from.
+      if __blank__(first_name_column) && __blank__(full_name_column)
+        raise ArgumentError, 'first_name_column or full_name_column is required'
+      end
 
       params = { domain_column: domain_column }
       params[:has_header_row] = has_header_row ? 'true' : 'false' unless has_header_row.nil?
@@ -110,36 +121,33 @@ module Zerobounce
       params = {}
       params[:bucket] = bucket unless bucket.nil? || bucket.to_s.empty?
       params[:search] = search unless search.nil? || search.to_s.empty?
-      zb_request.bulk_get('listS3files', params)
+      # The S3 listing lives on the bulkapi ROOT, like the jobs below it, not
+      # under /v2 - bulk_get would send it to /v2/listS3files, which is a 404.
+      zb_request.bulk_root_get('listS3files', params)
     end
 
-    def validate_s3_file(file_name:, **options)
-      raise ArgumentError, 'file_name is required' if file_name.nil? || file_name.to_s.empty?
+    # The same job shape as the four below, so it goes through the same helper:
+    # LIVE, the API rejects it without file_name and return_url.
+    def validate_s3_file(file_name:, has_header_row: false, **options)
+      bulk_root_file_job('validateS3file', file_name, has_header_row, **options)
+    end
 
-      params = { file_name: file_name }
-      options.each do |key, value|
-        next if value.nil?
-        params[key] = value.is_a?(TrueClass) || value.is_a?(FalseClass) ? (value ? 'true' : 'false') : value
+    def score_s3_file(file_name:, has_header_row: false, **options)
+      bulk_root_file_job('scoreS3file', file_name, has_header_row, **options)
+    end
+
+    # export_bucket is optional: omit it and the export goes to the bucket in
+    # your ZeroBounce settings, the way export_sftp_file's export_path does.
+    def export_s3_file(file_id:, export_bucket: nil)
+      raise ArgumentError, 'file_id is required' if file_id.nil? || file_id.to_s.strip.empty?
+
+      if !export_bucket.nil? && export_bucket.to_s.strip.empty?
+        raise ArgumentError, 'export_bucket is required'
       end
-      zb_request.bulk_root_form_post('validateS3file', params)
-    end
 
-    def score_s3_file(file_name:, **options)
-      raise ArgumentError, 'file_name is required' if file_name.nil? || file_name.to_s.empty?
-
-      params = { file_name: file_name }
-      options.each do |key, value|
-        next if value.nil?
-        params[key] = value.is_a?(TrueClass) || value.is_a?(FalseClass) ? (value ? 'true' : 'false') : value
-      end
-      zb_request.bulk_root_form_post('scoreS3file', params)
-    end
-
-    def export_s3_file(file_id:, export_bucket:)
-      raise ArgumentError, 'file_id is required' if file_id.nil? || file_id.to_s.empty?
-      raise ArgumentError, 'export_bucket is required' if export_bucket.nil? || export_bucket.to_s.empty?
-
-      zb_request.bulk_root_form_post('exportS3file', { file_id: file_id, export_bucket: export_bucket })
+      params = { file_id: file_id }
+      params[:export_bucket] = export_bucket unless export_bucket.nil?
+      zb_request.bulk_root_form_post('exportS3file', params)
     end
 
     # The rest of the documented bulk surface.
@@ -203,8 +211,20 @@ module Zerobounce
       zb_request.ipt_request(:get, 'test-types')
     end
 
+    # name is capped at 64 characters, testType is 1, 2 or 3, and a testType of
+    # 1 (the seed-list test) has nowhere to send from without senderEmail. All
+    # three are rejected by the API, so they are caught before a request that
+    # would spend inbox-test credits.
     def create_inbox_placement_test(name, **options)
       raise ArgumentError, 'name is required' if name.nil? || name.to_s.strip.empty?
+      raise ArgumentError, 'name must be 64 characters or fewer' if name.to_s.strip.length > INBOX_PLACEMENT_NAME_MAX
+
+      if options.key?(:test_type)
+        test_type = __inbox_placement_test_type__(options[:test_type])
+        if test_type == 1 && __blank__(options[:sender_email])
+          raise ArgumentError, 'sender_email is required when test_type is 1'
+        end
+      end
 
       body = { 'name' => name }
       {
@@ -226,8 +246,20 @@ module Zerobounce
     def list_inbox_placement_tests(**options)
       params = {}
       params[:status] = options[:status] if options.key?(:status)
+      params[:createdAfter] = options[:created_after] if options.key?(:created_after)
+      params[:createdBefore] = options[:created_before] if options.key?(:created_before)
       params[:page] = options[:page] if options.key?(:page)
-      params[:pageSize] = options[:page_size] if options.key?(:page_size)
+      if options.key?(:page_size)
+        page_size = options[:page_size]
+        unless (INBOX_PLACEMENT_PAGE_SIZE_MIN..INBOX_PLACEMENT_PAGE_SIZE_MAX).cover?(page_size.to_i)
+          raise ArgumentError,
+                "page_size must be between #{INBOX_PLACEMENT_PAGE_SIZE_MIN} and #{INBOX_PLACEMENT_PAGE_SIZE_MAX}"
+        end
+        # LIVE: the page size parameter is page_size, not the camelCase
+        # pageSize the rest of this API uses. page_size=1 paginates; pageSize=1
+        # is ignored and the whole list comes back.
+        params[:page_size] = page_size
+      end
       # LIVE: the listing is GET /tests (plural). /test is the single-test path
       # and answers 'Method "GET" not allowed'.
       zb_request.ipt_request(:get, 'tests', params)
@@ -249,21 +281,34 @@ module Zerobounce
 
     private
 
-    # POSTs one of the six documented S3 / SFTP file jobs on the bulkapi root.
+    # Nil, or a value that is nothing but whitespace. A column index of 0 is
+    # not blank: the API accepts it and the caller meant the first column.
+    def __blank__(value)
+      value.nil? || value.to_s.strip.empty?
+    end
+
+    def __inbox_placement_test_type__(value)
+      test_type = value.is_a?(Integer) ? value : value.to_s.strip.to_i
+      unless INBOX_PLACEMENT_TEST_TYPES.include?(test_type)
+        raise ArgumentError, "test_type must be one of #{INBOX_PLACEMENT_TEST_TYPES.join(', ')}"
+      end
+
+      test_type
+    end
+
+    # POSTs one of the eight documented S3 / SFTP file jobs on the bulkapi root.
     #
     # Booleans go on the wire as the strings 'true'/'false'.
     #
     # LIVE: file_name and return_url are required on every one of these jobs,
-    # validateSFTPfile included, although the docs list file_name as optional
-    # for that one. Without either the API answers "This field is required".
+    # validateS3file, scoreS3file and validateSFTPfile included, although the
+    # docs list both as optional. Without either the API answers "This field is
+    # required".
     def bulk_root_file_job(path, file_name, has_header_row, **options)
-      if file_name.nil? || file_name.to_s.strip.empty?
-        raise ArgumentError, 'file_name is required'
-      end
+      raise ArgumentError, 'file_name is required' if __blank__(file_name)
+      raise ArgumentError, 'return_url is required' if __blank__(options[:return_url])
+
       return_url = options[:return_url]
-      if return_url.nil? || return_url.to_s.strip.empty?
-        raise ArgumentError, 'return_url is required'
-      end
 
       params = {
         has_header_row: has_header_row ? 'true' : 'false',

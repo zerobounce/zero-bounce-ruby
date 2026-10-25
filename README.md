@@ -41,6 +41,9 @@ Zerobounce.configure do |config|
   # Optional: Set custom API URLs
   config.api_root_url = 'https://api.zerobounce.net/v2'
   config.bulk_api_root_url = 'https://bulkapi.zerobounce.net/v2'
+  # Optional: the root the S3 and SFTP/FTP jobs use (the bulk host without
+  # /v2). Left unset it is derived from bulk_api_root_url.
+  config.bulk_root_url = 'https://bulkapi.zerobounce.net'
 end
 ```
 
@@ -82,6 +85,8 @@ Create a `.env` file in your project root:
 ZEROBOUNCE_API_KEY=your_api_key_here
 ZEROBOUNCE_API_URL=https://api.zerobounce.net/v2
 ZEROBOUNCE_BULK_API_URL=https://bulkapi.zerobounce.net/v2
+# Optional. Only needed to point the S3 and SFTP/FTP jobs somewhere of their own.
+ZEROBOUNCE_BULK_ROOT_URL=https://bulkapi.zerobounce.net
 ```
 
 The gem will automatically load these environment variables when initialized. No additional configuration needed in your code.
@@ -92,6 +97,8 @@ Set environment variables in your system:
 export ZEROBOUNCE_API_KEY=your_api_key_here
 export ZEROBOUNCE_API_URL=https://api.zerobounce.net/v2
 export ZEROBOUNCE_BULK_API_URL=https://bulkapi.zerobounce.net/v2
+# Optional. Only needed to point the S3 and SFTP/FTP jobs somewhere of their own.
+export ZEROBOUNCE_BULK_ROOT_URL=https://bulkapi.zerobounce.net
 ```
 
 
@@ -101,6 +108,9 @@ export ZEROBOUNCE_BULK_API_URL=https://bulkapi.zerobounce.net/v2
 If you don't specify `api_root_url` or `bulk_api_root_url`, the gem will use the following defaults:
 - **Main API**: `https://api.zerobounce.net/v2`
 - **Bulk API**: `https://bulkapi.zerobounce.net/v2`
+- **S3 and SFTP/FTP jobs**: `https://bulkapi.zerobounce.net` — the bulk host *without* `/v2`
+
+`bulk_root_url` (`ZEROBOUNCE_BULK_ROOT_URL`) is the one base URL that is derived rather than defaulted: left unset, it is `bulk_api_root_url` with the trailing `/v2` stripped, so pointing `bulk_api_root_url` at a mock server moves the S3 and SFTP/FTP endpoints with it. Set it to send those jobs somewhere on their own.
 
 These defaults are defined in the `Zerobounce::ApiUrls` class constants:
 - `Zerobounce::ApiUrls::DEFAULT_URL` - Main API URL (Global)
@@ -149,8 +159,8 @@ end
 #### Environment Variable Priority
 The configuration follows this priority order (highest to lowest):
 1. Explicitly set in code (`config.api_root_url = '...'`)
-2. Environment variables (`ZEROBOUNCE_API_URL`, `ZEROBOUNCE_BULK_API_URL`)
-3. Default constants (`ApiUrls::DEFAULT_URL`, `ApiUrls::BULK_DEFAULT_URL`)
+2. Environment variables (`ZEROBOUNCE_API_URL`, `ZEROBOUNCE_BULK_API_URL`, `ZEROBOUNCE_BULK_ROOT_URL`)
+3. Default constants (`ApiUrls::DEFAULT_URL`, `ApiUrls::BULK_DEFAULT_URL`); `bulk_root_url` falls back to `bulk_api_root_url` without `/v2`
 
 Credits
 ```ruby
@@ -645,6 +655,10 @@ Zerobounce.find_email("John", company_name: "Zero Bounce")
 
 # With additional name information for better accuracy
 Zerobounce.find_email("John", domain: "zerobounce.net", middle_name: "Deere", last_name: "Doe")
+
+# The first name is optional. Without one the call answers with the domain's
+# address format rather than one person's address.
+Zerobounce.find_email(domain: "zerobounce.net")
 ```
 
 Find Domain Information

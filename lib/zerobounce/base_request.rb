@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'zerobounce/api_urls'
 require 'zerobounce/response_error'
 
 # https://github.com/rest-client/rest-client
@@ -177,9 +178,31 @@ module Zerobounce
       __parse_json_response__(response)
     end
 
+    # Whether a Content-Type names a JSON body.
+    #
+    # The API types most responses 'application/json' but some
+    # 'application/json; charset=utf-8'. Compared with ==, the second kind
+    # skipped JSON parsing entirely, so an {"error": ...} payload came back as
+    # a raw String and read as a success. Only the media type decides; the
+    # parameters after the semicolon are ignored.
+    def self.__json_content_type__(content_type)
+      media_type = content_type.to_s.split(';', 2).first.to_s.strip.downcase
+      media_type == 'application/json' || media_type.end_with?('+json')
+    end
+
+    # The root for the S3 and SFTP/FTP jobs: the bulkapi host WITHOUT /v2.
+    #
+    # +bulk_root_url+ (ZEROBOUNCE_BULK_ROOT_URL) wins when it is set, so these
+    # endpoints can be pointed at a mock server on their own. Left unset it is
+    # derived from +bulk_api_root_url+ with the /v2 stripped, so overriding
+    # that one alone still moves these endpoints with it.
     def self.bulk_api_root_without_v2
-      root = Zerobounce.configuration.bulk_api_root_url.to_s.sub(%r{/v2/?$}, '')
-      __root_without_trailing_slashes__(root)
+      configured = Zerobounce.configuration.bulk_root_url.to_s.strip
+      return __root_without_trailing_slashes__(configured) unless configured.empty?
+
+      derived = Zerobounce.configuration.bulk_api_root_url.to_s.sub(%r{/v2/?$}, '')
+      derived = ApiUrls::BULK_ROOT_URL if derived.strip.empty?
+      __root_without_trailing_slashes__(derived)
     end
 
     # Whether a "success" field means failure. The API sends it as a JSON
