@@ -142,10 +142,25 @@ def validation_free
   end
 
   check('LIVE: S3/SFTP jobs reject a payload without return_url before sending') do
-    Zerobounce.email_finder_s3_file('f.csv', true)
-    'unexpectedly succeeded'
-  rescue ArgumentError => e
-    e.message.include?('return_url') ? nil : "unexpected message: #{e.message}"
+    # validate_s3_file and score_s3_file share the same helper, so they are
+    # held to the same requirement the live API enforces.
+    %i[email_finder_s3_file domain_search_s3_file].each do |method|
+      begin
+        Zerobounce.public_send(method, 'f.csv', true)
+        return "#{method} unexpectedly succeeded"
+      rescue ArgumentError => e
+        return "#{method}: unexpected message: #{e.message}" unless e.message.include?('return_url')
+      end
+    end
+    %i[validate_s3_file score_s3_file].each do |method|
+      begin
+        Zerobounce.public_send(method, file_name: 'f.csv')
+        return "#{method} unexpectedly succeeded"
+      rescue ArgumentError => e
+        return "#{method}: unexpected message: #{e.message}" unless e.message.include?('return_url')
+      end
+    end
+    nil
   end
 
   check('LIVE: a complete S3 job payload is accepted by the API') do

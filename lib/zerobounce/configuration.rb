@@ -23,6 +23,10 @@ module Zerobounce
   # @attr [String] bulk_api_root_url
   #   The Zerobounce bulk API root URL.
   #
+  # @attr [String, nil] bulk_root_url
+  #   The root for the S3 and SFTP/FTP bulk jobs: the bulkapi host without the
+  #   /v2 path. Defaults to nil, which derives it from {#bulk_api_root_url}.
+  #
   # @attr [Array<Symbol>] valid_statues
   #   The statuses that are considered valid by {Response#valid?}.
   class Configuration
@@ -33,9 +37,13 @@ module Zerobounce
       self.apikey = ENV['ZEROBOUNCE_API_KEY']
       self.api_root_url = ENV['ZEROBOUNCE_API_URL'] || ApiUrls::DEFAULT_URL
       self.bulk_api_root_url = ENV['ZEROBOUNCE_BULK_API_URL'] || ApiUrls::BULK_DEFAULT_URL
-      # These three are separate base URLs rather than paths built from
+      # The S3/SFTP root is the only one that can be derived from another base
+      # URL, so it is left unset unless it is asked for: BaseRequest then takes
+      # bulk_api_root_url with the /v2 stripped. Set it - in code or through
+      # ZEROBOUNCE_BULK_ROOT_URL - to point those jobs somewhere on their own.
+      self.bulk_root_url = ENV['ZEROBOUNCE_BULK_ROOT_URL']
+      # These two are separate base URLs rather than paths built from
       # bulk_api_root_url, so overriding that alone leaves them on the live API.
-      self.bulk_root_url = ENV['ZEROBOUNCE_BULK_ROOT_URL'] || ApiUrls::BULK_ROOT_URL
       self.list_evaluator_root_url = ENV['ZEROBOUNCE_LIST_EVALUATOR_URL'] || ApiUrls::LIST_EVALUATOR_URL
       self.inbox_placement_root_url = ENV['ZEROBOUNCE_INBOX_PLACEMENT_URL'] || ApiUrls::INBOX_PLACEMENT_URL
       self.valid_statuses = %i[valid catch_all accept_all]

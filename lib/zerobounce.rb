@@ -588,7 +588,8 @@ module Zerobounce
     #
     # @option [String] domain Domain to search within (e.g. example.com). Required if company_name is not provided.
     # @option [String] company_name Company name to search within (e.g. Example). Required if domain is not provided.
-    # @option [String] first_name First name of target.
+    # @param [String] first_name First name of target. Optional: left out, the
+    #   call answers with the domain's format rather than one person's address.
     # @option [String] middle_name Middle name of target.
     # @option [String] last_name Last name of target.
     #
@@ -601,7 +602,10 @@ module Zerobounce
     #   "did_you_mean": "",
     #   "failure_reason": ""
     # }
-    def find_email(first_name, domain: '', company_name: '', middle_name: '', last_name: '')
+    # first_name is optional: /guessformat only requires a domain or a company
+    # name, and answers the domain's format when no name is given. It stays the
+    # first positional argument, so every existing call keeps working.
+    def find_email(first_name = nil, domain: '', company_name: '', middle_name: '', last_name: '')
       # Validate that exactly one of domain or company_name is provided
       if (domain.nil? || domain.empty?) && (company_name.nil? || company_name.empty?)
         raise ArgumentError, "Either domain or company_name must be provided"
@@ -609,7 +613,8 @@ module Zerobounce
         raise ArgumentError, "Only one of domain or company_name can be provided"
       end
 
-      params = { first_name: first_name }
+      params = {}
+      params[:first_name] = first_name unless first_name.nil? || first_name.to_s.empty?
       params[:domain] = domain unless domain.nil? || domain.empty?
       params[:company_name] = company_name unless company_name.nil? || company_name.empty?
       params[:middle_name] = middle_name unless middle_name.nil? || middle_name.empty?

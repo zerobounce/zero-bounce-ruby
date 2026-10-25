@@ -20,6 +20,28 @@ RSpec.describe Zerobounce::BaseRequest do
     end
   end
 
+  describe '.__json_content_type__' do
+    let(:json_content_type) { described_class.method(:__json_content_type__) }
+
+    it 'matches the media type, ignoring parameters and case' do
+      ['application/json',
+       'application/json; charset=utf-8',
+       'application/json;charset=UTF-8',
+       'APPLICATION/JSON',
+       '  application/json  ',
+       'application/problem+json; charset=utf-8'].each do |content_type|
+        expect(json_content_type.call(content_type)).to be(true), content_type
+      end
+    end
+
+    it 'does not match other media types or a missing header' do
+      ['text/csv', 'text/html; charset=utf-8', 'application/octet-stream',
+       'application/jsonp', '', nil].each do |content_type|
+        expect(json_content_type.call(content_type)).to be(false), content_type.inspect
+      end
+    end
+  end
+
   describe '.__root_without_trailing_slashes__' do
     it 'returns the string unchanged when there is no trailing slash' do
       expect(strip_trailing_slashes.call('https://api.example.com')).to eq('https://api.example.com')
