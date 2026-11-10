@@ -23,68 +23,68 @@ Set a valid ZeroBounce API key.
 ```ruby
 Zerobounce.configure do |config|
   config.apikey = '<zerobounce-api-key>'
-  ...
+  # ...
 end
 ```
 or
-```
+```ruby
 Zerobounce.config.apikey = '<zerobounce-api-key>'
-...
+# ...
 ```
 
 Credits
 ```ruby
 Zerobounce.credits
-=> 79   ### returns -1 for invalid key
+# => 79   (-1 for an invalid key)
 ```
 
 Activity
 ```ruby
 Zerobounce.activity('ss@gmail.com')
-=> {"found"=>true, "active_in_days"=>"180"}
+# => {"found"=>true, "active_in_days"=>"180"}
 ```
 
 Usage statistics
 ```ruby
 Zerobounce.api_usage(Date.today, Date.today)
-=>
-{"total"=>0,
- "status_valid"=>0,
- "status_invalid"=>0,
- "status_catch_all"=>0,
- "status_do_not_mail"=>0,
- "status_spamtrap"=>0,
- "status_unknown"=>0,
- "sub_status_toxic"=>0,
- "sub_status_disposable"=>0,
- "sub_status_role_based"=>0,
- "sub_status_possible_trap"=>0,
- "sub_status_global_suppression"=>0,
- "sub_status_timeout_exceeded"=>0,
- "sub_status_mail_server_temporary_error"=>0,
- "sub_status_mail_server_did_not_respond"=>0,
- "sub_status_greylisted"=>0,
- "sub_status_antispam_system"=>0,
- "sub_status_does_not_accept_mail"=>0,
- "sub_status_exception_occurred"=>0,
- "sub_status_failed_syntax_check"=>0,
- "sub_status_mailbox_not_found"=>0,
- "sub_status_unroutable_ip_address"=>0,
- "sub_status_possible_typo"=>0,
- "sub_status_no_dns_entries"=>0,
- "sub_status_role_based_catch_all"=>0,
- "sub_status_mailbox_quota_exceeded"=>0,
- "sub_status_forcible_disconnect"=>0,
- "sub_status_failed_smtp_connection"=>0,
- "sub_status_accept_all"=>0,
- "sub_status_mx_forward"=>0,
- "sub_status_alternate"=>0,
- "sub_status_allowed"=>0,
- "sub_status_blocked"=>0,
- "sub_status_gold"=>0,
- "sub_status_role_based_accept_all"=>0,
- "start_date"=>"4/28/2023",
- "end_date"=>"4/28/2023"}
+# =>
+# {"total"=>0,
+#  "status_valid"=>0,
+#  "status_invalid"=>0,
+#  "status_catch_all"=>0,
+#  "status_do_not_mail"=>0,
+#  "status_spamtrap"=>0,
+#  "status_unknown"=>0,
+#  "sub_status_toxic"=>0,
+#  "sub_status_disposable"=>0,
+#  "sub_status_role_based"=>0,
+#  "sub_status_possible_trap"=>0,
+#  "sub_status_global_suppression"=>0,
+#  "sub_status_timeout_exceeded"=>0,
+#  "sub_status_mail_server_temporary_error"=>0,
+#  "sub_status_mail_server_did_not_respond"=>0,
+#  "sub_status_greylisted"=>0,
+#  "sub_status_antispam_system"=>0,
+#  "sub_status_does_not_accept_mail"=>0,
+#  "sub_status_exception_occurred"=>0,
+#  "sub_status_failed_syntax_check"=>0,
+#  "sub_status_mailbox_not_found"=>0,
+#  "sub_status_unroutable_ip_address"=>0,
+#  "sub_status_possible_typo"=>0,
+#  "sub_status_no_dns_entries"=>0,
+#  "sub_status_role_based_catch_all"=>0,
+#  "sub_status_mailbox_quota_exceeded"=>0,
+#  "sub_status_forcible_disconnect"=>0,
+#  "sub_status_failed_smtp_connection"=>0,
+#  "sub_status_accept_all"=>0,
+#  "sub_status_mx_forward"=>0,
+#  "sub_status_alternate"=>0,
+#  "sub_status_allowed"=>0,
+#  "sub_status_blocked"=>0,
+#  "sub_status_gold"=>0,
+#  "sub_status_role_based_accept_all"=>0,
+#  "start_date"=>"4/28/2023",
+#  "end_date"=>"4/28/2023"}
 ```
 
 ##### Email Validation
@@ -93,159 +93,164 @@ Validate single eMail
 ```ruby
 Zerobounce.validate('valid@example.com')
 ### Zerobounce.validate('valid@example.com', '192.168.0.1') # optional IP address
-=>
-{"address"=>"valid@example.com",
- "status"=>"valid",
- "sub_status"=>"",
- "free_email"=>false,
- "did_you_mean"=>nil,
- "account"=>nil,
- "domain"=>nil,
- "domain_age_days"=>"9692",
- "smtp_provider"=>"example",
- "mx_found"=>"true",
- "mx_record"=>"mx.example.com",
- "firstname"=>"zero",
- "lastname"=>"bounce",
- "gender"=>"male",
- "country"=>nil,
- "region"=>nil,
- "city"=>nil,
- "zipcode"=>nil,
- "processed_at"=>"2023-04-28 15:18:45.631"}
+# =>
+# {"address"=>"valid@example.com",
+#  "status"=>"valid",
+#  "sub_status"=>"",
+#  "free_email"=>false,
+#  "did_you_mean"=>nil,
+#  "account"=>nil,
+#  "domain"=>nil,
+#  "domain_age_days"=>"9692",
+#  "smtp_provider"=>"example",
+#  "mx_found"=>"true",
+#  "mx_record"=>"mx.example.com",
+#  "firstname"=>"zero",
+#  "lastname"=>"bounce",
+#  "gender"=>"male",
+#  "country"=>nil,
+#  "region"=>nil,
+#  "city"=>nil,
+#  "zipcode"=>nil,
+#  "processed_at"=>"2023-04-28 15:18:45.631"}
 ```
 
 Validate batch
+
+`validate_batch` returns the whole response: a Hash with `email_batch` (one result per address) and `errors`. Up to 2.1.8 it returned only the `email_batch` Array and raised on any error; now a problem with one address is listed in `errors` and does not raise. An account-level error (reported for the address `all`, such as an invalid key or no credits left) still raises.
+
 ```ruby
-emails
-=>
-["disposable@example.com",
- "invalid@example.com",
- "valid@example.com",
- "toxic@example.com",
- "donotmail@example.com",
- "spamtrap@example.com"]
+emails = ["disposable@example.com",
+          "invalid@example.com",
+          "valid@example.com",
+          "toxic@example.com",
+          "donotmail@example.com",
+          "spamtrap@example.com"]
+ip_addresses = ["192.168.0.1"] * emails.length
 
-### ip_addresses
-=> ["192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1", "192.168.0.1"]
-### Zerobounce.validate_batch(emails, ip_addresses) # optional ip_addresses parameter
+result = Zerobounce.validate_batch(emails)
+### result = Zerobounce.validate_batch(emails, ip_addresses) # optional ip_addresses parameter
+# => {"email_batch"=>[...], "errors"=>[]}
 
-Zerobounce.validate_batch(emails)
-=>
-[{"address"=>"disposable@example.com",
-  "status"=>"do_not_mail",
-  "sub_status"=>"disposable",
-  "free_email"=>false,
-  "did_you_mean"=>nil,
-  "account"=>nil,
-  "domain"=>nil,
-  "domain_age_days"=>"9692",
-  "smtp_provider"=>"example",
-  "mx_found"=>"true",
-  "mx_record"=>"mx.example.com",
-  "firstname"=>"zero",
-  "lastname"=>"bounce",
-  "gender"=>"male",
-  "country"=>nil,
-  "region"=>nil,
-  "city"=>nil,
-  "zipcode"=>nil,
-  "processed_at"=>"2023-04-28 15:21:44.340"},
- {"address"=>"invalid@example.com",
-  "status"=>"invalid",
-  "sub_status"=>"mailbox_not_found",
-  "free_email"=>false,
-  "did_you_mean"=>nil,
-  "account"=>nil,
-  "domain"=>nil,
-  "domain_age_days"=>"9692",
-  "smtp_provider"=>"example",
-  "mx_found"=>"true",
-  "mx_record"=>"mx.example.com",
-  "firstname"=>"zero",
-  "lastname"=>"bounce",
-  "gender"=>"male",
-  "country"=>nil,
-  "region"=>nil,
-  "city"=>nil,
-  "zipcode"=>nil,
-  "processed_at"=>"2023-04-28 15:21:44.340"},
- {"address"=>"valid@example.com",
-  "status"=>"valid",
-  "sub_status"=>"",
-  "free_email"=>false,
-  "did_you_mean"=>nil,
-  "account"=>nil,
-  "domain"=>nil,
-  "domain_age_days"=>"9692",
-  "smtp_provider"=>"example",
-  "mx_found"=>"true",
-  "mx_record"=>"mx.example.com",
-  "firstname"=>"zero",
-  "lastname"=>"bounce",
-  "gender"=>"male",
-  "country"=>nil,
-  "region"=>nil,
-  "city"=>nil,
-  "zipcode"=>nil,
-  "processed_at"=>"2023-04-28 15:21:44.340"},
- {"address"=>"toxic@example.com",
-  "status"=>"do_not_mail",
-  "sub_status"=>"toxic",
-  "free_email"=>false,
-  "did_you_mean"=>nil,
-  "account"=>nil,
-  "domain"=>nil,
-  "domain_age_days"=>"9692",
-  "smtp_provider"=>"example",
-  "mx_found"=>"true",
-  "mx_record"=>"mx.example.com",
-  "firstname"=>"zero",
-  "lastname"=>"bounce",
-  "gender"=>"male",
-  "country"=>nil,
-  "region"=>nil,
-  "city"=>nil,
-  "zipcode"=>nil,
-  "processed_at"=>"2023-04-28 15:21:44.340"},
- {"address"=>"donotmail@example.com",
-  "status"=>"do_not_mail",
-  "sub_status"=>"role_based",
-  "free_email"=>false,
-  "did_you_mean"=>nil,
-  "account"=>nil,
-  "domain"=>nil,
-  "domain_age_days"=>"9692",
-  "smtp_provider"=>"example",
-  "mx_found"=>"true",
-  "mx_record"=>"mx.example.com",
-  "firstname"=>"zero",
-  "lastname"=>"bounce",
-  "gender"=>"male",
-  "country"=>nil,
-  "region"=>nil,
-  "city"=>nil,
-  "zipcode"=>nil,
-  "processed_at"=>"2023-04-28 15:21:44.340"},
- {"address"=>"spamtrap@example.com",
-  "status"=>"spamtrap",
-  "sub_status"=>"",
-  "free_email"=>false,
-  "did_you_mean"=>nil,
-  "account"=>nil,
-  "domain"=>nil,
-  "domain_age_days"=>"9692",
-  "smtp_provider"=>"example",
-  "mx_found"=>"true",
-  "mx_record"=>"mx.example.com",
-  "firstname"=>"zero",
-  "lastname"=>"bounce",
-  "gender"=>"male",
-  "country"=>nil,
-  "region"=>nil,
-  "city"=>nil,
-  "zipcode"=>nil,
-  "processed_at"=>"2023-04-28 15:21:44.340"}]
+result['errors']
+# => []   e.g. [{"email_address"=>"bad@", "error"=>"Invalid email address"}]
+
+result['email_batch']
+# =>
+# [{"address"=>"disposable@example.com",
+#   "status"=>"do_not_mail",
+#   "sub_status"=>"disposable",
+#   "free_email"=>false,
+#   "did_you_mean"=>nil,
+#   "account"=>nil,
+#   "domain"=>nil,
+#   "domain_age_days"=>"9692",
+#   "smtp_provider"=>"example",
+#   "mx_found"=>"true",
+#   "mx_record"=>"mx.example.com",
+#   "firstname"=>"zero",
+#   "lastname"=>"bounce",
+#   "gender"=>"male",
+#   "country"=>nil,
+#   "region"=>nil,
+#   "city"=>nil,
+#   "zipcode"=>nil,
+#   "processed_at"=>"2023-04-28 15:21:44.340"},
+#  {"address"=>"invalid@example.com",
+#   "status"=>"invalid",
+#   "sub_status"=>"mailbox_not_found",
+#   "free_email"=>false,
+#   "did_you_mean"=>nil,
+#   "account"=>nil,
+#   "domain"=>nil,
+#   "domain_age_days"=>"9692",
+#   "smtp_provider"=>"example",
+#   "mx_found"=>"true",
+#   "mx_record"=>"mx.example.com",
+#   "firstname"=>"zero",
+#   "lastname"=>"bounce",
+#   "gender"=>"male",
+#   "country"=>nil,
+#   "region"=>nil,
+#   "city"=>nil,
+#   "zipcode"=>nil,
+#   "processed_at"=>"2023-04-28 15:21:44.340"},
+#  {"address"=>"valid@example.com",
+#   "status"=>"valid",
+#   "sub_status"=>"",
+#   "free_email"=>false,
+#   "did_you_mean"=>nil,
+#   "account"=>nil,
+#   "domain"=>nil,
+#   "domain_age_days"=>"9692",
+#   "smtp_provider"=>"example",
+#   "mx_found"=>"true",
+#   "mx_record"=>"mx.example.com",
+#   "firstname"=>"zero",
+#   "lastname"=>"bounce",
+#   "gender"=>"male",
+#   "country"=>nil,
+#   "region"=>nil,
+#   "city"=>nil,
+#   "zipcode"=>nil,
+#   "processed_at"=>"2023-04-28 15:21:44.340"},
+#  {"address"=>"toxic@example.com",
+#   "status"=>"do_not_mail",
+#   "sub_status"=>"toxic",
+#   "free_email"=>false,
+#   "did_you_mean"=>nil,
+#   "account"=>nil,
+#   "domain"=>nil,
+#   "domain_age_days"=>"9692",
+#   "smtp_provider"=>"example",
+#   "mx_found"=>"true",
+#   "mx_record"=>"mx.example.com",
+#   "firstname"=>"zero",
+#   "lastname"=>"bounce",
+#   "gender"=>"male",
+#   "country"=>nil,
+#   "region"=>nil,
+#   "city"=>nil,
+#   "zipcode"=>nil,
+#   "processed_at"=>"2023-04-28 15:21:44.340"},
+#  {"address"=>"donotmail@example.com",
+#   "status"=>"do_not_mail",
+#   "sub_status"=>"role_based",
+#   "free_email"=>false,
+#   "did_you_mean"=>nil,
+#   "account"=>nil,
+#   "domain"=>nil,
+#   "domain_age_days"=>"9692",
+#   "smtp_provider"=>"example",
+#   "mx_found"=>"true",
+#   "mx_record"=>"mx.example.com",
+#   "firstname"=>"zero",
+#   "lastname"=>"bounce",
+#   "gender"=>"male",
+#   "country"=>nil,
+#   "region"=>nil,
+#   "city"=>nil,
+#   "zipcode"=>nil,
+#   "processed_at"=>"2023-04-28 15:21:44.340"},
+#  {"address"=>"spamtrap@example.com",
+#   "status"=>"spamtrap",
+#   "sub_status"=>"",
+#   "free_email"=>false,
+#   "did_you_mean"=>nil,
+#   "account"=>nil,
+#   "domain"=>nil,
+#   "domain_age_days"=>"9692",
+#   "smtp_provider"=>"example",
+#   "mx_found"=>"true",
+#   "mx_record"=>"mx.example.com",
+#   "firstname"=>"zero",
+#   "lastname"=>"bounce",
+#   "gender"=>"male",
+#   "country"=>nil,
+#   "region"=>nil,
+#   "city"=>nil,
+#   "zipcode"=>nil,
+#   "processed_at"=>"2023-04-28 15:21:44.340"}]
 ```
 
 ###### Batch File Validation
@@ -253,24 +258,24 @@ Zerobounce.validate_batch(emails)
 Send file
 ```ruby
 ### sample file can be found in the files folder of this repository
- validate_file_path = File.join(Dir.pwd, 'files', 'validation.csv')
-=> "/home/zb/wrappers/ruby-test/files/validation.csv"
- Zerobounce.validate_file_send(validate_file_path)
-=>
-{"success"=>true,
- "message"=>"File Accepted",
- "file_name"=>"validation.csv",
- "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
- ### file_id will be required for next steps
- ### optional named parameters:
-    email_address_column: 1,
-    first_name_column: 2,
-    last_name_column: 3,
-    gender_column: 4,
-    has_header_row: true,
-    return_url: nil,        ### results callback url
-    allow_phase_2: true     ### optional; validation bulk sendfile only (omit or nil to skip)
- ### Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4)
+validate_file_path = File.join(Dir.pwd, 'files', 'validation.csv')
+# => "/home/zb/wrappers/ruby-test/files/validation.csv"
+Zerobounce.validate_file_send(validate_file_path)
+# =>
+# {"success"=>true,
+#  "message"=>"File Accepted",
+#  "file_name"=>"validation.csv",
+#  "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
+### file_id will be required for next steps
+### optional named parameters:
+#   email_address_column: 1,
+#   first_name_column: 2,
+#   last_name_column: 3,
+#   gender_column: 4,
+#   has_header_row: true,
+#   return_url: nil,        ### results callback url
+#   allow_phase_2: true     ### optional; validation bulk sendfile only (omit or nil to skip)
+Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4)
 ```
 
 Bulk validation uses `https://bulkapi.zerobounce.net/v2`. See [v2 send file](https://www.zerobounce.net/docs/email-validation-api-quickstart/v2-send-file), [v2 file status](https://www.zerobounce.net/docs/email-validation-api-quickstart/v2-file-status), and [v2 get file](https://www.zerobounce.net/docs/email-validation-api-quickstart/v2-get-file).
@@ -278,29 +283,27 @@ Bulk validation uses `https://bulkapi.zerobounce.net/v2`. See [v2 send file](htt
 Check file
 ```ruby
 file_id = "75d854a6-565c-49f9-b4c8-b3344480ec4c"
-=> "75d854a6-565c-49f9-b4c8-b3344480ec4c"
 Zerobounce.validate_file_check(file_id)
-=>
-{"success"=>true,
- "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c",
- "file_name"=>"validation.csv",
- "upload_date"=>"2023-04-28T15:25:41Z",
- "file_status"=>"Greylisted",
- "complete_percentage"=>"0%",
- "file_phase_2_status"=>"N/A",  ### when present (validation bulk v2)
- "error_reason"=>nil,
- "return_url"=>nil}
+# =>
+# {"success"=>true,
+#  "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c",
+#  "file_name"=>"validation.csv",
+#  "upload_date"=>"2023-04-28T15:25:41Z",
+#  "file_status"=>"Greylisted",
+#  "complete_percentage"=>"0%",
+#  "file_phase_2_status"=>"N/A",  ### when present (validation bulk v2)
+#  "error_reason"=>nil,
+#  "return_url"=>nil}
 ```
 
 Get file
 ```ruby
 file_id = "75d854a6-565c-49f9-b4c8-b3344480ec4c"
-=> "75d854a6-565c-49f9-b4c8-b3344480ec4c"
 Zerobounce.validate_file_get(file_id)
-=> "\"email\",\"first\",\"last\",\"gender\",\"ip\",\"ZB Status\",\"ZB Sub Status\",\"ZB Account\",\"ZB Domain\",\"ZB First Name\",\"ZB Last Name\",\"ZB Gender\",\"ZB Free Email\",\"ZB MX Found\",\"ZB MX Record\",\"ZB SMTP Provider\",\"ZB Did You Mean\"\n\"disposable@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"disposable\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"invalid@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"mailbox_not_found\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"valid@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"valid\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"toxic@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"toxic\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"donotmail@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"role_based\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"spamtrap@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"spamtrap\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"abuse@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"abuse\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"unknown@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"mail_server_temporary_error\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"catch_all@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"catch-all\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"antispam_system@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"antispam_system\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"does_not_accept_mail@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"does_not_accept_mail\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"exception_occurred@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"exception_occurred\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"failed_smtp_connection@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"failed_smtp_connection\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"failed_syntax_check@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"failed_syntax_check\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"forcible_disconnect@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"forcible_disconnect\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"global_suppression@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"global_suppression\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"greylisted@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"greylisted\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"leading_period_removed@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"valid\",\"leading_period_removed\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mail_server_did_not_respond@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"mail_server_did_not_respond\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mail_server_temporary_error@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"mail_server_temporary_error\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mailbox_quota_exceeded@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"mailbox_quota_exceeded\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mailbox_not_found@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"mailbox_not_found\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"no_dns_entries@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"no_dns_entries\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"possible_trap@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"possible_trap\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"possible_typo@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"possible_typo\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"role_based@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"role_based\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"timeout_exceeded@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"timeout_exceeded\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"unroutable_ip_address@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"unroutable_ip_address\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"free_email@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"valid\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"True\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"role_based_catch_all@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"role_based_catch_all\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n"
+# => "\"email\",\"first\",\"last\",\"gender\",\"ip\",\"ZB Status\",\"ZB Sub Status\",\"ZB Account\",\"ZB Domain\",\"ZB First Name\",\"ZB Last Name\",\"ZB Gender\",\"ZB Free Email\",\"ZB MX Found\",\"ZB MX Record\",\"ZB SMTP Provider\",\"ZB Did You Mean\"\n\"disposable@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"disposable\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"invalid@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"mailbox_not_found\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"valid@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"valid\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"toxic@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"toxic\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"donotmail@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"role_based\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"spamtrap@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"spamtrap\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"abuse@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"abuse\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"unknown@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"mail_server_temporary_error\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"catch_all@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"catch-all\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"antispam_system@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"antispam_system\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"does_not_accept_mail@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"does_not_accept_mail\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"exception_occurred@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"exception_occurred\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"failed_smtp_connection@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"failed_smtp_connection\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"failed_syntax_check@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"failed_syntax_check\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"forcible_disconnect@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"forcible_disconnect\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"global_suppression@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"global_suppression\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"greylisted@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"greylisted\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"leading_period_removed@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"valid\",\"leading_period_removed\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mail_server_did_not_respond@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"mail_server_did_not_respond\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mail_server_temporary_error@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"mail_server_temporary_error\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mailbox_quota_exceeded@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"mailbox_quota_exceeded\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"mailbox_not_found@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"mailbox_not_found\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"no_dns_entries@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"no_dns_entries\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"possible_trap@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"possible_trap\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"possible_typo@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"possible_typo\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"role_based@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"role_based\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"timeout_exceeded@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"unknown\",\"timeout_exceeded\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"unroutable_ip_address@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"invalid\",\"unroutable_ip_address\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"free_email@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"valid\",\"\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"True\",\"true\",\"mx.example.com\",\"example\",\"\"\n\"role_based_catch_all@example.com\",\"First\",\"Last\",\"male\",\"127.0.0.1\",\"do_not_mail\",\"role_based_catch_all\",\"\",\"\",\"zero\",\"bounce\",\"male\",\"False\",\"true\",\"mx.example.com\",\"example\",\"\"\n"
 ```
 
-Optional [v2 get file](https://www.zerobounce.net/docs/email-validation-api-quickstart/v2-get-file) query parameters: `Zerobounce::GetFileOptions` and `Zerobounce::DownloadType` (`PHASE_1`, `PHASE_2`, `COMBINED`). Use `activity_data` on the options for validation `validate_file_get` only. JSON error bodies (including some HTTP 200 responses) raise `RuntimeError`; use `Zerobounce.get_file_json_indicates_error?(body)` on a raw string if needed.
+Optional [v2 get file](https://www.zerobounce.net/docs/email-validation-api-quickstart/v2-get-file) query parameters: `Zerobounce::GetFileOptions` and `Zerobounce::DownloadType` (`PHASE_1`, `PHASE_2`, `COMBINED`). Use `activity_data` on the options for validation `validate_file_get` only. Non-success HTTP responses raise the `RestClient` exception for the status (a `RuntimeError` subclass, with `#http_code`), and JSON error bodies (including HTTP 200 responses with `"success": false`) raise `RuntimeError`; use `Zerobounce.get_file_json_indicates_error?(body)` on a raw string if needed.
 
 ```ruby
 opts = Zerobounce::GetFileOptions.new(
@@ -313,13 +316,12 @@ csv = Zerobounce.validate_file_get(file_id, opts)
 Delete file
 ```ruby
 file_id = "75d854a6-565c-49f9-b4c8-b3344480ec4c"
-=> "75d854a6-565c-49f9-b4c8-b3344480ec4c"
 Zerobounce.validate_file_delete(file_id)
-=>
-{"success"=>true,
- "message"=>"File Deleted",
- "file_name"=>"validation.csv",
- "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
+# =>
+# {"success"=>true,
+#  "message"=>"File Deleted",
+#  "file_name"=>"validation.csv",
+#  "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
 ```
 
 ##### AI Scoring
@@ -327,109 +329,123 @@ Zerobounce.validate_file_delete(file_id)
 Send file
 ```ruby
 scoring_file_path = File.join(Dir.pwd, 'files', 'scoring.csv')
-=> "/home/odin/zb/wrappers/ruby-test/files/scoring.csv"
+# => "/home/odin/zb/wrappers/ruby-test/files/scoring.csv"
 Zerobounce.scoring_file_send(scoring_file_path)
-=>
-{"success"=>true,
- "message"=>"File Accepted",
- "file_name"=>"scoring.csv",
- "file_id"=>"89fb7262-b845-4fa1-aa25-e486347ec64e"}
+# =>
+# {"success"=>true,
+#  "message"=>"File Accepted",
+#  "file_name"=>"scoring.csv",
+#  "file_id"=>"89fb7262-b845-4fa1-aa25-e486347ec64e"}
 ### file_id will be required for the next steps
 ### optional named parameters
-    email_address_column: 1,
-    has_header_row: true,
-    return_url: nil         ### results callback url
-### Zerobounce.scoring_file_send(scoring_file_path, email_address_column: 1)
+#   email_address_column: 1,
+#   has_header_row: true,
+#   return_url: nil         ### results callback url
+Zerobounce.scoring_file_send(scoring_file_path, email_address_column: 1)
 ```
 
 File check
 ```ruby
 file_id = "89fb7262-b845-4fa1-aa25-e486347ec64e"
-=> "89fb7262-b845-4fa1-aa25-e486347ec64e"
 Zerobounce.scoring_file_check(file_id)
-=>
-{"success"=>true,
- "file_id"=>"89fb7262-b845-4fa1-aa25-e486347ec64e",
- "file_name"=>"scoring.csv",
- "upload_date"=>"2023-04-28T16:57:18Z",
- "file_status"=>"Complete",
- "complete_percentage"=>"100% Complete.",
- "return_url"=>nil}
+# =>
+# {"success"=>true,
+#  "file_id"=>"89fb7262-b845-4fa1-aa25-e486347ec64e",
+#  "file_name"=>"scoring.csv",
+#  "upload_date"=>"2023-04-28T16:57:18Z",
+#  "file_status"=>"Complete",
+#  "complete_percentage"=>"100% Complete.",
+#  "return_url"=>nil}
 ```
 
 Get file
 ```ruby
 file_id = "89fb7262-b845-4fa1-aa25-e486347ec64e"
-=> "89fb7262-b845-4fa1-aa25-e486347ec64e"
 Zerobounce.scoring_file_get(file_id)
-=> "\"email\",\"ZeroBounceQualityScore\"\r\n\"disposable@example.com\",\"0\"\r\n\"invalid@example.com\",\"10\"\r\n\"valid@example.com\",\"10\"\r\n\"toxic@example.com\",\"2\"\r\n\"donotmail@example.com\",\"0\"\r\n\"spamtrap@example.com\",\"0\"\r\n\"abuse@example.com\",\"10\"\r\n\"unknown@example.com\",\"10\"\r\n\"catch_all@example.com\",\"10\"\r\n\"antispam_system@example.com\",\"0\"\r\n\"does_not_accept_mail@example.com\",\"0\"\r\n\"exception_occurred@example.com\",\"0\"\r\n\"failed_smtp_connection@example.com\",\"0\"\r\n\"failed_syntax_check@example.com\",\"0\"\r\n\"forcible_disconnect@example.com\",\"0\"\r\n\"global_suppression@example.com\",\"0\"\r\n\"greylisted@example.com\",\"0\"\r\n\"leading_period_removed@example.com\",\"0\"\r\n\"mail_server_did_not_respond@example.com\",\"0\"\r\n\"mail_server_temporary_error@example.com\",\"0\"\r\n\"mailbox_quota_exceeded@example.com\",\"0\"\r\n\"mailbox_not_found@example.com\",\"0\"\r\n\"no_dns_entries@example.com\",\"0\"\r\n\"possible_trap@example.com\",\"0\"\r\n\"possible_typo@example.com\",\"0\"\r\n\"role_based@example.com\",\"0\"\r\n\"timeout_exceeded@example.com\",\"0\"\r\n\"unroutable_ip_address@example.com\",\"0\"\r\n\"free_email@example.com\",\"0\"\r\n\"role_based_catch_all@example.com\",\"0\""
+# => "\"email\",\"ZeroBounceQualityScore\"\r\n\"disposable@example.com\",\"0\"\r\n\"invalid@example.com\",\"10\"\r\n\"valid@example.com\",\"10\"\r\n\"toxic@example.com\",\"2\"\r\n\"donotmail@example.com\",\"0\"\r\n\"spamtrap@example.com\",\"0\"\r\n\"abuse@example.com\",\"10\"\r\n\"unknown@example.com\",\"10\"\r\n\"catch_all@example.com\",\"10\"\r\n\"antispam_system@example.com\",\"0\"\r\n\"does_not_accept_mail@example.com\",\"0\"\r\n\"exception_occurred@example.com\",\"0\"\r\n\"failed_smtp_connection@example.com\",\"0\"\r\n\"failed_syntax_check@example.com\",\"0\"\r\n\"forcible_disconnect@example.com\",\"0\"\r\n\"global_suppression@example.com\",\"0\"\r\n\"greylisted@example.com\",\"0\"\r\n\"leading_period_removed@example.com\",\"0\"\r\n\"mail_server_did_not_respond@example.com\",\"0\"\r\n\"mail_server_temporary_error@example.com\",\"0\"\r\n\"mailbox_quota_exceeded@example.com\",\"0\"\r\n\"mailbox_not_found@example.com\",\"0\"\r\n\"no_dns_entries@example.com\",\"0\"\r\n\"possible_trap@example.com\",\"0\"\r\n\"possible_typo@example.com\",\"0\"\r\n\"role_based@example.com\",\"0\"\r\n\"timeout_exceeded@example.com\",\"0\"\r\n\"unroutable_ip_address@example.com\",\"0\"\r\n\"free_email@example.com\",\"0\"\r\n\"role_based_catch_all@example.com\",\"0\""
 ### Optional second argument: GetFileOptions with download_type only (activity_data is not sent for scoring getfile)
 ```
 
 Delete file
 ```ruby
 file_id = "89fb7262-b845-4fa1-aa25-e486347ec64e"
-=> "89fb7262-b845-4fa1-aa25-e486347ec64e"
 Zerobounce.scoring_file_delete(file_id)
-=> {"success"=>false, "message"=>"File cannot be found."}
+# =>
+# {"success"=>true,
+#  "message"=>"File Deleted",
+#  "file_name"=>"scoring.csv",
+#  "file_id"=>"89fb7262-b845-4fa1-aa25-e486347ec64e"}
+
+### The API answers an unknown file id - and, for a while, a file that was only
+### just uploaded - with {"success": false} on an HTTP 200. That raises:
+begin
+  Zerobounce.scoring_file_delete("00000000-0000-0000-0000-000000000000")
+rescue RuntimeError => e
+  e.message # => "File cannot be found."
+end
 ```
 
 ##### Email Finder
 
-Guess Format
+Guess Format (deprecated)
+
+`guessformat(domain, first_name: '', middle_name: '', last_name: '')` takes the domain as its only positional argument and has no `company_name:` option. It is deprecated, prints a deprecation warning on every call, and will be removed: use `find_domain` for a domain's formats and `find_email` for one person's address, below.
 ```ruby
+### Deprecated - prefer Zerobounce.find_domain(domain: "zerobounce.net")
 Zerobounce.guessformat("zerobounce.net")
-=>
-{"email"=>"",
- "domain"=>"zerobounce.net",
- "format"=>"first.last",
- "status"=>"",
- "sub_status"=>"",
- "confidence"=>"high",
- "did_you_mean"=>"",
- "failure_reason"=>"",
- "other_domain_formats"=>
-  [{"format"=>"first", "confidence"=>"high"},
-   {"format"=>"last.first", "confidence"=>"high"},
-   {"format"=>"lfirst", "confidence"=>"high"},
-   {"format"=>"lastfirst", "confidence"=>"high"},
-   {"format"=>"firstl", "confidence"=>"high"},
-   {"format"=>"last", "confidence"=>"medium"},
-   {"format"=>"first.middle.last", "confidence"=>"medium"},
-   {"format"=>"first-last", "confidence"=>"medium"},
-   {"format"=>"l.first", "confidence"=>"medium"},
-   {"format"=>"f.last", "confidence"=>"medium"},
-   {"format"=>"f-last", "confidence"=>"medium"},
-   {"format"=>"first.l", "confidence"=>"medium"},
-   {"format"=>"first-l", "confidence"=>"medium"},
-   {"format"=>"firstlast", "confidence"=>"medium"},
-   {"format"=>"first_l", "confidence"=>"medium"},
-   {"format"=>"f_last", "confidence"=>"medium"},
-   {"format"=>"last.f", "confidence"=>"medium"},
-   {"format"=>"last-f", "confidence"=>"medium"},
-   {"format"=>"last-first", "confidence"=>"medium"},
-   {"format"=>"first_last", "confidence"=>"medium"},
-   {"format"=>"last_f", "confidence"=>"medium"},
-   {"format"=>"last_first", "confidence"=>"medium"},
-   {"format"=>"flast", "confidence"=>"medium"},
-   {"format"=>"lastf", "confidence"=>"medium"},
-   {"format"=>"l-first", "confidence"=>"low"},
-   {"format"=>"l_first", "confidence"=>"low"}]}
-# Zerobounce.guessformat("zerobounce.net", first_name: "John", middle_name: 'Deere', last_name: "Doe")
+# =>
+# {"email"=>"",
+#  "domain"=>"zerobounce.net",
+#  "format"=>"first.last",
+#  "status"=>"",
+#  "sub_status"=>"",
+#  "confidence"=>"high",
+#  "did_you_mean"=>"",
+#  "failure_reason"=>"",
+#  "other_domain_formats"=>
+#   [{"format"=>"first", "confidence"=>"high"},
+#    {"format"=>"last.first", "confidence"=>"high"},
+#    {"format"=>"lfirst", "confidence"=>"high"},
+#    {"format"=>"lastfirst", "confidence"=>"high"},
+#    {"format"=>"firstl", "confidence"=>"high"},
+#    {"format"=>"last", "confidence"=>"medium"},
+#    {"format"=>"first.middle.last", "confidence"=>"medium"},
+#    {"format"=>"first-last", "confidence"=>"medium"},
+#    {"format"=>"l.first", "confidence"=>"medium"},
+#    {"format"=>"f.last", "confidence"=>"medium"},
+#    {"format"=>"f-last", "confidence"=>"medium"},
+#    {"format"=>"first.l", "confidence"=>"medium"},
+#    {"format"=>"first-l", "confidence"=>"medium"},
+#    {"format"=>"firstlast", "confidence"=>"medium"},
+#    {"format"=>"first_l", "confidence"=>"medium"},
+#    {"format"=>"f_last", "confidence"=>"medium"},
+#    {"format"=>"last.f", "confidence"=>"medium"},
+#    {"format"=>"last-f", "confidence"=>"medium"},
+#    {"format"=>"last-first", "confidence"=>"medium"},
+#    {"format"=>"first_last", "confidence"=>"medium"},
+#    {"format"=>"last_f", "confidence"=>"medium"},
+#    {"format"=>"last_first", "confidence"=>"medium"},
+#    {"format"=>"flast", "confidence"=>"medium"},
+#    {"format"=>"lastf", "confidence"=>"medium"},
+#    {"format"=>"l-first", "confidence"=>"low"},
+#    {"format"=>"l_first", "confidence"=>"low"}]}
+
+### Deprecated - prefer Zerobounce.find_email("John", domain: "zerobounce.net", middle_name: "Deere", last_name: "Doe")
+Zerobounce.guessformat("zerobounce.net", first_name: "John", middle_name: 'Deere', last_name: "Doe")
 ```
 
 Find Email Address
 ```ruby
 Zerobounce.find_email("John", domain: "zerobounce.net")
-=>
-{
-  "email": "john@zerobounce.net",
-  "email_confidence": "medium",
-  "domain": "zerobounce.net",
-  "company_name": "ZeroBounce",
-  "did_you_mean": "",
-  "failure_reason": ""
-}
+# =>
+# {
+#   "email"=>"john@zerobounce.net",
+#   "email_confidence"=>"medium",
+#   "domain"=>"zerobounce.net",
+#   "company_name"=>"ZeroBounce",
+#   "did_you_mean"=>"",
+#   "failure_reason"=>""
+# }
 
 # With additional name information for better accuracy
 Zerobounce.find_email("John", domain: "zerobounce.net", middle_name: "Deere", last_name: "Doe")
@@ -438,59 +454,59 @@ Zerobounce.find_email("John", domain: "zerobounce.net", middle_name: "Deere", la
 Find Domain Information
 ```ruby
 Zerobounce.find_domain(domain: "zerobounce.net")
-=>
-{
-  "domain": "zerobounce.net",
-  "company_name": "Hertza, LLC",
-  "format": "first.last",
-  "confidence": "high",
-  "did_you_mean": "",
-  "failure_reason": "",
-  "other_domain_formats": [
-    {"format": "first", "confidence": "high"},
-    {"format": "last.first", "confidence": "high"},
-    {"format": "lastfirst", "confidence": "high"},
-    {"format": "firstl", "confidence": "high"},
-    {"format": "lfirst", "confidence": "high"},
-    {"format": "firstlast", "confidence": "high"},
-    {"format": "last_middle_f", "confidence": "high"},
-    {"format": "last", "confidence": "high"},
-    {"format": "f.last", "confidence": "medium"},
-    {"format": "last-f", "confidence": "medium"},
-    {"format": "l.first", "confidence": "medium"},
-    {"format": "last_f", "confidence": "medium"},
-    {"format": "first.middle.last", "confidence": "medium"},
-    {"format": "first-last", "confidence": "medium"},
-    {"format": "last.f", "confidence": "medium"},
-    {"format": "last_first", "confidence": "medium"},
-    {"format": "f-last", "confidence": "medium"},
-    {"format": "first.l", "confidence": "medium"},
-    {"format": "first-l", "confidence": "medium"},
-    {"format": "first_l", "confidence": "medium"},
-    {"format": "first_last", "confidence": "medium"},
-    {"format": "f_last", "confidence": "medium"},
-    {"format": "last-first", "confidence": "medium"},
-    {"format": "flast", "confidence": "medium"},
-    {"format": "lastf", "confidence": "medium"},
-    {"format": "l_first", "confidence": "medium"},
-    {"format": "l-first", "confidence": "medium"},
-    {"format": "first-middle-last", "confidence": "low"},
-    {"format": "firstmlast", "confidence": "low"},
-    {"format": "last.middle.first", "confidence": "low"},
-    {"format": "last_middle_first", "confidence": "low"},
-    {"format": "first_middle_last", "confidence": "low"},
-    {"format": "last-middle-first", "confidence": "low"},
-    {"format": "first-m-last", "confidence": "low"},
-    {"format": "firstmiddlelast", "confidence": "low"},
-    {"format": "last.m.first", "confidence": "low"},
-    {"format": "lastmfirst", "confidence": "low"},
-    {"format": "lastmiddlefirst", "confidence": "low"},
-    {"format": "last_m_first", "confidence": "low"},
-    {"format": "first.m.last", "confidence": "low"},
-    {"format": "first_m_last", "confidence": "low"},
-    {"format": "last-m-first", "confidence": "low"}
-  ]
-}
+# =>
+# {
+#   "domain"=>"zerobounce.net",
+#   "company_name"=>"Hertza, LLC",
+#   "format"=>"first.last",
+#   "confidence"=>"high",
+#   "did_you_mean"=>"",
+#   "failure_reason"=>"",
+#   "other_domain_formats"=>[
+#     {"format"=>"first", "confidence"=>"high"},
+#     {"format"=>"last.first", "confidence"=>"high"},
+#     {"format"=>"lastfirst", "confidence"=>"high"},
+#     {"format"=>"firstl", "confidence"=>"high"},
+#     {"format"=>"lfirst", "confidence"=>"high"},
+#     {"format"=>"firstlast", "confidence"=>"high"},
+#     {"format"=>"last_middle_f", "confidence"=>"high"},
+#     {"format"=>"last", "confidence"=>"high"},
+#     {"format"=>"f.last", "confidence"=>"medium"},
+#     {"format"=>"last-f", "confidence"=>"medium"},
+#     {"format"=>"l.first", "confidence"=>"medium"},
+#     {"format"=>"last_f", "confidence"=>"medium"},
+#     {"format"=>"first.middle.last", "confidence"=>"medium"},
+#     {"format"=>"first-last", "confidence"=>"medium"},
+#     {"format"=>"last.f", "confidence"=>"medium"},
+#     {"format"=>"last_first", "confidence"=>"medium"},
+#     {"format"=>"f-last", "confidence"=>"medium"},
+#     {"format"=>"first.l", "confidence"=>"medium"},
+#     {"format"=>"first-l", "confidence"=>"medium"},
+#     {"format"=>"first_l", "confidence"=>"medium"},
+#     {"format"=>"first_last", "confidence"=>"medium"},
+#     {"format"=>"f_last", "confidence"=>"medium"},
+#     {"format"=>"last-first", "confidence"=>"medium"},
+#     {"format"=>"flast", "confidence"=>"medium"},
+#     {"format"=>"lastf", "confidence"=>"medium"},
+#     {"format"=>"l_first", "confidence"=>"medium"},
+#     {"format"=>"l-first", "confidence"=>"medium"},
+#     {"format"=>"first-middle-last", "confidence"=>"low"},
+#     {"format"=>"firstmlast", "confidence"=>"low"},
+#     {"format"=>"last.middle.first", "confidence"=>"low"},
+#     {"format"=>"last_middle_first", "confidence"=>"low"},
+#     {"format"=>"first_middle_last", "confidence"=>"low"},
+#     {"format"=>"last-middle-first", "confidence"=>"low"},
+#     {"format"=>"first-m-last", "confidence"=>"low"},
+#     {"format"=>"firstmiddlelast", "confidence"=>"low"},
+#     {"format"=>"last.m.first", "confidence"=>"low"},
+#     {"format"=>"lastmfirst", "confidence"=>"low"},
+#     {"format"=>"lastmiddlefirst", "confidence"=>"low"},
+#     {"format"=>"last_m_first", "confidence"=>"low"},
+#     {"format"=>"first.m.last", "confidence"=>"low"},
+#     {"format"=>"first_m_last", "confidence"=>"low"},
+#     {"format"=>"last-m-first", "confidence"=>"low"}
+#   ]
+# }
 ```
 
 
@@ -498,33 +514,25 @@ Zerobounce.find_domain(domain: "zerobounce.net")
 
 After checking out the repo run tests
 ```bash
-rspec --init ### if needed
+bundle install
 bundle exec rspec
 ```
 
-You should see an output like this
-```bash
-Run options: include {:focus=>true}
-running live tests
-.....................................................
-
-Finished in 6.81 seconds (files took 0.40587 seconds to load)
-53 examples, 0 failures
-```
+It should end with `0 failures`. The suite is offline: recorded cassettes and WebMock stubs, no network.
 
 ##### Test parameters
-The tests use the following environment parameters:
-- **TEST** {unit|live} – Influences whether mocked unit tests are run or the live server is used (credits may be used if you choose to do this).
-- **ZEROBOUNCE_API_KEY** – Your API key; used to make requests to the live server and in mock tests as the valid key sample (any value will work for mock tests).
+The tests use the following environment parameter:
+- **ZEROBOUNCE_API_KEY** - used in the mock tests as the valid key sample; any value works.
 
 An invalid API key for error-handling tests is hardcoded in the spec; no env var is required.
 
-To set them:
+To set it:
 ```bash
 export ZEROBOUNCE_API_KEY=your_api_key_here
-export TEST=unit
 ```
 
-A .env.example file is provided.
+A `.env.example` file is provided; it holds a placeholder (`your_api_key_here`), not a key. The spec helper loads a `.env` file if there is one.
 
-Mock tests were generated using webmock and vcr. This means that actual requests were made and recorded in the spec/cassettes with an (at the time) valid API key used for testing purposes. This key has been invalidated in the meantime, however it is provided in the .env.example file for the mock tests to work. If you do not wish to use this key for mocks, you can replace it with any value in the .yml files under spec/cassettes or delete all of them and rerun the tests so that vcr records them with a new key.
+Tests use webmock and vcr for mocking HTTP requests. The cassettes in `spec/cassettes` were recorded against the live API; the key in them has been replaced with a placeholder, and requests are matched ignoring `api_key`, so any value of `ZEROBOUNCE_API_KEY` works (CI uses `invalid_key_for_tests`).
+
+The live API suite (`ruby -Ilib live/live_api.rb`, real keys from the environment) is separate from `rspec`; see the README.

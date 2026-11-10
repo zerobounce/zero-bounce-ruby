@@ -29,14 +29,7 @@ module Zerobounce
         raise (response_body_json['errors'][0]['error']) \
           if response_body_json.key?('errors') and \
             response_body_json['errors'].length > 0
-        # LIVE: {"success": false} on an HTTP 200 is a failure, not a result.
-        # The API answers an unknown bulk file id that way.
-        if response_body_json.key?('success') &&
-           __success_means_failure__(response_body_json['success'])
-          raise ResponseError.message_from_parts(
-            response.code, response.headers[:content_type].to_s, response_body
-          )
-        end
+        __raise_if_success_false__(response, response_body_json)
 
         return response_body_json
       else
@@ -111,6 +104,13 @@ module Zerobounce
       return parsed unless parsed.is_a?(Hash)
 
       raise ResponseError.strip_prefix(parsed['error']) if parsed.key?('error') && !parsed['error'].nil?
+      __raise_if_success_false__(response, parsed)
+      # LIVE: the filters spell it "Error". An invalid or drained key answers
+      # them with {"Error": "Invalid API key or your account ran out of
+      # credits"} on an HTTP 200, which used to come back as their result.
+      if !parsed.key?('success') && parsed['Error'].is_a?(String) && !parsed['Error'].strip.empty?
+        raise ResponseError.strip_prefix(parsed['Error'])
+      end
       # A body that is nothing but "Message" is how the validate endpoints
       # report a rejected request. The filters endpoints use the same shape for
       # a *success* ("Filter successfully added"), so they are left out.

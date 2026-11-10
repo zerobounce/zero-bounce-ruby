@@ -50,15 +50,36 @@ module Zerobounce
       url
     end
 
+    # Removes the API key from error text. The key the request actually used
+    # (a Zerobounce::Client's or with_api_key's, which is thread-local) is
+    # redacted as well as the global one, in its raw and URL-encoded forms.
     def self.__redact_api_key__(message)
-      key = Zerobounce.config.apikey
-      return message if key.nil? || key.to_s.empty?
-      message.to_s.gsub(key.to_s, '***')
+      text = message.to_s
+      [current_api_key, Zerobounce.config.apikey].uniq.each do |key|
+        next if key.nil? || key.to_s.strip.empty?
+
+        [key.to_s, URI.encode_www_form_component(key.to_s)].uniq.each do |form|
+          text = text.gsub(form, '***')
+        end
+      end
+      text
     end
 
     def self.current_api_key
       key = Thread.current[:zerobounce_api_key]
       key.nil? ? Zerobounce.config.apikey : key
+    end
+
+    # The message for an HTTP error status.
+    def self.__http_error_message__(error)
+      code = error.http_code.to_i
+      # max_redirects is 0, so a 3xx is never followed; say so rather than
+      # reporting its (usually empty) body as an "Empty response".
+      if code.between?(300, 399)
+        return "ZeroBounce answered with a redirect (HTTP #{code}), which is not followed"
+      end
+
+      ResponseError.message_from(error.response)
     end
 
     def self.__execute_request__(**kwargs)
@@ -67,9 +88,20 @@ module Zerobounce
       kwargs[:headers] = (kwargs[:headers] || {}).merge(user_agent: user_agent) if user_agent
       RestClient::Request.execute(**kwargs)
     rescue RestClient::ExceptionWithResponse => e
-      raise ResponseError.message_from(e.response)
+      # Re-raised as the same RestClient class (RestClient::NotFound and so
+      # on), so `rescue RestClient::...` and #http_code keep working as they
+      # did up to 2.1.8. Only the message changes: the API's short error text,
+      # with the key redacted.
+      e.message = __redact_api_key__(__http_error_message__(e))
+      raise e
+    rescue RestClient::Exception => e
+      e.message = __redact_api_key__(e.message)
+      raise e
     rescue StandardError => e
-      raise e.class, __redact_api_key__(e.message)
+      # Same class and backtrace, redacted message. cause: nil, because the
+      # original (unredacted) error would otherwise ride along as #cause and
+      # be printed by #full_message.
+      raise e.exception(__redact_api_key__(e.message)), cause: nil
     end
 
     def self._get(root, path, params, content_type='application/json')
@@ -213,6 +245,15 @@ module Zerobounce
       value.is_a?(String) && value.strip.casecmp('false').zero?
     end
 
+    # LIVE: {"success": false} on an HTTP 200 is a failure, not a result. The
+    # API answers an unknown bulk file id that way. Applied to the main API
+    # and the bulk API alike.
+    def self.__raise_if_success_false__(response, parsed)
+      return unless parsed.is_a?(Hash) && parsed.key?('success') && __success_means_failure__(parsed['success'])
+
+      raise ResponseError.message_from_parts(response.code, response.headers[:content_type].to_s, response.body.to_s)
+    end
+
     def self.__parse_json_response__(response)
       body = response.body.to_s
       content_type = (response.headers[:content_type] || '').to_s
@@ -226,11 +267,7 @@ module Zerobounce
       end
       return parsed unless parsed.is_a?(Hash)
 
-      # LIVE: {"success": false} on an HTTP 200 is a failure, not a result. The
-      # API answers an unknown bulk file id that way.
-      if parsed.key?('success') && __success_means_failure__(parsed['success'])
-        raise ResponseError.message_from_parts(response.code, content_type, body)
-      end
+      __raise_if_success_false__(response, parsed)
 
       raise ResponseError.strip_prefix(parsed['error']) if parsed.key?('error') && !parsed['error'].nil?
       # The Inbox Placement Tester is a Django REST framework app and reports

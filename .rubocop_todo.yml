@@ -577,6 +577,13 @@ Style/GuardClause:
   Exclude:
     - 'lib/zerobounce/mock_request.rb'
 
+# Offense count: 2
+# Raised by TargetRubyVersion 3.0. Not a real offence: URI.decode_www_form
+# returns an Array of pairs, which has no #except, so do not autocorrect it.
+Style/HashExcept:
+  Exclude:
+    - 'spec/mock_spec.rb'
+
 # Offense count: 22
 # This cop supports safe autocorrection (--autocorrect).
 Style/IfUnlessModifier:
@@ -707,6 +714,13 @@ Style/SafeNavigation:
 Style/SingleLineMethods:
   Exclude:
     - 'spec/base_request_spec.rb'
+
+# Offense count: 1
+# Raised by TargetRubyVersion 3.0 (loc[1..-1] was written for Ruby 2.5).
+# This cop supports safe autocorrection (--autocorrect).
+Style/SlicingWithRange:
+  Exclude:
+    - 'lib/zerobounce/response_error.rb'
 
 # Offense count: 1
 # This cop supports safe autocorrection (--autocorrect).

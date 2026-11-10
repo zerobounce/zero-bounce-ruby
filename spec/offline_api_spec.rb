@@ -45,6 +45,22 @@ RSpec.describe 'offline API' do
       status = 400
       content_type = 'text/plain'
       payload = 'Error: Error: api_key is invalid'
+    # LIVE (2026-11-11): what an invalid or drained key gets back, each with
+    # an HTTP 200 and no "success" field.
+    elsif key.start_with?('dead-key-')
+      payload = if path.include?('guessformat')
+                  '{"Message":"Invalid API key or your account ran out of credits"}'
+                elsif path.include?('filters')
+                  '{  "Error": "Invalid API key or your account ran out of credits"}'
+                elsif path.include?('getapiusage')
+                  '{"error":"Invalid API key"}'
+                elsif path.include?('getcredits')
+                  '{"Credits":"-1"}'
+                else
+                  '{"error":"Invalid API key or your account ran out of credits"}'
+                end
+    elsif key.start_with?('filter-message-') && path.include?('filters')
+      payload = '{"Message":"Filter has been added."}'
     elsif path.include?('validatebatch') && key.start_with?('batch-account-')
       payload = '{"email_batch":[],"errors":[{"email_address":"all","error":"Invalid API Key or your account ran out of credits"}]}'
     elsif path.include?('validatebatch') && key.start_with?('batch-partial-')
@@ -71,7 +87,7 @@ RSpec.describe 'offline API' do
   end
 
   it 'matches the gem version in the user agent' do
-    expect(Zerobounce::VERSION).to eq('2.1.8')
+    expect(Zerobounce::VERSION).to eq('2.2.0')
     expect(Zerobounce::Configuration.new.headers[:user_agent]).to include(Zerobounce::VERSION)
   end
 
@@ -129,6 +145,33 @@ RSpec.describe 'offline API' do
 
     Zerobounce.configure { |config| config.apikey = 'double-error-user' }
     expect { Zerobounce.activity('a@example.com') }.to raise_error(RuntimeError, 'api_key is invalid')
+  end
+
+  it 'raises the API message for a dead key on every call' do
+    Zerobounce.configure { |config| config.apikey = 'dead-key-user' }
+    drained = 'Invalid API key or your account ran out of credits'
+    calls = {
+      'validate' => [-> { Zerobounce.validate('a@example.com') }, drained],
+      'activity' => [-> { Zerobounce.activity('a@example.com') }, drained],
+      'api_usage' => [-> { Zerobounce.api_usage(Date.new(2026, 10, 1), Date.new(2026, 10, 2)) }, 'Invalid API key'],
+      'find_email' => [-> { Zerobounce.find_email('john', domain: 'example.com') }, drained],
+      'find_domain' => [-> { Zerobounce.find_domain(domain: 'example.com') }, drained],
+      'add_filter' => [-> { Zerobounce.add_filter(rule: 'allow', target: 'email', value: 'x@example.com') }, drained],
+      'delete_filter' => [-> { Zerobounce.delete_filter(rule: 'allow', target: 'email', value: 'x@example.com') }, drained],
+      'list_filters' => [-> { Zerobounce.list_filters }, drained],
+      'list_filters POST' => [-> { Zerobounce.list_filters(use_post: true) }, drained]
+    }
+    calls.each do |name, (call, message)|
+      expect { call.call }.to raise_error(RuntimeError, message), name
+    end
+    # -1 is the documented credit balance of an invalid key, not an error.
+    expect(Zerobounce.credits).to eq(-1)
+  end
+
+  it 'keeps a bare Message from the filters as their result' do
+    Zerobounce.configure { |config| config.apikey = 'filter-message-user' }
+    expect(Zerobounce.add_filter(rule: 'allow', target: 'email', value: 'x@example.com'))
+      .to eq('Message' => 'Filter has been added.')
   end
 
   it 'rejects an empty key and a bad timeout before a request' do

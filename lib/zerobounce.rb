@@ -251,8 +251,13 @@ module Zerobounce
     # @param [Array] :emails List of email addresses to validate.
     # @option [Array] :ip_addresses Corresponding list of IP addresses.
     #
-    # @return [Array] list of validate result for each element
-    # [
+    # @return [Hash] the whole response: +email_batch+ holds one validate
+    #   result per address, +errors+ the addresses that could not be
+    #   validated. A per-address error does not raise; an account-level one
+    #   (reported for the address "all", e.g. an invalid key) does.
+    #   Up to 2.1.8 this returned only the +email_batch+ Array.
+    # {
+    #   "email_batch": [
     #   {
     #     "address": "disposable@example.com",
     #     "status": "do_not_mail",
@@ -279,7 +284,9 @@ module Zerobounce
     #     ...
     #   },
     #   ...
-    # ]
+    #   ],
+    #   "errors": []
+    # }
     def validate_batch(emails, ip_addresses=[], timeout: nil, activity_data: nil, verify_plus: nil)
       unless timeout.nil?
         timeout_i = Integer(timeout)

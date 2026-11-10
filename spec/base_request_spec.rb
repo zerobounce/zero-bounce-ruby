@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'tmpdir'
+require 'webmock/rspec'
 
 RSpec.describe Zerobounce::BaseRequest do
   # Test protected helpers via send
@@ -165,6 +166,132 @@ RSpec.describe Zerobounce::BaseRequest do
           expect(result).to eq(File.realpath('f.csv'))
         end
       end
+    end
+  end
+end
+
+# Error behaviour of the validation client's request layer: which class is
+# raised, what its message says, and that the API key never reaches it.
+RSpec.describe 'request errors' do
+  json = { 'Content-Type' => 'application/json' }
+
+  around do |example|
+    original = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    Zerobounce.configure { |config| config.apikey = 'GLOBALKEY777' }
+    example.run
+  ensure
+    Zerobounce.configuration = original
+    Thread.current[:zerobounce_api_key] = nil
+  end
+
+  # Everything a caller (or an uncaught-exception printer) can read off the
+  # error without digging into the HTTP response object.
+  def visible_text(error)
+    [error.message, error.inspect, error.full_message(highlight: false), error.cause&.message].join("\n")
+  end
+
+  describe 'API key redaction' do
+    before do
+      # A space makes the URL unparseable, so the HTTP library raises before
+      # sending and quotes the whole URL - query string and key included.
+      Zerobounce.configure { |config| config.api_root_url = 'https://bad host.example/v2/' }
+    end
+
+    it 'redacts the key of a Zerobounce::Client' do
+      expect { Zerobounce::Client.new('CLIENTKEY999').validate('person@example.com') }
+        .to raise_error(StandardError) { |error|
+          expect(error.message).to include('***')
+          expect(visible_text(error)).not_to include('CLIENTKEY999')
+        }
+    end
+
+    it 'redacts the URL-encoded form of a key' do
+      expect { Zerobounce::Client.new('client+key/999').credits }
+        .to raise_error(StandardError) { |error|
+          expect(visible_text(error)).not_to include('client%2Bkey%2F999')
+          expect(visible_text(error)).not_to include('client+key/999')
+        }
+    end
+
+    it 'redacts a key set with with_api_key' do
+      expect { Zerobounce.with_api_key('SCOPEDKEY555') { Zerobounce.activity('person@example.com') } }
+        .to raise_error(StandardError) { |error| expect(visible_text(error)).not_to include('SCOPEDKEY555') }
+    end
+
+    it 'still redacts the global key' do
+      expect { Zerobounce.validate('person@example.com') }
+        .to raise_error(StandardError) { |error|
+          expect(error.message).to include('***')
+          expect(visible_text(error)).not_to include('GLOBALKEY777')
+        }
+    end
+
+    it 'redacts a key echoed back in an HTTP error body' do
+      Zerobounce.configure { |config| config.api_root_url = 'https://api.zerobounce.net/v2/' }
+      stub_request(:get, %r{api\.zerobounce\.net/v2/validate})
+        .to_return(status: 400, headers: json, body: '{"error":"Unknown api_key CLIENTKEY999"}')
+      expect { Zerobounce::Client.new('CLIENTKEY999').validate('person@example.com') }
+        .to raise_error(RuntimeError, 'Unknown api_key ***')
+    end
+  end
+
+  describe 'HTTP error statuses' do
+    it 'raises the RestClient class for the status, as 2.1.8 did, with the short API message' do
+      stub_request(:get, %r{bulkapi\.zerobounce\.net/v2/filestatus})
+        .to_return(status: 404, headers: json, body: '{"error":"Error: File not found"}')
+      expect { Zerobounce.validate_file_check('missing') }
+        .to raise_error(RestClient::NotFound, 'File not found') { |error|
+          expect(error.http_code).to eq(404)
+          expect(error).to be_a(RuntimeError)
+        }
+    end
+
+    it 'keeps an HTML error page out of the message but on the RestClient error' do
+      page = '<!DOCTYPE html><html><head><title>Access denied | zerobounce.net</title></head>' \
+             '<body>blocked</body></html>'
+      stub_request(:get, %r{api\.zerobounce\.net/v2/getcredits})
+        .to_return(status: 403, headers: { 'Content-Type' => 'text/html' }, body: page)
+      expect { Zerobounce.credits }
+        .to raise_error(RestClient::Forbidden) { |error|
+          expect(error.http_code).to eq(403)
+          expect(error.message).to include('Access denied')
+          expect(error.message).not_to include('<body>')
+        }
+    end
+
+    it 'reports a redirect as a redirect and does not follow it' do
+      stub_request(:get, %r{api\.zerobounce\.net/v2/validate})
+        .to_return(status: 302, headers: { 'Location' => 'https://elsewhere.example/collect' }, body: '')
+      stub_request(:any, /elsewhere\.example/)
+      expect { Zerobounce.validate('person@example.com') }
+        .to raise_error(RestClient::Found, 'ZeroBounce answered with a redirect (HTTP 302), which is not followed')
+      expect(a_request(:any, /elsewhere\.example/)).not_to have_been_made
+    end
+  end
+
+  describe '{"success": false} on an HTTP 200' do
+    it 'raises on the main API, as it does on the bulk API' do
+      body = '{"success":false,"message":"The request could not be processed."}'
+      stub_request(:get, %r{api\.zerobounce\.net/v2/(validate|activity|guessformat)})
+        .to_return(status: 200, headers: json, body: body)
+      stub_request(:post, %r{api\.zerobounce\.net/v2/scoring})
+        .to_return(status: 200, headers: json, body: body)
+      calls = {
+        'validate' => -> { Zerobounce.validate('person@example.com') },
+        'activity' => -> { Zerobounce.activity('person@example.com') },
+        'find_domain' => -> { Zerobounce.find_domain(domain: 'example.com') },
+        'score_email POST' => -> { Zerobounce.score_email('person@example.com', use_post: true) }
+      }
+      calls.each do |name, call|
+        expect { call.call }.to raise_error(RuntimeError, 'The request could not be processed.'), name
+      end
+    end
+
+    it 'still returns a result whose success is true' do
+      stub_request(:get, %r{api\.zerobounce\.net/v2/activity})
+        .to_return(status: 200, headers: json, body: '{"success":true,"found":true}')
+      expect(Zerobounce.activity('person@example.com')).to eq('success' => true, 'found' => true)
     end
   end
 end

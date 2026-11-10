@@ -22,7 +22,7 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
 
   spec.metadata['yard.run'] = 'yri' # use "yard" to build full HTML docs.
 
-  spec.required_ruby_version = '>= 2.5'
+  spec.required_ruby_version = '>= 3.0'
 
   spec.add_dependency 'rest-client', '~>2.1'
 

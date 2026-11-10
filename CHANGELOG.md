@@ -1,31 +1,3 @@
-# Unreleased
-
-* `validate` accepts `domain_info`, `greylist_processing` and `callback_url`. An option left out is not sent; booleans go on the wire as the strings `true`/`false`. `callback_url` is where the greylist retry posts its result, so it is rejected without `greylist_processing`, and when blank, before any request is sent.
-* Add the rest of the documented bulk surface: `email_finder_s3_file`, `domain_search_s3_file`, and the SFTP/FTP jobs `validate_sftp_file`, `score_sftp_file`, `email_finder_sftp_file`, `domain_search_sftp_file` and `export_sftp_file`. These are on the bulkapi host **without** `/v2`. `validate_sftp_file`'s file name is optional - passing `nil` uses the input bucket from your ZeroBounce settings - and `export_sftp_file` takes `export_path`, not the `export_bucket` `export_s3_file` sends.
-* Add the Inbox Placement Tester: the API key goes on the query string, bodies are camelCase JSON, and unset fields are left out.
-* `Configuration` gains `bulk_root_url`, `list_evaluator_root_url` and `inbox_placement_root_url`. `list_evaluator_root_url` and `inbox_placement_root_url` are separate base URLs rather than paths built from `bulk_api_root_url`, so overriding that alone leaves them pointing at the live API. `bulk_root_url` (`ZEROBOUNCE_BULK_ROOT_URL`) now actually reaches the request layer: set, it is the root for the S3 and SFTP/FTP jobs; unset, that root is still derived from `bulk_api_root_url` with the `/v2` stripped. It was previously written and never read, so the environment variable looked supported and did nothing.
-* `get_list_evaluator_result` uses the list evaluator's own base URL, encodes the file id as a single path segment, and rejects a blank id before a request is sent.
-* An error body carrying a `detail` key (the Inbox Placement Tester is a Django REST framework app) is now raised with that text.
-* Add `Zerobounce::Warmup`, a client for the Warmup API. It is a separate product with its own host (`https://warmup-api.zerobounce.net`), its own team-scoped key sent in an `API-Key` header, and all 26 documented endpoints, including the seed-list and statistics CSV downloads.
-* Add `Zerobounce::ApiResponseError`, which carries the HTTP status through `#status_code`, so callers can tell a Cloudflare 403 from an API 400/404 and a Warmup 429. The Warmup client raises it.
-* Add an opt-in live API suite (`ruby -Ilib live/live_api.rb`). It lives outside `spec/`, so `rspec` and CI never load it, and it only spends credits or changes the account behind `ZEROBOUNCE_LIVE_SPEND=1` and `ZEROBOUNCE_LIVE_CHANGES=1`.
-* Verified against the live API; where the API and the docs disagree, the API wins:
-  * `validate_batch` sends `timeout` as a JSON **string**. Sent as a number the API rejects the whole batch with an account-level error.
-  * The Inbox Placement Tester authenticates with an `Authorization: Bearer` header, not an `api_key` parameter, so the key no longer reaches a query string that gets logged. Its listing is `GET /tests`; `/test` answers `Method "GET" not allowed`.
-  * `send_evaluated_file` takes the list evaluator's `file_id` as a form field, not a file upload, so its argument is now a file id.
-  * The S3 and SFTP jobs require `file_name` and `return_url`, `validate_sftp_file` included, although the docs list `file_name` as optional for that one.
-* Fixed: `list_s3_files` asked for `bulkapi/v2/listS3files`. Like every other S3 and SFTP/FTP call it lives on the bulkapi **root**, so the request 404ed.
-* Fixed: a response typed `application/json; charset=utf-8` skipped JSON parsing, because the content type was compared with `==` against the bare media type. The raw body came back as a `String`, so an `{"error": ...}` payload read as a success instead of raising. The media type is now matched on its own, ignoring the parameters after the semicolon. Affects the bulk file status, get and delete calls, the AI scoring, email finder and domain search bulk jobs, and `list_s3_files`.
-* Fixed: `validate_s3_file` and `score_s3_file` took `return_url` through `**options` and never required it, so the live API rejected the job. They now go through the same helper as the other six S3/SFTP jobs, which requires `file_name` and `return_url` and sends `has_header_row` and `remove_duplicates` in the documented shape. `has_header_row` is now a named keyword and defaults to `false`.
-* Fixed: `export_s3_file` demanded `export_bucket`. It is optional - omitted, the export goes to the bucket in your ZeroBounce settings - the way `export_sftp_file`'s `export_path` already was.
-* Fixed: `list_inbox_placement_tests` sent `pageSize`, which the API accepts and then ignores; the parameter it honours is `page_size`. It also accepts `created_after` / `created_before` (sent as `createdAfter` / `createdBefore`), and rejects a page size outside 1-100 before a request is sent.
-* Fixed: `send_email_finder_file` now requires `first_name_column` or `full_name_column`. With neither, the finder has no name to build a local part from.
-* Fixed: `create_inbox_placement_test` checks the documented bounds before spending inbox-test credits: `name` at most 64 characters, `test_type` one of 1, 2 or 3, and `sender_email` required when `test_type` is 1.
-* Fixed: `find_email`'s `first_name` is optional. `/guessformat` only requires a domain or a company name; without a name it answers with the domain's format. It is still the first positional argument, so existing calls are unchanged, and `find_domain` and the deprecated `guessformat` keep their own signatures.
-* Fixed: `add_filter`, `delete_filter` and `list_filters` raised on success. They answer with a bare `{"Message": "..."}` body, which everywhere else means the request was rejected.
-* Fixed: `{"success": false}` on an HTTP 200 raises instead of being returned as a result. The API answers an unknown bulk file id that way.
-* Security: a Warmup API key with surrounding whitespace or control characters is rejected, because the transport would otherwise quote it unredacted in its own error; a Warmup base URL must be `https://`; and the Warmup SMTP test masks the username and password out of every error it raises.
-
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -35,45 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-11
+
+### Breaking
+
+These change behaviour that 2.1.8 callers can rely on. Check each before upgrading.
+
+- **Breaking:** Ruby 3.0 or later is required (`required_ruby_version` was `>= 2.5`, which CI never tested). On Ruby 2.5 to 2.7 the `Zerobounce::Warmup` methods that send query parameters (such as `get_sending_account` and `statistics`) and `list_inbox_placement_tests` with filters raise `ArgumentError` (unknown keyword), and on 2.5 and 2.6 a successful `validate_file_get` or `scoring_file_get` download raises `NoMethodError` (`StringIO#set_encoding_by_bom`); the offline spec suite passes on 3.0. Bundler on an older Ruby keeps resolving 2.1.8.
+- **Breaking:** the gem no longer loads a `.env` file, and `dotenv` is no longer a runtime dependency. Up to 2.1.8, building the configuration (on the first `Zerobounce.configure`, `Zerobounce.config` or API call) called `Dotenv.load`, which read `.env` from the process's current directory and copied every variable in it that was not already set into `ENV` - not only the `ZEROBOUNCE_*` ones. The `ZEROBOUNCE_*` environment variables are still read. To keep using a `.env` file, add `dotenv` to your own Gemfile and `require 'dotenv/load'` before the gem is first configured.
+- **Breaking:** `validate_batch` returns the whole response Hash (`email_batch` and `errors`) instead of the `email_batch` Array, and an error for one address no longer raises: it is listed in `errors`. An account-level error (HTTP 200 with an error for the address `all`, such as an invalid API key or no credits) still raises. Migrate `Zerobounce.validate_batch(emails)` to `Zerobounce.validate_batch(emails)['email_batch']`, and check `['errors']`.
+- **Breaking:** `{"success": false}` on an HTTP 200 raises a `RuntimeError` with the API's message instead of being returned as the result. Up to 2.1.8 `validate_file_check`, `validate_file_delete`, `scoring_file_check` and `scoring_file_delete` returned it (the API answers an unknown file id, and for a while a just-uploaded one, that way); code that tested `result['success']` must rescue instead. The main-API calls apply the same rule.
+- **Breaking:** `api_root_url` and `bulk_api_root_url` (and `ZEROBOUNCE_API_URL` / `ZEROBOUNCE_BULK_API_URL`) must be `https://` URLs; anything else raises `ArgumentError` before a request is sent. Up to 2.1.8 an `http://` URL (for example a local mock server) was used as given. The new base URLs below have the same rule. Redirects are no longer followed either: a 3xx raises its `RestClient` exception (such as `RestClient::Found`) with the message `ZeroBounce answered with a redirect (HTTP 302), which is not followed`, where 2.1.8 followed a redirect on a `GET` request (and a 303 on any request).
+
 ### Added
 
-- `validate` options `timeout`, `activity_data`, `verify_plus`, and `use_post` (form-encoded `POST /validate`).
-- `validate_batch` options `timeout`, `activity_data`, and `verify_plus`.
+- `validate` options `timeout` (3-60 seconds), `activity_data`, `verify_plus`, `domain_info`, `greylist_processing`, `callback_url` and `use_post` (form-encoded `POST /validate`). An option left out is not sent; booleans go on the wire as the strings `true`/`false`. `callback_url` is where the greylist retry posts its result, so it is rejected without `greylist_processing`, and when blank, before any request is sent.
+- `validate_batch` options `timeout` (10-120 seconds, sent as a JSON string, the only form the API accepts), `activity_data`, and `verify_plus`.
 - `score_email` for `GET` and `POST /scoring`.
-- Bulk email finder, bulk domain search, list evaluator, filters, and S3 (`validate_s3_file`, `score_s3_file`, `export_s3_file`, `list_s3_files`).
-- `Zerobounce::Client` so each API key stays on its own thread. Module methods still share `Zerobounce.config`.
-- `Configuration#bulk_root_url` / `ZEROBOUNCE_BULK_ROOT_URL` is read by the request layer and overrides the root used by the S3 and SFTP/FTP jobs.
+- Bulk email finder and bulk domain search (`send_email_finder_file`, `send_domain_search_file` and their status, get and delete calls). `has_header_row` is sent when it is false, and a name column of `0` is sent when passed; `domain_column` must be 1 or more, and the email finder needs `first_name_column` or `full_name_column`.
+- The list evaluator: `send_list_evaluator_file`, `get_list_evaluator_result` (on the list evaluator's own base URL, with the file id encoded as one path segment and a blank id rejected before sending) and `send_evaluated_file`, which takes the evaluator's file id as a form field.
+- Filters: `add_filter`, `list_filters` and `delete_filter`. Their success is a bare `{"Message": "..."}` body and is returned; an invalid or drained key, which they answer with an HTTP 200 and `{"Error": "..."}`, raises.
+- S3 and SFTP/FTP jobs on the bulkapi host **without** `/v2`: `list_s3_files`, `validate_s3_file`, `score_s3_file`, `email_finder_s3_file`, `domain_search_s3_file`, `export_s3_file`, `validate_sftp_file`, `score_sftp_file`, `email_finder_sftp_file`, `domain_search_sftp_file` and `export_sftp_file`. Every job requires `file_name` and `return_url` and raises `ArgumentError` without them (the live API rejects such a job, although its docs list `file_name` as optional for `validate_sftp_file`). `validate_s3_file` and `score_s3_file` take `file_name:` and `has_header_row:` (default `false`) as keywords; the other jobs take them as the first two positional arguments. `export_s3_file`'s `export_bucket` is optional (left out, the export goes to the bucket in your ZeroBounce settings), and so is `export_sftp_file`'s `export_path`.
+- The Inbox Placement Tester. The API key goes in an `Authorization: Bearer` header, not a query parameter; bodies are camelCase JSON and unset fields are left out; the listing is `GET /tests`, with `page_size` (1-100), `created_after` and `created_before`; `create_inbox_placement_test` checks `name` (at most 64 characters), `test_type` (1, 2 or 3) and `sender_email` (required for type 1) before spending inbox-test credits; and its errors, reported under `detail`, are raised with that text.
+- `Zerobounce::Client`, which holds one API key for `validate`, `credits` and `validate_batch` without touching `Zerobounce.config`, so threads can use different keys. For any other call, wrap it in `Zerobounce.with_api_key(key) { ... }`, which sets a key for the current thread only.
+- `Configuration` gains `bulk_root_url` (`ZEROBOUNCE_BULK_ROOT_URL`), `list_evaluator_root_url` (`ZEROBOUNCE_LIST_EVALUATOR_URL`) and `inbox_placement_root_url` (`ZEROBOUNCE_INBOX_PLACEMENT_URL`). `bulk_root_url` is the root for the S3 and SFTP/FTP jobs; left unset it is derived from `bulk_api_root_url` with the `/v2` stripped. The other two are separate base URLs, so overriding `bulk_api_root_url` alone leaves them pointing at the live API.
+- `Zerobounce::ValidateSubStatus::AI_AGENT_MAILBOX` (`ai_agent_mailbox`).
+- `Zerobounce::Warmup`, a client for the Warmup API. It is a separate product with its own host (`https://warmup-api.zerobounce.net`), its own team-scoped key sent in an `API-Key` header, and all 26 documented endpoints, including the seed-list and statistics CSV downloads.
+- `Zerobounce::ApiResponseError`, which carries the HTTP status through `#status_code`. The Warmup client raises it.
+- An opt-in live API suite (`ruby -Ilib live/live_api.rb`). It lives outside `spec/`, so `rspec` and CI never load it. Its default tier makes only free calls and submits no job; it spends credits or submits jobs only with `ZEROBOUNCE_LIVE_SPEND=1`, and changes the account only with `ZEROBOUNCE_LIVE_CHANGES=1`.
 
 ### Changed
 
-- `validate_batch` returns the full response hash (`email_batch` and `errors`). A per-address error stays on that hash.
-- API requests time out after 120 seconds and do not follow redirects.
-- Multipart booleans are sent as `true` or `false`.
+- An HTTP error status still raises the `RestClient` exception for that status (`RestClient::NotFound` and so on, with `#http_code` and `#response`), but its message is now the API's short error text, for example `File not found`, instead of RestClient's status line (`404 Not Found`). An HTML error page becomes a one-line message naming its title.
+- Error messages taken from the API have a repeated `Error:` / `[Error]:` prefix removed.
+- `find_email`'s `first_name` is optional: without a name the API answers with the domain's format. It is still the first positional argument, so existing calls are unchanged.
+- API requests time out after 120 seconds (connect and read; up to 2.1.8 Net::HTTP's 60-second defaults applied).
+- Validation-client requests send `User-Agent: ZerobounceRubyGem/2.2.0`, the value of `Configuration#headers[:user_agent]`. Up to 2.1.8 that value was set but never sent, and requests carried RestClient's default user agent.
+- The packaged gem contains only `lib/`, `README.md`, the licence files and `CHANGELOG.md`. Up to 2.1.8 it packaged every git-tracked file outside `spec/`, including the CI workflows, `Dockerfile`, the sample CSVs and `documentation.md`.
 
 ### Fixed
 
-- `Zerobounce::ResponseError` used `loc[1..]` to build a validation-error field name. An endless range needs Ruby 2.6, but the gemspec supports 2.5, where the file is a syntax error and the gem will not load at all. Changed to `loc[1..-1]`.
-
-- An HTML "Access denied" page is a short `RuntimeError`. An HTML page with status 200 is an error as well, including `validate_file_get`, instead of file text or a JSON parse.
-- Empty and non-JSON bodies are a short error. A repeated `Error:` / `[Error]:` prefix is removed.
-- `validate_batch` raises for an account-level failure (HTTP 200, error for address `all`, such as an invalid API key or no credits).
-- Bulk email finder and domain search send `has_header_row` when it is false. A column index of `0` is sent when the caller passes it.
-- `list_s3_files` is sent to the bulkapi root instead of `/v2`, where it 404ed.
-- A `Content-Type` of `application/json; charset=utf-8` is parsed as JSON, so an error payload raises instead of being returned as a raw `String`.
-- `validate_s3_file` and `score_s3_file` require `return_url`, which the live API rejects the job without.
-- `export_s3_file`'s `export_bucket` is optional and falls back to the account's settings.
-- `list_inbox_placement_tests` sends `page_size` (the API ignores `pageSize`), accepts `created_after` / `created_before`, and bounds the page size to 1-100.
-- `send_email_finder_file` requires `first_name_column` or `full_name_column`.
-- `create_inbox_placement_test` enforces the documented `name`, `test_type` and `sender_email` rules.
-- `find_email`'s `first_name` is optional.
-- An empty API key is rejected before a request is sent.
-- `validate` timeout must be 3–60 seconds. `validate_batch` timeout must be 10–120 seconds.
+- `validate_file_check`, `validate_file_delete`, `scoring_file_check` and `scoring_file_delete` returned the raw body as a `String` when the API typed its JSON `application/json; charset=utf-8`, because the content type was compared with `==`; an `{"error": ...}` payload then read as a success. The media type is now matched on its own, ignoring the parameters after the semicolon, on every call.
+- An HTML page served with HTTP 200 (such as a Cloudflare "Access denied" page) raises a short error. Up to 2.1.8 it came back as the result: a raw `RestClient::Response` from the main-API `GET` calls, and the page text from the bulk status and delete calls and from `validate_file_get` and `scoring_file_get`.
+- An empty or non-JSON body raises a short error, instead of a `JSON::ParserError` or the raw response.
+- An empty or blank API key is rejected before a request is sent; up to 2.1.8 only a missing (`nil`) key was.
 
 ### Security
 
-- Redirects are disabled, so a 3xx response cannot send the API key to another host.
-- Error messages no longer include the raw HTML access-denied page.
-- RestClient error text is redacted of the API key.
+- Redirects are not followed, so a 3xx response cannot send the API key to another host.
+- Error messages are redacted of the API key the request used - the global one, a `Zerobounce::Client`'s, or one set with `with_api_key` - in plain and URL-encoded form. A low-level error (an unparseable URL quotes the whole query string, key included) is re-raised with the redacted message and without the original attached as `#cause`, which `#full_message` would otherwise print. The `RestClient` exception for an HTTP error status still holds the request, URL included, in `#response`, as it did up to 2.1.8; do not log that object.
+- `Zerobounce::Configuration#inspect` shows `[FILTERED]` in place of the API key.
+- A Warmup API key with surrounding whitespace or control characters is rejected, because the transport would otherwise quote it unredacted in its own error; a Warmup base URL must be `https://`; and the Warmup SMTP test masks the username and password out of every error it raises.
 
 ## [2.1.8] - 2026-08-14
 
@@ -163,7 +147,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial client for ZeroBounce API v2.
 
-[Unreleased]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.8...HEAD
+[Unreleased]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.8...v2.2.0
 [2.1.8]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.6...v2.1.8
 [2.1.6]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.5...v2.1.6
 [2.1.5]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.1...v2.1.5

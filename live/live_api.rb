@@ -10,9 +10,9 @@
 #   ruby -Ilib live/live_api.rb
 #
 # By default only free calls run: sandbox addresses (no credits), reads, and
-# requests expected to fail (unknown file IDs, S3/SFTP without an integration)
-# that still prove the API accepts the payload. The free tier checks that the
-# credit balance did not change. Two flags opt in to more:
+# requests expected to fail (unknown file IDs) that still prove the API
+# accepts the payload; nothing in it submits a job. The free tier checks that
+# the credit balance did not change. Two flags opt in to more:
 #
 #   ZEROBOUNCE_LIVE_SPEND=1     spends credits: scoring, activity, email
 #                               finder, and a bulk round trip whose job is
@@ -163,17 +163,24 @@ def validation_free
     nil
   end
 
-  check('LIVE: a complete S3 job payload is accepted by the API') do
-    # Without an S3 integration this fails on the integration, not the payload.
-    begin
-      Zerobounce.email_finder_s3_file('f.csv', true, return_url: CALLBACK)
-    rescue StandardError => e
-      message = redact(e.message)
-      if message.match?(/return URL is not permitted|This field is required/i)
-        return "payload rejected: #{message}"
+  # Not free: on an account with an S3 integration this submits a real email
+  # finder job, so it only runs with ZEROBOUNCE_LIVE_SPEND=1.
+  if SPEND
+    check('LIVE: a complete S3 job payload is accepted by the API') do
+      # Without an S3 integration this fails on the integration, not the payload.
+      begin
+        Zerobounce.email_finder_s3_file('f.csv', true, return_url: CALLBACK)
+      rescue StandardError => e
+        message = redact(e.message)
+        if message.match?(/return URL is not permitted|This field is required/i)
+          return "payload rejected: #{message}"
+        end
       end
+      nil
     end
-    nil
+  else
+    skip('LIVE: a complete S3 job payload is accepted by the API',
+         'can submit a real S3 job; needs ZEROBOUNCE_LIVE_SPEND=1')
   end
 
   check('filters list') do

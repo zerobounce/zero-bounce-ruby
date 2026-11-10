@@ -53,7 +53,7 @@ CI runs `bundle exec rspec` only. `rake default` also runs RuboCop, which report
 - **A body that is nothing but `Message` means different things per endpoint.** On the validate endpoints it is a rejection; on `/filters/add`, `/filters/delete` and `/filters/list` it is the success. `Request::FILTER_PATHS` is the exception list.
 - **`Gemfile.lock` pins the gem's own version.** A version bump must update both `lib/zerobounce/version.rb` and `Gemfile.lock`, or `bundle install --deployment` in CI fails.
 - **Offline tests only, in `spec/`.** Never call the live API from a spec. The live suite is the separate, opt-in `live/live_api.rb`.
-- **Errors carry the HTTP status.** The Warmup client raises `Zerobounce::ApiResponseError`, whose `#status_code` lets callers tell a Cloudflare 403 from an API 400/404 and a Warmup 429. The validation client still raises a `RuntimeError` with the same short message.
+- **Errors carry the HTTP status.** The Warmup client raises `Zerobounce::ApiResponseError`, whose `#status_code` lets callers tell a Cloudflare 403 from an API 400/404 and a Warmup 429. The validation client raises the `RestClient` exception for an HTTP error status (`#http_code`, compatible with 2.1.8) and a `RuntimeError` for an error reported with an HTTP 200, both with the same short, key-redacted message.
 
 ## Releasing
 
