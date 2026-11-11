@@ -3,6 +3,8 @@
 require 'json'
 require 'zerobounce/api_urls'
 require 'zerobounce/response_error'
+require 'zerobounce/api_key'
+require 'zerobounce/error'
 
 # https://github.com/rest-client/rest-client
 require 'rest-client'
@@ -70,6 +72,17 @@ module Zerobounce
       key.nil? ? Zerobounce.config.apikey : key
     end
 
+    # The key for this request, or an error before anything is sent. A key with
+    # surrounding whitespace or control characters (one read from a file with
+    # its newline) would go out as it is and fail, and the HTTP library could
+    # quote it unredacted.
+    def self.__checked_api_key__
+      api_key = current_api_key
+      raise ('API key must be assigned') if api_key.nil? || api_key.to_s.strip.empty?
+
+      ApiKey.check!(api_key)
+    end
+
     # The message for an HTTP error status.
     def self.__http_error_message__(error)
       code = error.http_code.to_i
@@ -109,8 +122,7 @@ module Zerobounce
       # puts path
       # puts Zerobounce.config.apikey
 
-      api_key = current_api_key
-      raise ('API key must be assigned') if api_key.nil? || api_key.to_s.strip.empty?
+      api_key = __checked_api_key__
 
       params[:api_key] = api_key
       url = "#{Zerobounce::BaseRequest.__root_without_trailing_slashes__(root)}/#{path}"
@@ -122,8 +134,7 @@ module Zerobounce
 
     def self._post(root, path, params, content_type='application/json', filepath=nil)
 
-      api_key = current_api_key
-      raise ('API key must be assigned') if api_key.nil? || api_key.to_s.strip.empty?
+      api_key = __checked_api_key__
 
       params[:api_key] = api_key
       url = "#{Zerobounce::BaseRequest.__root_without_trailing_slashes__(root)}/#{path}"
@@ -165,8 +176,7 @@ module Zerobounce
     # parameter, which the Inbox Placement Tester requires and which keeps the
     # key out of request logs.
     def self.__execute_with_method__(method, url, params, form: nil, json: nil, bearer: false)
-      api_key = current_api_key
-      raise ('API key must be assigned') if api_key.nil? || api_key.to_s.strip.empty?
+      api_key = __checked_api_key__
 
       params = (params || {}).dup
       extra = {}
@@ -251,30 +261,72 @@ module Zerobounce
     def self.__raise_if_success_false__(response, parsed)
       return unless parsed.is_a?(Hash) && parsed.key?('success') && __success_means_failure__(parsed['success'])
 
-      raise ResponseError.message_from_parts(response.code, response.headers[:content_type].to_s, response.body.to_s)
+      raise ApiResponseError.new(
+        ResponseError.message_from_parts(response.code, response.headers[:content_type].to_s, response.body.to_s),
+        response.code
+      )
+    end
+
+    # A value that reads as an error: a non-blank String.
+    def self.__error_text__(value)
+      value.is_a?(String) && !value.strip.empty?
+    end
+
+    # An "error" value that means failure: anything but nil or a blank String.
+    def self.__error_value__(value)
+      !value.nil? && !(value.is_a?(String) && value.strip.empty?)
+    end
+
+    # The keys a message-only body is made of.
+    MESSAGE_KEYS = %w[error message error_message Message Error detail].freeze
+
+    # A body made only of message keys (no "success"), for the calls whose
+    # result is never a bare message.
+    def self.__raise_if_message_only__(response, parsed)
+      return if parsed.empty? || parsed.key?('success')
+      return unless parsed.keys.all? { |key| MESSAGE_KEYS.include?(key) }
+
+      text = MESSAGE_KEYS.map { |key| parsed[key] }.find { |value| __error_text__(value) }
+      raise ApiResponseError.new(ResponseError.strip_prefix(text), response.code) if text
+    end
+
+    # A dead or invalid key on an HTTP 200: no "success" field and a non-empty
+    # "Error" (LIVE: the filters spell it so) or "error_message".
+    def self.__raise_if_bare_error__(response, parsed)
+      return if parsed.key?('success')
+
+      %w[Error error_message].each do |key|
+        next unless __error_text__(parsed[key])
+
+        raise ApiResponseError.new(ResponseError.strip_prefix(parsed[key]), response.code)
+      end
     end
 
     def self.__parse_json_response__(response)
       body = response.body.to_s
       content_type = (response.headers[:content_type] || '').to_s
+      code = response.code
       if ResponseError.html?(body, content_type) || body.strip.empty?
-        raise ResponseError.message_from_parts(response.code, content_type, body)
+        raise ApiResponseError.new(ResponseError.message_from_parts(code, content_type, body), code)
       end
       begin
         parsed = JSON.parse(body)
       rescue JSON::ParserError
-        raise 'ZeroBounce returned a response that is not valid JSON.'
+        raise ApiResponseError.new('ZeroBounce returned a response that is not valid JSON.', code)
       end
       return parsed unless parsed.is_a?(Hash)
 
       __raise_if_success_false__(response, parsed)
 
-      raise ResponseError.strip_prefix(parsed['error']) if parsed.key?('error') && !parsed['error'].nil?
+      raise ApiResponseError.new(ResponseError.strip_prefix(parsed['error']), code) if __error_value__(parsed['error'])
       # The Inbox Placement Tester is a Django REST framework app and reports
       # its errors under "detail" rather than "error"/"message".
-      raise ResponseError.strip_prefix(parsed['detail']) if parsed.key?('detail') && !parsed['detail'].nil?
+      if __error_value__(parsed['detail'])
+        raise ApiResponseError.new(ResponseError.strip_prefix(parsed['detail']), code)
+      end
+      __raise_if_bare_error__(response, parsed)
       if parsed.key?('errors') && parsed['errors'].is_a?(Array) && !parsed['errors'].empty?
-        raise ResponseError.strip_prefix(parsed['errors'][0]['error'])
+        raise ApiResponseError.new(ResponseError.strip_prefix(parsed['errors'][0]['error']), code)
       end
       parsed
     end

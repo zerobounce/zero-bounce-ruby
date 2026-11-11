@@ -59,10 +59,12 @@ module Zerobounce
   # Carries the HTTP status so callers can tell a 403 (Cloudflare) from a
   # 400/404 (API) or a 429 (the Warmup rate limit). The Warmup client raises
   # it. The validation client raises the RestClient exception for an HTTP
-  # error status (status in #http_code), as it did up to 2.1.8, and a
-  # RuntimeError for an error reported with an HTTP 200; both carry the same
-  # short message.
-  class ApiResponseError < StandardError
+  # error status (status in #http_code), as it did up to 2.1.8, and this
+  # class, with the 2xx status (usually 200), for an error reported on a
+  # successful HTTP response; both carry the same short message. It is a
+  # RuntimeError, which those errors were before, so `rescue RuntimeError`
+  # still catches them.
+  class ApiResponseError < RuntimeError
     # @return [Integer] the HTTP status of the failed response, or 0
     attr_reader :status_code
 

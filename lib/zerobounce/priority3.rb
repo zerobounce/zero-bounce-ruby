@@ -27,7 +27,7 @@ module Zerobounce
       end
 
       params = { domain_column: domain_column }
-      params[:has_header_row] = has_header_row ? 'true' : 'false' unless has_header_row.nil?
+      params[:has_header_row] = __wire_bool__(has_header_row, 'has_header_row') unless has_header_row.nil?
       params[:first_name_column] = first_name_column unless first_name_column.nil?
       params[:last_name_column] = last_name_column unless last_name_column.nil?
       params[:middle_name_column] = middle_name_column unless middle_name_column.nil?
@@ -51,7 +51,7 @@ module Zerobounce
       raise ArgumentError, 'domain_column is required' if domain_column.nil? || domain_column.to_i < 1
 
       params = { domain_column: domain_column }
-      params[:has_header_row] = has_header_row ? 'true' : 'false' unless has_header_row.nil?
+      params[:has_header_row] = __wire_bool__(has_header_row, 'has_header_row') unless has_header_row.nil?
       zb_request.bulk_root_post("#{DOMAIN_SEARCH_BULK_BASE}/sendfile", params, 'multipart/form-data', filepath)
     end
 
@@ -287,6 +287,26 @@ module Zerobounce
       value.nil? || value.to_s.strip.empty?
     end
 
+    # A boolean option, parsed strictly: true/false, 'true'/'false' in any
+    # case, or 1/0. Anything else is an ArgumentError, so 'false' can no
+    # longer be sent as true and a typo is not silently taken as a flag.
+    def __strict_bool__(value, name)
+      return value if [true, false].include?(value)
+      return value == 1 if value.is_a?(Integer) && [0, 1].include?(value)
+
+      if value.is_a?(String)
+        text = value.strip.downcase
+        return true if %w[true 1].include?(text)
+        return false if %w[false 0].include?(text)
+      end
+      raise ArgumentError, "#{name} must be true or false"
+    end
+
+    # A strict boolean option as the string the API expects on the wire.
+    def __wire_bool__(value, name)
+      __strict_bool__(value, name) ? 'true' : 'false'
+    end
+
     def __inbox_placement_test_type__(value)
       test_type = value.is_a?(Integer) ? value : value.to_s.strip.to_i
       unless INBOX_PLACEMENT_TEST_TYPES.include?(test_type)
@@ -311,12 +331,12 @@ module Zerobounce
       return_url = options[:return_url]
 
       params = {
-        has_header_row: has_header_row ? 'true' : 'false',
+        has_header_row: __wire_bool__(has_header_row, 'has_header_row'),
         file_name: file_name,
         return_url: return_url
       }
       if options.key?(:remove_duplicates)
-        params[:remove_duplicates] = options[:remove_duplicates] ? 'true' : 'false'
+        params[:remove_duplicates] = __wire_bool__(options[:remove_duplicates], 'remove_duplicates')
       end
 
       zb_request.bulk_root_form_post(path, params)

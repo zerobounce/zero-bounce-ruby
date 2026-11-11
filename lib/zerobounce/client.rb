@@ -1,10 +1,18 @@
 # frozen_string_literal: true
 
+require 'zerobounce/api_key'
+
 module Zerobounce
   # One API key. Package methods share Zerobounce.config; a Client does not.
   class Client
     def initialize(apikey)
+      ApiKey.check!(apikey) unless apikey.nil? || apikey.to_s.strip.empty?
       @apikey = apikey
+    end
+
+    # Keeps the API key out of logs and consoles.
+    def inspect
+      "#<#{self.class.name} apikey=#{@apikey.nil? ? 'nil' : '[FILTERED]'}>"
     end
 
     def validate(email, ip_address = nil, **options)

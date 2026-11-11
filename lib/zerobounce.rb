@@ -102,6 +102,10 @@ module Zerobounce
           raise ArgumentError, 'Invalid parameter: timeout (must be between 3 and 60 seconds)'
         end
       end
+      activity_data = __strict_bool__(activity_data, 'activity_data') unless activity_data.nil?
+      verify_plus = __strict_bool__(verify_plus, 'verify_plus') unless verify_plus.nil?
+      domain_info = __strict_bool__(domain_info, 'domain_info') unless domain_info.nil?
+      greylist_processing = __strict_bool__(greylist_processing, 'greylist_processing') unless greylist_processing.nil?
       unless callback_url.nil?
         raise ArgumentError, 'Empty parameter: callback_url' if callback_url.to_s.strip.empty?
 
@@ -312,8 +316,8 @@ module Zerobounce
       # the API rejects the whole batch with the account-level "Invalid API Key
       # or your account ran out of credits".
       params[:timeout] = timeout.to_s unless timeout.nil?
-      params[:activity_data] = activity_data unless activity_data.nil?
-      params[:verify_plus] = verify_plus unless verify_plus.nil?
+      params[:activity_data] = __strict_bool__(activity_data, 'activity_data') unless activity_data.nil?
+      params[:verify_plus] = __strict_bool__(verify_plus, 'verify_plus') unless verify_plus.nil?
       results = @@request.post('validatebatch', params)
       results
     end
@@ -345,16 +349,14 @@ module Zerobounce
         return_url: nil,
         allow_phase_2: nil
       )
-      params = {
-        email_address_column: email_address_column,
-        has_header_row: has_header_row,
-      }
+      params = { email_address_column: email_address_column }
+      params[:has_header_row] = __wire_bool__(has_header_row, 'has_header_row') unless has_header_row.nil?
       params[:first_name_column] = first_name_column unless first_name_column.nil?
       params[:last_name_column] = last_name_column unless last_name_column.nil?
       params[:gender_column] = gender_column unless gender_column.nil?
       params[:return_url] = return_url unless return_url.nil? || return_url.to_s.empty?
       unless allow_phase_2.nil?
-        params[:allow_phase_2] = allow_phase_2 ? 'true' : 'false'
+        params[:allow_phase_2] = __wire_bool__(allow_phase_2, 'allow_phase_2')
       end
       @@request.bulk_post('sendfile', params, 'multipart/form-data', filepath)
     end
@@ -414,7 +416,7 @@ module Zerobounce
       if options
         params[:download_type] = options.download_type if options.download_type
         unless options.activity_data.nil?
-          params[:activity_data] = options.activity_data ? 'true' : 'false'
+          params[:activity_data] = __wire_bool__(options.activity_data, 'activity_data')
         end
       end
       @@request.bulk_getfile('getfile', params)
@@ -457,10 +459,8 @@ module Zerobounce
         has_header_row: true,
         return_url: nil
       )
-      params = {
-        email_address_column: email_address_column,
-        has_header_row: has_header_row,
-      }
+      params = { email_address_column: email_address_column }
+      params[:has_header_row] = __wire_bool__(has_header_row, 'has_header_row') unless has_header_row.nil?
       params[:return_url] = return_url if return_url
       @@request.bulk_post('scoring/sendfile', params, 'multipart/form-data', filepath)
     end

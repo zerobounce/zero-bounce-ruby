@@ -700,8 +700,9 @@ Zerobounce.find_domain(company_name: "Zero Bounce")
 ## Errors
 
 - An HTTP error status raises the `RestClient` exception for that status, as it did up to 2.1.8: `RestClient::NotFound`, `RestClient::Forbidden` and so on, all subclasses of `RestClient::ExceptionWithResponse` and of `RuntimeError`. `#http_code` gives the status. The message is the API's own short error text (up to 2.1.8 it was RestClient's, such as `404 Not Found`); an HTML error page is reduced to its title.
-- An error reported with an HTTP 200 - an `error` field, `{"success": false}`, or an account-level `validate_batch` failure - raises `RuntimeError` with the API's message.
-- Invalid arguments, and a base URL that is not `https://`, raise `ArgumentError` before any request is sent.
+- An error reported with an HTTP 200 - an `error` field, an `Error` or `error_message` field without `success`, `{"success": false}`, or an account-level `validate_batch` failure - raises `Zerobounce::ApiResponseError` (a `RuntimeError`) with the API's message; `#status_code` is the HTTP status, usually 200. `find_email`, `find_domain` and `guessformat` also raise for a body made only of message fields (such as `{"Message": "Invalid API key or your account ran out of credits"}`).
+- `validate`'s greylist answer, `{"Message": "Greylist validation still in progress..."}`, is a result: the Hash is returned with its `Message`.
+- Invalid arguments, a boolean option that is not `true`/`false`, `'true'`/`'false'` or `1`/`0`, an API key with surrounding whitespace or control characters, and a base URL that is not `https://` raise `ArgumentError` before any request is sent.
 - Redirects are not followed; a 3xx raises its `RestClient` exception (for example `RestClient::Found`).
 - The Warmup client raises `Zerobounce::ApiResponseError`, whose `#status_code` gives the HTTP status.
 
@@ -842,4 +843,4 @@ Registry: [zerobounce-sdk on RubyGems](https://rubygems.org/gems/zerobounce-sdk)
 
 ## License
 
-MIT. See [LICENSE.txt](LICENSE.txt).
+MIT. See [LICENSE](LICENSE).
