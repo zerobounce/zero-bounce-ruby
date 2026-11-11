@@ -14,7 +14,6 @@ require 'zerobounce/get_file_helper'
 require 'zerobounce/validate_status'
 require 'zerobounce/validate_sub_status'
 require 'zerobounce/request'
-require 'zerobounce/mock_request'
 require 'zerobounce/configuration'
 require 'zerobounce/api_urls'
 require 'zerobounce/priority3'
@@ -27,7 +26,7 @@ module Zerobounce
     include Priority3
     attr_writer :configuration
 
-    @@request = ENV['TEST']=='unit' ? MockRequest : Request
+    @@request = Request
 
     # Zerobounce configuration
     #

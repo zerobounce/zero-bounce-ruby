@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The gemspec has a fuller summary and description, and `source_code_uri`, `changelog_uri` and `homepage_uri` metadata.
 - Development only (nothing ships to gem users): `benchmark` is a development dependency, because it left Ruby 4.0's default gems and RuboCop needs it.
 
+### Removed
+
+- `Zerobounce::MockRequest` and the `TEST=unit` switch are gone. With `TEST=unit` set in the environment, the gem answered every call with canned responses instead of calling the API, which could silently fake results in an application's own test or CI setup. Nothing in the gem's specs used it.
+
 ## [2.2.0] - 2026-11-11
 
 ### Breaking
