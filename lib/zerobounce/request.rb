@@ -62,9 +62,10 @@ module Zerobounce
       interpret_json_response(response, path)
     end
 
-    def self.bulk_post(path, params, content_type='application/json', filepath=nil)
-      response = self._post(Zerobounce.configuration.bulk_api_root_url, path, params, \
-          content_type, filepath)
+    # +root+ defaults to bulk_api_root_url; the list evaluator passes its own.
+    def self.bulk_post(path, params, content_type='application/json', filepath=nil,
+                       root: Zerobounce.configuration.bulk_api_root_url)
+      response = self._post(root, path, params, content_type, filepath)
       if __json_content_type__(response.headers[:content_type])
         return __parse_json_response__(response)
       end

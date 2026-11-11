@@ -1,4 +1,6 @@
-# Keep .git so gemspec `git ls-files` works during `bundle install` in the image.
+# The gemspec lists its files with Dir[], so the image does not need .git.
+.git
+.gitignore
 
 # Docs and tooling not needed to run specs in the image
 *.md

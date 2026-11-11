@@ -71,7 +71,10 @@ module Zerobounce
       raise ArgumentError, 'email_address_column is required' if email_address_column.nil? || email_address_column.to_i < 1
 
       params = { email_address_column: email_address_column }
-      zb_request.bulk_post('listevaluator/', params, 'multipart/form-data', filepath)
+      # The same base URL as get_list_evaluator_result, not the bulk one. The
+      # endpoint is the base URL itself, with its trailing slash.
+      zb_request.bulk_post('', params, 'multipart/form-data', filepath,
+                           root: Zerobounce.configuration.list_evaluator_root_url)
     end
 
     def get_list_evaluator_result(file_id)

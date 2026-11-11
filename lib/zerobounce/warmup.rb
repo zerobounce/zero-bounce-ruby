@@ -431,7 +431,9 @@ module Zerobounce
       raise
     rescue StandardError => e
       # Rebuilt rather than re-raised: the original holds the URL and headers.
-      raise e.class, redact(e.message, secrets)
+      # cause: nil, or the unredacted original would ride along as #cause and
+      # be printed by #full_message.
+      raise e.class, redact(e.message, secrets), cause: nil
     end
 
     # The JSON payload of a success, or nil for the documented empty successes

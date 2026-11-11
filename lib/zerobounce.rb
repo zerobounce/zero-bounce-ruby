@@ -114,7 +114,10 @@ module Zerobounce
           raise ArgumentError, 'callback_url requires greylist_processing to be true'
         end
       end
-      params = {email: email, ip_address: ip_address}
+      params = {email: email}
+      # Sent only when given, as in the other SDKs: a nil value went out as a
+      # bare "ip_address" parameter.
+      params[:ip_address] = ip_address unless ip_address.nil? || ip_address.to_s.empty?
       params[:timeout] = timeout unless timeout.nil?
       unless activity_data.nil?
         params[:activity_data] = activity_data ? 'true' : 'false'
