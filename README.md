@@ -839,3 +839,7 @@ Run it by hand before every release: the offline suite proves the SDK sends what
 2. **Actions → Publish → Run workflow** with that tag.
 
 Registry: [zerobounce-sdk on RubyGems](https://rubygems.org/gems/zerobounce-sdk)
+
+## License
+
+MIT. See [LICENSE.txt](LICENSE.txt).

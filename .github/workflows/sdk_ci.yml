@@ -12,10 +12,22 @@ permissions:
 
 jobs:
   test:
-    name: Test
+    name: Test (Ruby ${{ matrix.ruby }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The declared floor: keep in step with required_ruby_version in
+          # zerobounce.gemspec. Gemfile.lock holds gems that need a newer Ruby,
+          # so this entry installs the same Gemfile from its own lockfile.
+          - ruby: "3.0"
+            gemfile: gemfiles/ruby_3.0.gemfile
+          - ruby: "3.4"
+            gemfile: Gemfile
     env:
       ZEROBOUNCE_API_KEY: "invalid_key_for_tests"
+      BUNDLE_GEMFILE: ${{ github.workspace }}/${{ matrix.gemfile }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -24,7 +36,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1
         with:
-          ruby-version: "3.2"
+          ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
       - name: RuboCop
