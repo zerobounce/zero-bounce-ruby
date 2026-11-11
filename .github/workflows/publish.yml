@@ -85,6 +85,11 @@ jobs:
           ruby-version: "3.2"
           bundler-cache: false
 
+      # bundler-cache is off here on purpose (no cache restore in the release
+      # environment), so the bundle has to be installed explicitly.
+      - name: Install dependencies
+        run: bundle install --jobs 4
+
       - name: Run specs
         run: bundle exec rspec
 
