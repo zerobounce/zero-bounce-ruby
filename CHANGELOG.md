@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- `Zerobounce::MockRequest` and the `TEST=unit` switch are gone. With `TEST=unit` set in the environment, the gem answered every call with canned responses instead of calling the API, which could silently fake results in an application's own test or CI setup. Nothing in the gem's specs used it.
+- `Zerobounce::MockRequest` and the `TEST=unit` switch are gone. With `TEST=unit` set in the environment, the gem routed every call through `MockRequest`, which still called the API but skipped the newer response checks in `Request` (HTML pages, empty bodies, `"success": false`, message-only bodies), so an application's own test or CI setup could get different results from production. Nothing in the gem's specs used it.
 
 ## [2.2.0] - 2026-11-11
 
