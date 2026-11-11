@@ -25,6 +25,10 @@ jobs:
             gemfile: gemfiles/ruby_3.0.gemfile
           - ruby: "3.4"
             gemfile: Gemfile
+          # Newest stable Ruby. benchmark left the default gems in 4.0 and is a
+          # gemspec development dependency for RuboCop's load chain.
+          - ruby: "4.0"
+            gemfile: Gemfile
     env:
       ZEROBOUNCE_API_KEY: "invalid_key_for_tests"
       BUNDLE_GEMFILE: ${{ github.workspace }}/${{ matrix.gemfile }}

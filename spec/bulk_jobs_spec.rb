@@ -206,12 +206,15 @@ describe 'Validate WHOIS and greylist options, SFTP bulk and the Inbox Placement
       expect(result).to eq('Message' => 'Filter successfully added')
     end
 
-    it 'still treats a bare Message body on validate as an error' do
+    it 'returns a bare Message body on validate as the result it is' do
+      # LIVE: a repeated greylist_processing request answers
+      # {"Message": "Greylist validation still in progress..."}: a result.
       stub_request(:get, %r{\Ahttps://api\.zerobounce\.net/v2/validate})
-        .to_return(status: 200, body: '{"Message":"Missing parameter: email."}',
+        .to_return(status: 200, body: '{"Message":"Greylist validation still in progress..."}',
                    headers: { 'Content-Type' => 'application/json' })
 
-      expect { Zerobounce.validate('a@example.com') }.to raise_error(/Missing parameter/)
+      result = Zerobounce.validate('a@example.com', greylist_processing: true)
+      expect(result).to eq('Message' => 'Greylist validation still in progress...')
     end
   end
 

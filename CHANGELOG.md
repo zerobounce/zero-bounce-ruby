@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking
+
+- **Breaking:** boolean options are parsed strictly. `true`/`false`, `'true'`/`'false'` (any case) and `1`/`0` are accepted; anything else raises `ArgumentError` naming the option before a request is sent. Up to 2.2.0 any truthy value was sent as `true`, so `activity_data: 'false'` sent `true`. Affects `validate` (`activity_data`, `verify_plus`, `domain_info`, `greylist_processing`), `validate_batch`, `validate_file_send`/`scoring_file_send` (`has_header_row`, `allow_phase_2`), `GetFileOptions#activity_data`, `send_email_finder_file`, `send_domain_search_file`, and the S3/SFTP jobs (`has_header_row`, `remove_duplicates`); a `nil` `has_header_row` on an S3/SFTP job, which 2.2.0 sent as `false`, now raises.
+- **Breaking:** an API key with surrounding whitespace or control characters (for example one read from a file with its newline) raises `ArgumentError` before any request, from `Zerobounce.configure`'s key, `Zerobounce.with_api_key` and `Zerobounce::Client.new`, as `Zerobounce::Warmup.new` already did. 2.2.0 sent it as it was.
+
+### Fixed
+
+- `validate` returns the greylist answer `{"Message": "Greylist validation still in progress..."}` as its result (GET and `use_post: true`). 2.2.0 raised `RuntimeError` for it, so `greylist_processing: true` could never be used to pick up a result later.
+- A 2xx `{"error_message": "..."}` with no `success` field raises. 2.2.0 returned it as the result, and `credits` returned `0` for it.
+- `find_email`, `find_domain` and `guessformat` raise for a body made only of message fields (`detail`, `error_message`, `message`, as well as `Message`); 2.2.0 returned `{"detail": ...}` and `{"error_message": ...}` as results.
+- `validate_file_get`, `scoring_file_get` and the email finder and domain search downloads raise `Empty response from ZeroBounce (HTTP 200)` for an empty body instead of returning `""`.
+- `validate_file_check`, `validate_file_delete` and the scoring equivalents no longer raise an empty message for `{"error": ""}`; an empty `error` is not an error.
+- `Zerobounce::Client#inspect` and `Zerobounce::Warmup#inspect` no longer show the API key.
+
+### Changed
+
+- Errors reported on a 2xx response raise `Zerobounce::ApiResponseError` with `#status_code` set to the HTTP status (usually 200). `ApiResponseError` is now a subclass of `RuntimeError` (it was a `StandardError`), so `rescue RuntimeError` catches these errors as before.
+- The license file is named `LICENSE` (it was `LICENSE.txt`), and the gem ships only that one license file.
+- The gemspec has a fuller summary and description, and `source_code_uri`, `changelog_uri` and `homepage_uri` metadata.
+- Development only (nothing ships to gem users): `benchmark` is a development dependency, because it left Ruby 4.0's default gems and RuboCop needs it.
+
+### Removed
+
+- `Zerobounce::MockRequest` and the `TEST=unit` switch are gone. With `TEST=unit` set in the environment, the gem answered every call with canned responses instead of calling the API, which could silently fake results in an application's own test or CI setup. Nothing in the gem's specs used it.
+
 ## [2.2.0] - 2026-11-11
 
 ### Breaking

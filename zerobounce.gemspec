@@ -10,17 +10,23 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.authors       = ['Zero Bounce']
   spec.email         = ['integrations@zerobounce.net']
 
-  spec.summary       = 'A Ruby client for Zerobounce.net.'
-  spec.description   = 'A Ruby client for Zerobounce.net.'
+  spec.summary       = 'Official ZeroBounce Ruby SDK: email validation, AI scoring, bulk files, ' \
+                       'email finder and domain search'
+  spec.description   = 'The official Ruby client for the ZeroBounce API: real-time and batch email ' \
+                       'validation, AI scoring, bulk file validation and scoring, email finder and ' \
+                       'domain search, the list evaluator, filters, the Inbox Placement Tester and Warmup.'
   spec.homepage      = 'https://zerobounce.net'
   spec.license       = 'MIT'
 
-  spec.files = Dir['lib/**/*', 'README.md', 'LICENSE*', 'CHANGELOG*'].select { |f| File.file?(f) }
+  spec.files = Dir['lib/**/*', 'README.md', 'LICENSE', 'CHANGELOG*'].select { |f| File.file?(f) }
   spec.bindir        = 'exe'
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
   spec.metadata['yard.run'] = 'yri' # use "yard" to build full HTML docs.
+  spec.metadata['homepage_uri'] = spec.homepage
+  spec.metadata['source_code_uri'] = 'https://github.com/zerobounce/zero-bounce-ruby'
+  spec.metadata['changelog_uri'] = 'https://github.com/zerobounce/zero-bounce-ruby/blob/develop/CHANGELOG.md'
 
   spec.required_ruby_version = '>= 3.0'
 
@@ -32,6 +38,7 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.add_development_dependency 'ostruct' # stdlib gem on Ruby 3.5+ (json/simplecov load chain)
   spec.add_development_dependency 'logger' # stdlib gem on Ruby 3.4+ (mime-types / rest-client load chain)
   spec.add_development_dependency 'racc' # bundled gem on Ruby 3.4+ (parser / rubocop load chain)
+  spec.add_development_dependency 'benchmark' # bundled gem on Ruby 4.0+ (rubocop load chain)
   spec.add_development_dependency 'bundler', '~> 2.4.6'
   spec.add_development_dependency 'pry', '~> 0.14.1'
   spec.add_development_dependency 'rake', '~> 13.0'

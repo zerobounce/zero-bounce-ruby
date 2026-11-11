@@ -2,6 +2,7 @@
 
 require 'json'
 require 'stringio'
+require 'zerobounce/error'
 require 'zerobounce/response_error'
 
 module Zerobounce
@@ -70,12 +71,13 @@ module Zerobounce
       body_str = response.body.to_s
       ct = (response.headers[:content_type] || response.headers['Content-Type'] || '').to_s
 
-      if code > 299 || ResponseError.html?(body_str, ct)
-        raise ResponseError.message_from_parts(code, ct, body_str)
+      # An empty body is no result file: an error, as in the other SDKs.
+      if code > 299 || body_str.strip.empty? || ResponseError.html?(body_str, ct)
+        raise ApiResponseError.new(ResponseError.message_from_parts(code, ct, body_str), code)
       end
 
       if should_treat_as_error?(body_str, ct)
-        raise format_error_message(body_str)
+        raise ApiResponseError.new(format_error_message(body_str), code)
       end
 
       io = StringIO.new(response.body)

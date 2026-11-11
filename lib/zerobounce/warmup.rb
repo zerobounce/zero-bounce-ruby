@@ -5,6 +5,7 @@ require 'erb'
 require 'json'
 require 'rest-client'
 
+require 'zerobounce/api_key'
 require 'zerobounce/error'
 require 'zerobounce/response_error'
 
@@ -40,9 +41,7 @@ module Zerobounce
 
       # A key with surrounding whitespace or control characters would be
       # quoted, unredacted, in the HTTP library's own error.
-      if api_key != api_key.strip || api_key.match?(/[\u0000-\u001f\u007f]/)
-        raise ArgumentError, 'api_key has surrounding whitespace or control characters'
-      end
+      ApiKey.check!(api_key)
       unless base_url.to_s.downcase.start_with?('https://')
         raise ArgumentError, 'base_url must be an https:// URL'
       end
@@ -51,6 +50,11 @@ module Zerobounce
       root = base_url.to_s
       root = root.chomp('/') while root.end_with?('/')
       @root = "#{root}#{BASE_PATH}"
+    end
+
+    # Keeps the API key out of logs and consoles.
+    def inspect
+      "#<#{self.class.name} root=#{@root.inspect} api_key=[FILTERED]>"
     end
 
     # -- sending accounts ---------------------------------------------------
