@@ -87,7 +87,7 @@ RSpec.describe 'offline API' do
   end
 
   it 'matches the gem version in the user agent' do
-    expect(Zerobounce::VERSION).to eq('3.0.0')
+    expect(Zerobounce::VERSION).to eq('3.0.1')
     expect(Zerobounce::Configuration.new.headers[:user_agent]).to include(Zerobounce::VERSION)
   end
 
