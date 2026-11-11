@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+# The same bundle as ../Gemfile, locked separately for the CI job on the oldest
+# Ruby the gemspec supports (required_ruby_version). ../Gemfile.lock tracks
+# current releases, and some of them need a newer Ruby (public_suffix 7 needs
+# 3.2). Refresh this lockfile on Ruby 3.0 after changing ../Gemfile or the
+# gemspec, or to follow a bump in ../Gemfile.lock:
+#   BUNDLE_GEMFILE=gemfiles/ruby_3.0.gemfile bundle lock [--update GEM]
+eval_gemfile File.expand_path('../Gemfile', __dir__)

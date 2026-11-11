@@ -1,0 +1,139 @@
+PATH
+  remote: ..
+  specs:
+    zerobounce-sdk (2.2.0)
+      rest-client (~> 2.1)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.9.0)
+      public_suffix (>= 2.0.2, < 8.0)
+    ast (2.4.2)
+    base64 (0.3.0)
+    bigdecimal (4.0.1)
+    coderay (1.1.3)
+    crack (0.4.5)
+      rexml
+    diff-lcs (1.5.0)
+    docile (1.4.0)
+    domain_name (0.5.20190701)
+      unf (>= 0.0.5, < 1.0.0)
+    dotenv (3.1.8)
+    hashdiff (1.0.1)
+    http-accept (1.7.0)
+    http-cookie (1.0.5)
+      domain_name (~> 0.5)
+    json (2.6.3)
+    logger (1.7.0)
+    method_source (1.0.0)
+    mime-types (3.5.1)
+      mime-types-data (~> 3.2015)
+    mime-types-data (3.2023.0808)
+    netrc (0.11.0)
+    ostruct (0.6.3)
+    parallel (1.22.1)
+    parser (3.2.2.0)
+      ast (~> 2.4.1)
+    pry (0.14.2)
+      coderay (~> 1.1)
+      method_source (~> 1.0)
+    public_suffix (6.0.2)
+    racc (1.8.1)
+    rainbow (3.1.1)
+    rake (13.0.6)
+    regexp_parser (2.7.0)
+    rest-client (2.1.0)
+      http-accept (>= 1.7.0, < 2.0)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
+    rexml (3.4.4)
+    rspec (3.12.0)
+      rspec-core (~> 3.12.0)
+      rspec-expectations (~> 3.12.0)
+      rspec-mocks (~> 3.12.0)
+    rspec-core (3.12.1)
+      rspec-support (~> 3.12.0)
+    rspec-expectations (3.12.2)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.12.0)
+    rspec-mocks (3.12.5)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.12.0)
+    rspec-support (3.12.0)
+    rspec_junit_formatter (0.4.1)
+      rspec-core (>= 2, < 4, != 2.12.0)
+    rubocop (1.49.0)
+      json (~> 2.3)
+      parallel (~> 1.10)
+      parser (>= 3.2.0.0)
+      rainbow (>= 2.2.2, < 4.0)
+      regexp_parser (>= 1.8, < 3.0)
+      rexml (>= 3.2.5, < 4.0)
+      rubocop-ast (>= 1.28.0, < 2.0)
+      ruby-progressbar (~> 1.7)
+      unicode-display_width (>= 2.4.0, < 3.0)
+    rubocop-ast (1.28.0)
+      parser (>= 3.2.1.0)
+    rubocop-capybara (2.17.1)
+      rubocop (~> 1.41)
+    rubocop-performance (1.17.1)
+      rubocop (>= 1.7.0, < 2.0)
+      rubocop-ast (>= 0.4.0)
+    rubocop-rake (0.5.1)
+      rubocop
+    rubocop-rspec (2.19.0)
+      rubocop (~> 1.33)
+      rubocop-capybara (~> 2.17)
+    ruby-progressbar (1.13.0)
+    simplecov (0.21.2)
+      docile (~> 1.1)
+      simplecov-html (~> 0.11)
+      simplecov_json_formatter (~> 0.1)
+    simplecov-html (0.12.3)
+    simplecov_json_formatter (0.1.4)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.8.2)
+    unicode-display_width (2.4.2)
+    vcr (6.4.0)
+    webmock (3.18.1)
+      addressable (>= 2.8.0)
+      crack (>= 0.3.2)
+      hashdiff (>= 0.4.0, < 2.0.0)
+    yard (0.9.45)
+
+PLATFORMS
+  aarch64-linux-musl
+  arm64-darwin-24
+  arm64-darwin-25
+  arm64-darwin-27
+  x86_64-linux
+
+DEPENDENCIES
+  addressable (>= 2.8.10)
+  base64
+  bigdecimal
+  bundler (~> 2.4.6)
+  dotenv
+  logger
+  ostruct
+  pry (~> 0.14.1)
+  racc
+  rake (~> 13.0)
+  rexml (>= 3.4.4)
+  rspec (~> 3.0)
+  rspec_junit_formatter (~> 0.4.1)
+  rubocop (~> 1.15)
+  rubocop-performance (~> 1.11, >= 1.11.3)
+  rubocop-rake (~> 0.5.1)
+  rubocop-rspec (~> 2.3)
+  simplecov (~> 0.21.2)
+  vcr (~> 6.4)
+  webmock (~> 3.18)
+  yard (~> 0.9.42)
+  zerobounce-sdk!
+
+BUNDLED WITH
+   2.4.22
