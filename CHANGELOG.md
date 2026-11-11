@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `validate` without an IP address leaves `ip_address` out of the request. 3.0.0 sent a bare `ip_address` parameter with no value. An IP address that is given, including `'0'`, is still sent.
+- `send_list_evaluator_file` uploads to `list_evaluator_root_url` (`ZEROBOUNCE_LIST_EVALUATOR_URL`), as `get_list_evaluator_result` already did. 3.0.0 posted to `bulk_api_root_url` + `listevaluator/` and ignored the setting. With the default URLs the request is unchanged (`https://bulkapi.zerobounce.net/v2/listevaluator/`).
+- The S3 and SFTP/FTP jobs derive their root from `bulk_api_root_url` after dropping trailing slashes, so `bulk_api_root_url = 'https://host/v2//'` sends them to `https://host/listS3files` instead of `https://host/v2/listS3files`. A `bulk_root_url` that is set is used as before.
+
+### Security
+
+- A `Zerobounce::Warmup` transport error (for example a `SocketError`) no longer keeps the unredacted original error as `#cause`, which `#full_message` prints. Its own message was already redacted; the main client's errors already dropped the cause.
+
 ## [3.0.0] - 2026-11-12
 
 ### Breaking

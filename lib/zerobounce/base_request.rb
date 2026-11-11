@@ -242,7 +242,8 @@ module Zerobounce
       configured = Zerobounce.configuration.bulk_root_url.to_s.strip
       return __root_without_trailing_slashes__(configured) unless configured.empty?
 
-      derived = Zerobounce.configuration.bulk_api_root_url.to_s.sub(%r{/v2/?$}, '')
+      # Trailing slashes first, so ".../v2//" loses its /v2 as well.
+      derived = __root_without_trailing_slashes__(Zerobounce.configuration.bulk_api_root_url).delete_suffix('/v2')
       derived = ApiUrls::BULK_ROOT_URL if derived.strip.empty?
       __root_without_trailing_slashes__(derived)
     end
