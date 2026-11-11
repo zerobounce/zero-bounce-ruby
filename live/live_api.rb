@@ -16,7 +16,8 @@
 #
 #   ZEROBOUNCE_LIVE_SPEND=1     spends credits: scoring, activity, email
 #                               finder, and a bulk round trip whose job is
-#                               deleted again
+#                               deleted again (ZEROBOUNCE_LIVE_DELETE_SECONDS
+#                               sets how long that delete is retried)
 #   ZEROBOUNCE_LIVE_CHANGES=1   reversible account changes, each undone in
 #                               cleanup even when a test fails: a test filter,
 #                               and a self-managed Warmup sending account
@@ -43,10 +44,23 @@ UNKNOWN_ID = '0d1b7a4e-1111-2222-3333-444455556666'
 CALLBACK = 'https://example.com/zerobounce-sdk-live-test'
 SANDBOX = 'valid@example.com'
 
+# LIVE: the bulk API refuses to delete a just-uploaded file for far longer than
+# a status of "Complete" suggests -- observed runs have needed anywhere from
+# ~10 to ~50 minutes before the delete was accepted, so "Complete" is not a
+# sufficient precondition. The suite waits this long before giving up, and
+# every file it could not delete is retried once more and named at the end of
+# the run, so a test CSV is never silently left on the live account. Raise it
+# for a slower account:
+#
+#   ZEROBOUNCE_LIVE_DELETE_SECONDS=3000
+DELETE_WINDOW = [ENV.fetch('ZEROBOUNCE_LIVE_DELETE_SECONDS', '600').to_i, 0].max
+DELETE_INTERVAL = 10
+
 @passed = 0
 @failed = 0
 @skipped = 0
 @failures = []
+@leftovers = []
 
 def redact(text)
   value = text.to_s
@@ -77,6 +91,28 @@ def skip(name, reason)
   puts "  - SKIP #{name} (#{reason})"
 end
 
+# Deletes an uploaded bulk file, retrying until DELETE_WINDOW is spent. Hands
+# back nil once the API accepts the delete, or a message naming the file that
+# is still on the account. Anything it gives up on is swept again at the end of
+# the run.
+def delete_uploaded_file(file_id)
+  deadline = Time.now + DELETE_WINDOW
+  last = ''
+  loop do
+    begin
+      Zerobounce.validate_file_delete(file_id)
+      return nil
+    rescue StandardError => e
+      last = redact(e.message)
+    end
+    break if Time.now + DELETE_INTERVAL >= deadline
+
+    sleep DELETE_INTERVAL
+  end
+  @leftovers << file_id
+  "could not delete #{file_id} after retrying for #{DELETE_WINDOW}s: #{last}"
+end
+
 # Runs a call that must fail, and hands back nil when it did.
 def expect_failure(what)
   yield
@@ -97,7 +133,12 @@ def validation_free
 
   check('credits returns a balance') do
     before = Zerobounce.credits
-    before.is_a?(Integer) ? nil : 'credits was not a number'
+    # LIVE: -1 is the API's answer for an INVALID key, not a balance. Accepting
+    # it let a dead key sail through this check while every billable call below
+    # failed, so the one test that should catch a bad key sat green.
+    next 'credits was not a number' unless before.is_a?(Integer)
+
+    before.positive? ? nil : "not a usable credit balance: #{before}"
   end
 
   check('api_usage parses the documented date formats') do
@@ -282,20 +323,10 @@ def validation_spend
     skip('the uploaded validation job is deleted again', 'upload did not produce a file id')
   else
     check('the uploaded validation job is deleted again') do
-      # LIVE: a just-accepted job answers "File cannot be found" for a short
+      # LIVE: a just-accepted job answers "File cannot be found" for a long
       # while, so the delete is retried rather than leaving the job behind.
-      last = ''
-      12.times do
-        begin
-          Zerobounce.validate_file_delete(file_id)
-          break
-        rescue StandardError => e
-          last = redact(e.message)
-          sleep 10
-          next
-        end
-      end
-      last.empty? ? nil : nil
+      # Returning the message is what makes this check able to fail at all.
+      delete_uploaded_file(file_id)
     end
   end
 end
@@ -446,6 +477,21 @@ end
 unless WARMUP_KEY.empty?
   warmup_free
   warmup_changes if CHANGES
+end
+
+# A file the suite could not delete is still on the live account, so it gets
+# one more attempt now that the rest of the run has bought it extra time, and
+# is named loudly if it is still there.
+unless @leftovers.empty?
+  puts "\nLeftover uploaded files"
+  @leftovers.each do |id|
+    begin
+      Zerobounce.validate_file_delete(id)
+      puts "  + #{id} deleted on a later attempt"
+    rescue StandardError => e
+      puts "  ! #{id} is STILL on the account, delete it by hand: #{redact(e.message)}"
+    end
+  end
 end
 
 puts "\n#{@passed} passed, #{@failed} failed, #{@skipped} skipped"
