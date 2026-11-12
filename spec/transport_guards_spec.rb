@@ -373,5 +373,83 @@ describe 'Transport guards on every request path' do
       end
     end
   end
+
+  # A response body that quotes the key (an API message naming the key, a
+  # proxy echoing the request URL, an HTML title) must not hand it to the
+  # caller, whatever the status: every error the SDK raises from a body is
+  # redacted, in the key's raw and URL-encoded forms.
+  describe 'a response body that quotes the API key' do
+    echo_key = 'echo+key/42'
+    encoded = 'echo%2Bkey%2F42'
+    json = 'application/json'
+    batch_all = %({"email_batch":[],"errors":[{"email_address":"all","error":"Invalid API key #{echo_key}"}]})
+    bodies = {
+      '200 {"error"}' => [200, json, %({"error":"Invalid API key #{echo_key}"})],
+      '200 {"success":false}' => [200, json, %({"success":false,"message":"Invalid API key #{echo_key}"})],
+      '200 batch "all" error' => [200, json, batch_all],
+      '200 HTML title' => [200, 'text/html', "<html><head><title>Denied #{echo_key}</title></head></html>"],
+      '200 JSON cut off' => [200, json, %({"error":"Invalid API key #{echo_key}")],
+      '400 text quoting the URL' => [400, 'text/plain', "Bad request: https://first.example/v2/x?api_key=#{encoded}"],
+      '400 {"error"}' => [400, json, %({"error":"Invalid API key #{echo_key}"})]
+    }.freeze
+
+    def stub_body(status, type, body)
+      stub_request(:any, %r{\Ahttps://first\.example/})
+        .to_return(status: status, body: body, headers: { 'Content-Type' => type })
+    end
+
+    # Everything a caller or an uncaught-exception printer reads off the
+    # error, down the whole #cause chain.
+    def visible_text(error)
+      parts = []
+      while error
+        parts << error.message << error.inspect << error.full_message(highlight: false)
+        error = error.cause
+      end
+      parts.join("\n")
+    end
+
+    def expect_redacted(label, key, encoded_key)
+      yield
+    rescue StandardError => e
+      text = visible_text(e)
+      expect(text).not_to include(key), "#{label}: #{e.class}: #{text}"
+      expect(text).not_to include(encoded_key), "#{label}: #{e.class}: #{text}"
+    end
+
+    TransportSweep::CALLS.each do |name, call|
+      it "keeps the key out of every error from #{name}" do
+        TransportSweep.configure(echo_key, 'https://first.example')
+        bodies.each do |label, (status, type, body)|
+          WebMock.reset!
+          stub_body(status, type, body)
+          expect_redacted(label, echo_key, encoded) { call.call }
+        end
+      end
+    end
+
+    TransportSweep::WARMUP_CALLS.each do |name, call|
+      it "keeps the key out of every error from Warmup##{name}" do
+        bodies.each do |label, (status, type, body)|
+          WebMock.reset!
+          stub_body(status, type, body)
+          expect_redacted(label, echo_key, encoded) { call.call(TransportSweep.warmup(echo_key, 'https://first.example')) }
+        end
+      end
+    end
+
+    # The sweep above only checks the errors that are raised; these bodies
+    # are errors on every call of the client, so each must raise.
+    it 'raises for each error body on every call of the client' do
+      TransportSweep.configure(echo_key, 'https://first.example')
+      bodies.except('200 batch "all" error').each do |label, (status, type, body)|
+        TransportSweep::CALLS.each do |name, call|
+          WebMock.reset!
+          stub_body(status, type, body)
+          expect { call.call }.to raise_error(StandardError), "#{name} returned for #{label}"
+        end
+      end
+    end
+  end
 end
 # rubocop:enable Metrics/BlockLength, Metrics/ModuleLength

@@ -742,10 +742,15 @@ Or have ZeroBounce provision the mailbox. A 200 means the request was accepted; 
 ```ruby
 warmup.add_sending_account(
   'sender@example.com', 'zb_managed',
-  email_content: { types_of_emails: %w[newsletter marketing] },
-  managed_sending: { timezone_offset: -5, warmup_start_date: Date.new(2026, 3, 4) }
+  email_content: { company_name: 'Acme', company_website: 'https://acme.example',
+                   company_description: 'B2B email tools', types_of_emails: %w[newsletter marketing],
+                   example_email: 'Hi, a short intro to Acme.' },
+  managed_sending: { weekdays_only: true, timezone: 'America/New_York', timezone_offset: -5,
+                     warmup_start_date: Date.new(2026, 3, 4) }
 )
 ```
+
+Keys other than these are not API fields: they are left out of the request with a warning.
 
 A custom engagement rule can be changed only once every seven days; inside that window the API answers 429.
 

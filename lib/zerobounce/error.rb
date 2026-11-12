@@ -64,13 +64,25 @@ module Zerobounce
   # successful HTTP response; both carry the same short message. It is a
   # RuntimeError, which those errors were before, so `rescue RuntimeError`
   # still catches them.
+  #
+  # Its message is often built from a response body, which can quote the
+  # API key (an "Invalid API key <key>" message, a proxy echoing the request
+  # URL, an HTML title). Every message is therefore redacted here, once, so
+  # each path that raises this error inherits it.
   class ApiResponseError < RuntimeError
     # @return [Integer] the HTTP status of the failed response, or 0
     attr_reader :status_code
 
     def initialize(message, status_code = 0)
-      super(message)
+      super(ApiResponseError.redact(message))
       @status_code = status_code.to_i
+    end
+
+    # The message with the request's API key replaced by ***.
+    def self.redact(message)
+      return message unless defined?(Zerobounce::BaseRequest)
+
+      Zerobounce::BaseRequest.__redact_api_key__(message)
     end
   end
 
