@@ -377,12 +377,9 @@ module Zerobounce
     # @return [Hash] same as validate_file_send
     def validate_file_send_stream(io, file_name, **opts)
       content = io.respond_to?(:read) ? io.read : io.to_s
-      Tempfile.create(['zb', File.extname(file_name)]) do |tmp|
-        tmp.binmode
-        tmp.write(content)
-        tmp.rewind
-        validate_file_send(tmp.path, **opts)
-      end
+      # Uploaded from memory: a Tempfile in Dir.tmpdir failed the check that
+      # keeps file paths under the current directory (2.0.1 to 3.0.1).
+      validate_file_send(BaseRequest::Upload.new(content, file_name), **opts)
     end
 
     # Get validate file status
@@ -477,12 +474,9 @@ module Zerobounce
     # @return [Hash] same as scoring_file_send
     def scoring_file_send_stream(io, file_name, **opts)
       content = io.respond_to?(:read) ? io.read : io.to_s
-      Tempfile.create(['zb', File.extname(file_name)]) do |tmp|
-        tmp.binmode
-        tmp.write(content)
-        tmp.rewind
-        scoring_file_send(tmp.path, **opts)
-      end
+      # Uploaded from memory: a Tempfile in Dir.tmpdir failed the check that
+      # keeps file paths under the current directory (2.0.1 to 3.0.1).
+      scoring_file_send(BaseRequest::Upload.new(content, file_name), **opts)
     end
 
     # Get scoring bulk results file

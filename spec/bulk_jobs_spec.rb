@@ -317,6 +317,14 @@ describe 'Validate WHOIS and greylist options, SFTP bulk and the Inbox Placement
       expect(JSON.parse(last_request.body)).to eq('name' => 'Launch', 'testType' => 3)
     end
 
+    it 'treats an empty 2xx answer to a delete as success, as the Go SDK does' do
+      [204, 200].each do |status|
+        stub_request(:delete, %r{\Ahttps://bulkapi\.zerobounce\.net/api/ipt/test/7\z})
+          .to_return(status: status, body: '')
+        expect(Zerobounce.delete_inbox_placement_test('7')).to be_nil
+      end
+    end
+
     it 'deletes a test and sets the webhook' do
       Zerobounce.delete_inbox_placement_test('a b/c')
       expect(last_request.method).to eq(:delete)

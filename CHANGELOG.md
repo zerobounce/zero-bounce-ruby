@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `validate_file_send_stream` and `scoring_file_send_stream` work again. From 2.0.1 to 3.0.1 they raised `ArgumentError` ("File path must be under the current directory") whenever the system temp directory is outside the current directory, as it usually is: they wrote the content to a Tempfile in the system temp directory and uploaded its path, which the path check added in 2.0.1 rejects. 2.0.0 was not affected. The content is now uploaded from memory under the given `file_name` (2.0.0 sent the temp file's random name); file paths passed to `validate_file_send` and the other upload methods are still checked as before.
+- A response whose body is cut short (the connection closes before `Content-Length` bytes arrive) raises `Zerobounce::ApiResponseError` with `status_code` 0 on every request, including the result-file downloads and `Zerobounce::Warmup`. Up to 3.0.1 Net::HTTP returned the bytes that had arrived, so a truncated result file or JSON body after a 200 header was returned as a success.
+- `Zerobounce::Warmup#download_seeds` and `#download_statistics` raise `Zerobounce::ApiResponseError` (with the HTTP status) for an HTML page on a 200, such as a proxy's "Access denied" page, as the Python SDK does. Up to 3.0.1 the page was returned as the CSV text.
+
 ## [3.0.1] - 2026-11-11
 
 ### Fixed

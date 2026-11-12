@@ -113,5 +113,24 @@ module Zerobounce
       code = response.respond_to?(:code) ? response.code : 0
       message_from_parts(code, content_type, response.respond_to?(:body) ? response.body : response.to_s)
     end
+
+    # Raises when fewer bytes arrived than the response's Content-Length.
+    # Net::HTTP ignores an early EOF by default (ignore_eof) and returns what
+    # it has, so a connection that closes mid-body would otherwise read as a
+    # complete, successful response. A transport failure: status 0.
+    def raise_if_cut_short!(response)
+      return if [204, 304].include?(response.code.to_i)
+
+      expected = response.headers[:content_length].to_s
+      return unless expected.match?(/\A\d+\z/)
+
+      received = response.body.to_s.bytesize
+      return if received >= expected.to_i
+
+      raise ApiResponseError.new(
+        "The response from ZeroBounce was cut short: #{received} of #{expected} bytes arrived " \
+        'before the connection closed.', 0
+      )
+    end
   end
 end
