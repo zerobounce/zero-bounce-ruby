@@ -145,8 +145,12 @@ module Zerobounce
     def credits()
       json = @@request.get('getcredits', {})
       credits = json['Credits']
-      credits_i = credits.to_i
-      return credits_i
+      return credits if credits.is_a?(Integer)
+      return credits.to_i if credits.is_a?(String) && credits.match?(/\A-?\d+\z/)
+
+      # E7: a missing or non-numeric Credits is the wrong shape for this call,
+      # not 0 credits (and not the NoMethodError [1].to_i raises).
+      raise ApiResponseError.new('ZeroBounce returned JSON of an unexpected shape: Credits is not a number.', 200)
     end
 
     # Convenience method for checking if an email address is valid.

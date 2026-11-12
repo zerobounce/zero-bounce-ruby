@@ -369,10 +369,39 @@ module Zerobounce
       end
     end
 
-    def self.__parse_json_response__(response)
+    # The calls whose documented answer is a JSON array: list_filters, and
+    # listS3files, which may also answer {"success": true, "files": [...]}.
+    # Every other call answers a JSON object.
+    ARRAY_PATHS = %w[filters/list listS3files].freeze
+
+    # E7: strict JSON of the wrong shape for the call (0, "x", null, true, an
+    # array where an object is expected, an object where an array is) is an
+    # API error with the HTTP status, never a result.
+    def self.__require_shape__(response, parsed, path)
+      return parsed if parsed.is_a?(Array) && ARRAY_PATHS.include?(path)
+      return parsed if parsed.is_a?(Hash) && !ARRAY_PATHS.include?(path)
+      return parsed if parsed.is_a?(Hash) && path == 'listS3files' && parsed['files'].is_a?(Array)
+
+      expected = { 'filters/list' => 'an array', 'listS3files' => 'an object with files, or an array' }
+                 .fetch(path, 'an object')
+      raise ApiResponseError.new("ZeroBounce returned JSON of an unexpected shape: expected #{expected}.",
+                                 response.code)
+    end
+
+    # The "error" of the first entry of an "errors" array; an entry that is
+    # not an object is the wrong shape (E7), not a TypeError.
+    def self.__first_error__(response, errors)
+      first = errors[0]
+      return first['error'] if first.is_a?(Hash)
+
+      raise ApiResponseError.new('ZeroBounce returned JSON of an unexpected shape: an errors entry is not an object.',
+                                 response.code)
+    end
+
+    def self.__parse_json_response__(response, path = nil)
       parsed = __parse_json_body__(response)
       code = response.code
-      return parsed unless parsed.is_a?(Hash)
+      return __require_shape__(response, parsed, path) unless parsed.is_a?(Hash)
 
       __raise_if_success_false__(response, parsed)
 
@@ -384,9 +413,9 @@ module Zerobounce
       end
       __raise_if_bare_error__(response, parsed)
       if parsed.key?('errors') && parsed['errors'].is_a?(Array) && !parsed['errors'].empty?
-        raise ApiResponseError.new(ResponseError.strip_prefix(parsed['errors'][0]['error']), code)
+        raise ApiResponseError.new(ResponseError.strip_prefix(__first_error__(response, parsed['errors'])), code)
       end
-      parsed
+      __require_shape__(response, parsed, path)
     end
 
   end

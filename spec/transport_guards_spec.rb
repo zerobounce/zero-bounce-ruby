@@ -911,11 +911,14 @@ describe 'the strict JSON corpus on every JSON call' do
       StrictJsonCorpus.calls(root).each do |name, call|
         call.call
       rescue Zerobounce::ApiResponseError => e
-        # A body that does not parse is the only API error a 2xx without an
-        # error field gives; a result of the wrong shape is a different error.
-        wrong << [name, body, e.message] if e.status_code == 200
-      rescue StandardError
-        nil
+        # It parsed: the only API error left is JSON of the wrong shape for
+        # the call ("0" is not a validate result), with status 200.
+        unless e.status_code == 200 && e.message.include?('unexpected shape')
+          wrong << [name, body, e.status_code, e.message]
+        end
+      rescue StandardError => e
+        # A raw language error is never the answer.
+        wrong << [name, body, e.class.name]
       end
     end
     expect(wrong).to eq([])
@@ -1072,6 +1075,210 @@ describe 'a secret echoed under any composition of encodings' do
 
   it 'keeps a message that holds no secret' do
     expect(Zerobounce::ApiKey.redact('Invalid email a+b%20c\\/d', [secret])).to eq('Invalid email a+b%20c\\/d')
+  end
+end
+
+# E7: strict JSON of the wrong shape for the call is an API error with status
+# 200 on every typed call of Zerobounce: never a result, a raw NoMethodError /
+# TypeError, or an error without a status. The Warmup client returns the API's
+# JSON as is (objects, arrays or a bare number), so only its parsing is checked,
+# by the corpus spec.
+describe 'JSON of the wrong shape on every call' do
+  root = 'https://first.example'
+  scalars = ['0', '"x"', 'null', 'true', '1.5']
+  array_calls = %i[list_filters]
+  either_calls = %i[list_s3_files]
+
+  around do |example|
+    saved = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    example.run
+  ensure
+    Zerobounce.configuration = saved
+  end
+
+  before do
+    allow(Zerobounce).to receive(:warn)
+    TransportSweep.configure('shape-key', root)
+  end
+
+  def answer(body)
+    WebMock.reset!
+    stub_request(:any, %r{\Ahttps://first\.example/})
+      .to_return(status: 200, body: body, headers: { 'Content-Type' => 'application/json' })
+  end
+
+  def wrong(bodies_for) # rubocop:disable Metrics/MethodLength
+    out = []
+    TransportSweep::CALLS.except(*StrictJsonCorpus::DOWNLOADS).each do |name, call|
+      bodies_for.call(name).each do |body|
+        answer(body)
+        begin
+          result = call.call
+          out << [name, body, 'accepted', result]
+        rescue Zerobounce::ApiResponseError => e
+          out << [name, body, e.status_code] unless e.status_code == 200
+        rescue StandardError => e
+          out << [name, body, e.class.name]
+        end
+      end
+    end
+    out
+  end
+
+  it 'names real calls' do
+    expect(TransportSweep::CALLS.keys).to include(*array_calls, *either_calls)
+  end
+
+  it 'rejects a scalar or null on every call' do
+    expect(wrong(->(_name) { scalars })).to eq([])
+  end
+
+  it 'rejects an array where an object is expected' do
+    bodies = lambda { |name|
+      array_calls.include?(name) || either_calls.include?(name) ? [] : ['[]', '[{"status":"valid"}]']
+    }
+    expect(wrong(bodies)).to eq([])
+  end
+
+  it 'rejects an object where an array is expected' do
+    bodies = lambda do |name|
+      next ['{}', '{"rule":"block"}'] if array_calls.include?(name)
+      next ['{}', '{"success":true}', '{"success":true,"files":5}'] if either_calls.include?(name)
+
+      []
+    end
+    expect(wrong(bodies)).to eq([])
+  end
+
+  it 'rejects a field of the wrong shape' do
+    bodies = { credits: ['{}', '{"Credits":[1]}', '{"Credits":"abc"}'], validate_file_check: ['{"errors":[1]}'] }
+    expect(wrong(->(name) { bodies.fetch(name, []) })).to eq([])
+  end
+
+  it 'still parses the documented shapes' do
+    answer('[]')
+    expect(Zerobounce.list_filters).to eq([])
+    expect(Zerobounce.list_s3_files).to eq([])
+    answer('{"success":true,"files":[]}')
+    expect(Zerobounce.list_s3_files).to eq('success' => true, 'files' => [])
+    answer('{"Credits":"7"}')
+    expect(Zerobounce.credits).to eq(7)
+    answer('{"Credits":7}')
+    expect(Zerobounce.credits).to eq(7)
+  end
+end
+
+# E7: a body nested deeper than the parser allows (200000 "[") is an API error
+# with status 200 on every call, downloads and Warmup included: not a
+# SystemStackError, a NestingError or a hang.
+describe 'a deeply nested body on every call' do
+  root = 'https://first.example'
+
+  around do |example|
+    saved = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    example.run
+  ensure
+    Zerobounce.configuration = saved
+  end
+
+  before do
+    allow(Zerobounce).to receive(:warn)
+    TransportSweep.configure('depth-key', root)
+  end
+
+  it 'is an API error with status 200' do
+    calls = TransportSweep::CALLS.to_a +
+            TransportSweep::WARMUP_CALLS.map do |name, call|
+              ["warmup.#{name}", -> { call.call(TransportSweep.warmup('depth-key', root)) }]
+            end
+    wrong = []
+    ['[' * 200_000, ('[' * 100_000) + (']' * 100_000), "#{'{"a":' * 100_000}1#{'}' * 100_000}"].each do |body|
+      WebMock.reset!
+      stub_request(:any, %r{\Ahttps://first\.example/})
+        .to_return(status: 200, body: body, headers: { 'Content-Type' => 'application/json' })
+      calls.each do |name, call|
+        call.call
+        wrong << [name, body.size, 'accepted']
+      rescue Zerobounce::ApiResponseError => e
+        wrong << [name, body.size, e.status_code] unless e.status_code == 200
+      rescue StandardError, SystemStackError => e
+        wrong << [name, body.size, e.class.name]
+      end
+    end
+    expect(wrong).to eq([])
+  end
+end
+
+# S4: the redaction check decodes four layers (the SDK's own request encoding
+# plus three echo layers), every decode step is needed, surrogate pairs are
+# joined, and a NUL or %00 before the secret does not end the check.
+describe 'the redaction decode check' do
+  omitted = Zerobounce::ApiKey::CREDENTIAL_OMITTED_MESSAGE
+
+  def lower_hex(text)
+    text.b.bytes.map { |byte| format('%%%02x', byte) }.join
+  end
+
+  def three_times(text)
+    3.times.reduce(text) { |form, _| ERB::Util.url_encode(form) }
+  end
+
+  it 'covers a key under four layers' do
+    secret = %(probe"key/ZQXMARK01+23&ab c\\xyz)
+    body = three_times("GET /v2/getcredits?api_key=#{CGI.escape(secret)} HTTP/1.1")
+    expect(Zerobounce::ApiKey.redact(body, [secret])).to eq(omitted)
+  end
+
+  it 'omits a request URL echoed under three more encodings, on every call' do
+    secret = %(probe"key/ZQXMARK01+23&ab c\\xyz)
+    root = 'https://first.example'
+    saved = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    allow(Zerobounce).to receive(:warn)
+    TransportSweep.configure(secret, root)
+    leaks = []
+    errors = 0
+    stub_request(:any, %r{\Ahttps://first\.example/}).to_return do |request|
+      { status: 400, body: three_times(request.uri.to_s), headers: { 'Content-Type' => 'text/plain' } }
+    end
+    TransportSweep::CALLS.each do |name, call|
+      call.call
+    rescue StandardError => e
+      errors += 1
+      views = EncodingFuzz.texts(e).flat_map { |text| Zerobounce::ApiKey.decoded_views(text, 4) }
+      leaks << name if views.any? { |view| view.include?('ZQXMARK') }
+    end
+    expect(errors).to be > 40
+    expect(leaks).to eq([])
+  ensure
+    Zerobounce.configuration = saved
+  end
+
+  it 'needs every decode step' do
+    secret = 'zq x/ZQXMARK'
+    u_escaped = secret.chars.map { |char| format('\\u%04x', char.ord) }.join
+    bodies = {
+      'lower-case %xx after invalid UTF-8' => "%ff%fe#{lower_hex(secret)}",
+      '+ as space, then %xx' => "#{lower_hex('zq')}+#{lower_hex('x/ZQXMARK')}",
+      'JSON \\u escapes' => u_escaped,
+      '\\u escapes, URL-encoded' => lower_hex(u_escaped),
+      'a literal + kept, %xx decoded' => "zq+x#{lower_hex('/ZQXMARK')}",
+      'NUL first' => "\u0000#{u_escaped}",
+      '%00 first' => "%00#{lower_hex(secret)}"
+    }
+    bodies.each do |label, body|
+      secrets = label.start_with?('a literal +') ? ['zq+x/ZQXMARK'] : [secret]
+      expect(Zerobounce::ApiKey.redact("rejected #{body}", secrets)).to eq(omitted), label
+    end
+  end
+
+  it 'joins a \\u-escaped surrogate pair' do
+    secret = "pw\u{1F600}ZQXMARK"
+    once = JSON.generate(secret, ascii_only: true)[1..-2]
+    body = once.chars.map { |char| format('\\u%04x', char.ord) }.join
+    expect(Zerobounce::ApiKey.redact(body, [secret])).to eq(omitted)
   end
 end
 # rubocop:enable Metrics/BlockLength, Metrics/ModuleLength

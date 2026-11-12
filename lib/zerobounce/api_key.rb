@@ -74,7 +74,7 @@ module Zerobounce
 
     # The text with every form of every secret replaced by ***. Then closed
     # under encoding: if any decoded view of what is left (URL-decoding, "+"
-    # as a space, JSON unescaping incl. "\/" and \uXXXX, up to three layers
+    # as a space, JSON unescaping incl. "\/" and \uXXXX, up to four layers
     # in any order) still holds a secret, the whole text is replaced by
     # CREDENTIAL_OMITTED_MESSAGE.
     def redact(text, secrets)
@@ -97,8 +97,12 @@ module Zerobounce
       secrets.any? { |secret| views.any? { |view| view.include?(secret.b) } }
     end
 
-    # The text (as bytes) and every view of it after up to three decodings.
-    def decoded_views(text, layers = 3)
+    # How many layers of encoding the check undoes: the SDK's own request
+    # encoding plus three echo layers (standard.md).
+    DECODE_LAYERS = 4
+
+    # The text (as bytes) and every view of it after up to DECODE_LAYERS decodings.
+    def decoded_views(text, layers = DECODE_LAYERS)
       views = [text.to_s.b]
       frontier = views
       layers.times do
