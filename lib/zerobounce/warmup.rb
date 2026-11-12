@@ -26,6 +26,8 @@ module Zerobounce
   # payload that is not a JSON object - /seeds is an array, /seed-count a bare
   # number - comes back as the parsed value itself.
   class Warmup
+    include ApiKey::RefusesDump
+
     DEFAULT_BASE_URL = 'https://warmup-api.zerobounce.net'
     BASE_PATH = '/api/v1/warmup'
 
@@ -439,13 +441,7 @@ module Zerobounce
 
     # Replaces every form of a secret in a message with ***.
     def redact(text, secrets = [])
-      value = text.to_s
-      ([api_key] + secrets).each do |secret|
-        next if secret.nil? || secret.to_s.empty?
-
-        value = value.gsub(secret.to_s, '***').gsub(ERB::Util.url_encode(secret.to_s), '***')
-      end
-      value
+      ApiKey.redact(text, [api_key] + secrets)
     end
 
     def get(path, **params)
@@ -528,13 +524,25 @@ module Zerobounce
       text = response.body.to_s
       content_type = (response.headers[:content_type] || '').to_s
       if text.strip.empty? || content_type.downcase.include?('application/json') ||
-         ResponseError.html?(text, content_type)
+         ResponseError.html?(text, content_type) || json_body?(text)
         raise ApiResponseError.new(
           redact(ResponseError.message_from_parts(response.code, content_type, text)),
           response.code
         )
       end
       text
+    end
+
+    # Whether a CSV download's body is a JSON object or array: an API error
+    # under a CSV content type.
+    def json_body?(text)
+      stripped = text.strip
+      return false unless stripped.start_with?('{', '[')
+
+      JSON.parse(stripped)
+      true
+    rescue JSON::ParserError
+      false
     end
   end
 end

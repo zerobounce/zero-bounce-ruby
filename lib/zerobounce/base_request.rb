@@ -85,17 +85,10 @@ module Zerobounce
 
     # Removes the API key from error text. The key the request actually used
     # (a Zerobounce::Client's or with_api_key's, which is thread-local) is
-    # redacted as well as the global one, in its raw and URL-encoded forms.
+    # redacted as well as the global one, in its raw, URL-encoded and
+    # JSON-escaped forms.
     def self.__redact_api_key__(message)
-      text = message.to_s
-      [current_api_key, Zerobounce.config.apikey].uniq.each do |key|
-        next if key.nil? || key.to_s.strip.empty?
-
-        [key.to_s, URI.encode_www_form_component(key.to_s)].uniq.each do |form|
-          text = text.gsub(form, '***')
-        end
-      end
-      text
+      ApiKey.redact(message, [current_api_key, Zerobounce.config.apikey].uniq)
     end
 
     def self.current_api_key

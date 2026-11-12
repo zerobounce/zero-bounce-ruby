@@ -5,6 +5,8 @@ require 'zerobounce/api_key'
 module Zerobounce
   # One API key. Package methods share Zerobounce.config; a Client does not.
   class Client
+    include ApiKey::RefusesDump
+
     def initialize(apikey)
       ApiKey.check!(apikey) unless apikey.nil? || apikey.to_s.strip.empty?
       @apikey = apikey

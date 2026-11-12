@@ -377,21 +377,31 @@ describe 'Transport guards on every request path' do
   # A response body that quotes the key (an API message naming the key, a
   # proxy echoing the request URL, an HTML title) must not hand it to the
   # caller, whatever the status: every error the SDK raises from a body is
-  # redacted, in the key's raw and URL-encoded forms.
+  # redacted, in the key's raw, URL-encoded and JSON-escaped forms. The key
+  # holds each character those encodings change: '"', '/', '+' and '%'.
   describe 'a response body that quotes the API key' do
-    echo_key = 'echo+key/42'
-    encoded = 'echo%2Bkey%2F42'
+    echo_key = 'echo"key/4+2%25'
+    encoded = ERB::Util.url_encode(echo_key)
+    escaped = JSON.generate(echo_key)[1..-2] # echo\"key/4+2%25
+    escaped_slash = escaped.gsub('/', '\\/') # echo\"key\/4+2%25, as some servers write JSON
+    forms = [echo_key, encoded, CGI.escape(echo_key), escaped, escaped_slash].freeze
     json = 'application/json'
-    batch_all = %({"email_batch":[],"errors":[{"email_address":"all","error":"Invalid API key #{echo_key}"}]})
     bodies = {
-      '200 {"error"}' => [200, json, %({"error":"Invalid API key #{echo_key}"})],
-      '200 {"success":false}' => [200, json, %({"success":false,"message":"Invalid API key #{echo_key}"})],
-      '200 batch "all" error' => [200, json, batch_all],
       '200 HTML title' => [200, 'text/html', "<html><head><title>Denied #{echo_key}</title></head></html>"],
-      '200 JSON cut off' => [200, json, %({"error":"Invalid API key #{echo_key}")],
       '400 text quoting the URL' => [400, 'text/plain', "Bad request: https://first.example/v2/x?api_key=#{encoded}"],
-      '400 {"error"}' => [400, json, %({"error":"Invalid API key #{echo_key}"})]
-    }.freeze
+      '400 text quoting the raw key' => [400, 'text/plain', "Bad request for #{echo_key}"]
+    }
+    { 'escaped' => escaped, 'escaped \\/' => escaped_slash }.each do |how, form|
+      bodies.merge!(
+        "200 {\"error\"} #{how}" => [200, json, %({"error":"Invalid API key #{form}"})],
+        "200 {\"success\":false} #{how}" => [200, json, %({"success":false,"message":"Invalid API key #{form}"})],
+        "200 batch \"all\" error #{how}" =>
+          [200, json, %({"email_batch":[],"errors":[{"email_address":"all","error":"Invalid API key #{form}"}]})],
+        "200 JSON cut off #{how}" => [200, json, %({"error":"Invalid API key #{form}")],
+        "400 {\"error\"} #{how}" => [400, json, %({"error":"Invalid API key #{form}"})]
+      )
+    end
+    bodies.freeze
 
     def stub_body(status, type, body)
       stub_request(:any, %r{\Ahttps://first\.example/})
@@ -409,12 +419,11 @@ describe 'Transport guards on every request path' do
       parts.join("\n")
     end
 
-    def expect_redacted(label, key, encoded_key)
+    def expect_redacted(label, forms)
       yield
     rescue StandardError => e
       text = visible_text(e)
-      expect(text).not_to include(key), "#{label}: #{e.class}: #{text}"
-      expect(text).not_to include(encoded_key), "#{label}: #{e.class}: #{text}"
+      forms.each { |form| expect(text).not_to include(form), "#{label}: #{e.class}: #{text}" }
     end
 
     TransportSweep::CALLS.each do |name, call|
@@ -423,7 +432,7 @@ describe 'Transport guards on every request path' do
         bodies.each do |label, (status, type, body)|
           WebMock.reset!
           stub_body(status, type, body)
-          expect_redacted(label, echo_key, encoded) { call.call }
+          expect_redacted(label, forms) { call.call }
         end
       end
     end
@@ -433,7 +442,7 @@ describe 'Transport guards on every request path' do
         bodies.each do |label, (status, type, body)|
           WebMock.reset!
           stub_body(status, type, body)
-          expect_redacted(label, echo_key, encoded) { call.call(TransportSweep.warmup(echo_key, 'https://first.example')) }
+          expect_redacted(label, forms) { call.call(TransportSweep.warmup(echo_key, 'https://first.example')) }
         end
       end
     end
@@ -442,7 +451,7 @@ describe 'Transport guards on every request path' do
     # are errors on every call of the client, so each must raise.
     it 'raises for each error body on every call of the client' do
       TransportSweep.configure(echo_key, 'https://first.example')
-      bodies.except('200 batch "all" error').each do |label, (status, type, body)|
+      bodies.reject { |label, _| label.start_with?('200 batch "all" error') }.each do |label, (status, type, body)|
         TransportSweep::CALLS.each do |name, call|
           WebMock.reset!
           stub_body(status, type, body)
@@ -559,6 +568,166 @@ describe 'errors from the client' do
           expect(ErrorContents.leaks(error, [key])).to eq([]), "#{label}: #{error.class}: #{error.message}"
         }
       end
+    end
+  end
+end
+
+# Body checks that a mutation once removed without a failing spec: the
+# text/html content type on its own, a "success" sent as the string "false",
+# a getfile JSON error under a CSV content type, and the Warmup CSV checks.
+describe 'body checks on every path' do
+  root = 'https://first.example'
+  downloads = TransportSweep::CALLS.keys.select { |name| name.to_s.end_with?('_file_get') }
+  getfile_errors = ['{"success":false,"message":"File cannot be found."}',
+                    %(  \n{"error":"File cannot be found."})].freeze
+  csv_json_bodies = ['{"error":"c_from not found"}', %(  \n{"success":false,"message":"no seeds"}), '[]'].freeze
+  empty_bodies = ['', "  \n"].freeze
+
+  def stub_any(status, type, body)
+    stub_request(:any, %r{\Ahttps://first\.example/})
+      .to_return(status: status, body: body, headers: { 'Content-Type' => type })
+  end
+
+  before do
+    TransportSweep.configure('body-key', root)
+    allow(Zerobounce).to receive(:warn)
+  end
+
+  it 'finds the four result-file downloads' do
+    expect(downloads.size).to eq(4)
+  end
+
+  # A body every path would otherwise accept, under text/html: JSON for the
+  # JSON calls, a CSV line for the downloads. Only the content type says
+  # it is a page.
+  TransportSweep::CALLS.each do |name, call|
+    it "treats a text/html answer as an error with status 200 on #{name}" do
+      body = if downloads.include?(name)
+               "email,status\na@example.com,valid\n"
+             else
+               '{"success":true,"Credits":"5","file_id":"f1","email_batch":[],"status":"valid"}'
+             end
+      stub_any(200, 'text/html; charset=utf-8', body)
+      expect { call.call }.to raise_error(Zerobounce::ApiResponseError) { |error|
+        expect(error.status_code).to eq(200)
+      }
+    end
+  end
+
+  %i[download_seeds download_statistics].each do |name|
+    call = TransportSweep::WARMUP_CALLS.fetch(name)
+    it "treats a text/html answer as an error with status 200 on Warmup##{name}" do
+      stub_any(200, 'text/html', "seed,provider\na@b.com,gmail\n")
+      expect { call.call(TransportSweep.warmup('body-key', root)) }
+        .to raise_error(Zerobounce::ApiResponseError) { |error| expect(error.status_code).to eq(200) }
+    end
+  end
+
+  it 'treats "success": "false" (a string, any case) as an error on every JSON call' do
+    accepted = []
+    ['{"success":"false","file_id":"f1"}', '{"success":" False ","file_id":"f1"}'].each do |body|
+      (TransportSweep::CALLS.keys - downloads).each do |name|
+        WebMock.reset!
+        stub_any(200, 'application/json', body)
+        begin
+          TransportSweep::CALLS[name].call
+          accepted << [name, body]
+        rescue Zerobounce::ApiResponseError => e
+          expect(e.status_code).to eq(200), name.to_s
+        end
+      end
+    end
+    # Calls whose answer has no "success" field still raise: the field is read
+    # wherever it appears.
+    expect(accepted).to eq([])
+  end
+
+  downloads.each do |name|
+    it "treats a JSON error under text/csv as an error on #{name}" do
+      getfile_errors.each do |body|
+        WebMock.reset!
+        stub_any(200, 'text/csv', body)
+        expect { TransportSweep::CALLS[name].call }.to raise_error(Zerobounce::ApiResponseError) { |error|
+          expect(error.status_code).to eq(200)
+          expect(error.message).to include('File cannot be found.')
+        }
+      end
+    end
+  end
+
+  %i[download_seeds download_statistics].each do |name|
+    it "treats a JSON body under text/csv as an error on Warmup##{name}" do
+      csv_json_bodies.each do |body|
+        WebMock.reset!
+        stub_any(200, 'text/csv', body)
+        expect { TransportSweep::WARMUP_CALLS[name].call(TransportSweep.warmup('body-key', root)) }
+          .to raise_error(Zerobounce::ApiResponseError) { |error| expect(error.status_code).to eq(200) }
+      end
+    end
+
+    it "treats an empty body as an error on Warmup##{name}" do
+      empty_bodies.each do |body|
+        WebMock.reset!
+        stub_any(200, 'text/csv', body)
+        expect { TransportSweep::WARMUP_CALLS[name].call(TransportSweep.warmup('body-key', root)) }
+          .to raise_error(Zerobounce::ApiResponseError) { |error| expect(error.status_code).to eq(200) }
+      end
+    end
+  end
+end
+
+# The SMTP username and password are masked like the key, in every form.
+describe 'SMTP secrets quoted in a body' do
+  password = 'pw"with/slash+plus%41'
+  username = 'user"name/x+y%42'
+
+  it 'are masked raw, URL-encoded and JSON-escaped' do
+    # The last one is written \u00e9 by a server that escapes non-ASCII.
+    [password, username, "pw\u00e9-unicode"].each do |secret|
+      escaped = JSON.generate(secret)[1..-2]
+      forms = [secret, ERB::Util.url_encode(secret), CGI.escape(secret), escaped, escaped.gsub('/', '\\/'),
+               JSON.generate(secret, ascii_only: true)[1..-2]].uniq
+      forms[1..].each do |form|
+        [[400, %({"error":"login failed: #{form}"})], [500, "login failed: #{form}"]].each do |status, body|
+          WebMock.reset!
+          stub_request(:any, %r{\Ahttps://first\.example/})
+            .to_return(status: status, body: body, headers: { 'Content-Type' => 'application/json' })
+          warmup = TransportSweep.warmup('smtp-key', 'https://first.example')
+          expect { warmup.test_smtp_configuration('a@b.com', username, secret, 'smtp.example.com', 587) }
+            .to raise_error(Zerobounce::ApiResponseError) { |error|
+              expect(ErrorContents.leaks(error, [secret]) + forms.select { |f| error.message.include?(f) })
+                .to eq([]), "#{status} #{body}: #{error.message}"
+            }
+        end
+      end
+    end
+  end
+end
+
+# A Marshal or YAML dump of an object holding the key would carry it to
+# wherever the dump is written, so it is refused.
+describe 'serialising an object that holds the API key' do
+  require 'yaml'
+
+  key = 'dump-key-0123456789'
+  objects = {
+    'Configuration' => -> { Zerobounce::Configuration.new.tap { |c| c.apikey = key } },
+    'Client' => -> { Zerobounce::Client.new(key) },
+    'Warmup' => -> { Zerobounce::Warmup.new(key) }
+  }
+
+  objects.each do |label, build|
+    it "refuses Marshal.dump of a #{label}" do
+      expect { Marshal.dump(build.call) }
+        .to raise_error(TypeError) { |error| expect(error.message).not_to include(key) }
+    end
+
+    it "refuses YAML.dump of a #{label}" do
+      expect { YAML.dump(build.call) }.to raise_error(TypeError) { |error| expect(error.message).not_to include(key) }
+    end
+
+    it "still copies a #{label} with dup" do
+      expect(build.call.dup).to be_a(build.call.class)
     end
   end
 end

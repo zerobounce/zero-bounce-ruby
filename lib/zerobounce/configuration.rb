@@ -2,6 +2,7 @@
 
 require 'rest-client'
 require_relative 'api_urls'
+require_relative 'api_key'
 
 module Zerobounce
   # Configuration object for Zerobounce.
@@ -30,6 +31,8 @@ module Zerobounce
   # @attr [Array<Symbol>] valid_statues
   #   The statuses that are considered valid by {Response#valid?}.
   class Configuration
+    include ApiKey::RefusesDump
+
     attr_accessor :headers, :apikey, :api_root_url, :bulk_api_root_url, :bulk_root_url,
                   :list_evaluator_root_url, :inbox_placement_root_url, :valid_statuses, :mock
 
