@@ -504,17 +504,26 @@ module Zerobounce
       text = response.body.to_s
       return nil if response.code == 204 || text.strip.empty?
 
+      # A page (a proxy's "Access denied") is an error even when its body parses as JSON.
+      raise body_error(response, text, secrets), cause: nil if ResponseError.html?(text, content_type_of(response))
+
       begin
         JSON.parse(text, quirks_mode: true)
       rescue JSON::ParserError
-        raise ApiResponseError.new(
-          redact(
-            ResponseError.message_from_parts(
-              response.code, (response.headers[:content_type] || '').to_s, text
-            ), secrets
-          ), response.code
-        ), cause: nil # the parser's error quotes the body
+        raise body_error(response, text, secrets), cause: nil # the parser's error quotes the body
       end
+    end
+
+    def content_type_of(response)
+      (response.headers[:content_type] || '').to_s
+    end
+
+    # The error for a 2xx body that is not a JSON result, redacted.
+    def body_error(response, text, secrets)
+      ApiResponseError.new(
+        redact(ResponseError.message_from_parts(response.code, content_type_of(response), text), secrets),
+        response.code
+      )
     end
 
     # A CSV download, returned as text. An HTML page on a 200 (a proxy's

@@ -383,7 +383,9 @@ describe 'Transport guards on every request path' do
     echo_key = 'echo"key/4+2%25'
     encoded = ERB::Util.url_encode(echo_key)
     escaped = JSON.generate(echo_key)[1..-2] # echo\"key/4+2%25
-    escaped_slash = escaped.gsub('/', '\\/') # echo\"key\/4+2%25, as some servers write JSON
+    # echo\"key\/4+2%25, as some servers write JSON (escape_slash: the json
+    # 2.6 name of script_safe, still accepted by later versions)
+    escaped_slash = JSON.generate(echo_key, escape_slash: true)[1..-2]
     forms = [echo_key, encoded, CGI.escape(echo_key), escaped, escaped_slash].freeze
     json = 'application/json'
     bodies = {
@@ -623,6 +625,15 @@ describe 'body checks on every path' do
     end
   end
 
+  # The Warmup JSON calls: a body that parses as JSON, under text/html.
+  (TransportSweep::WARMUP_CALLS.keys - %i[download_seeds download_statistics]).each do |name|
+    it "treats a text/html answer as an error with status 200 on Warmup##{name}" do
+      stub_any(200, 'text/html; charset=utf-8', '{"a":1}')
+      expect { TransportSweep::WARMUP_CALLS[name].call(TransportSweep.warmup('body-key', root)) }
+        .to raise_error(Zerobounce::ApiResponseError) { |error| expect(error.status_code).to eq(200) }
+    end
+  end
+
   it 'treats "success": "false" (a string, any case) as an error on every JSON call' do
     accepted = []
     ['{"success":"false","file_id":"f1"}', '{"success":" False ","file_id":"f1"}'].each do |body|
@@ -685,8 +696,8 @@ describe 'SMTP secrets quoted in a body' do
     # The last one is written \u00e9 by a server that escapes non-ASCII.
     [password, username, "pw\u00e9-unicode"].each do |secret|
       escaped = JSON.generate(secret)[1..-2]
-      forms = [secret, ERB::Util.url_encode(secret), CGI.escape(secret), escaped, escaped.gsub('/', '\\/'),
-               JSON.generate(secret, ascii_only: true)[1..-2]].uniq
+      forms = [secret, ERB::Util.url_encode(secret), CGI.escape(secret), escaped,
+               JSON.generate(secret, escape_slash: true)[1..-2], JSON.generate(secret, ascii_only: true)[1..-2]].uniq
       forms[1..].each do |form|
         [[400, %({"error":"login failed: #{form}"})], [500, "login failed: #{form}"]].each do |status, body|
           WebMock.reset!
@@ -699,6 +710,67 @@ describe 'SMTP secrets quoted in a body' do
                 .to eq([]), "#{status} #{body}: #{error.message}"
             }
         end
+      end
+    end
+  end
+end
+
+# Each spelling a secret can take in an echoed body, built here with the
+# encoders themselves, so dropping any one of them from ApiKey.secret_forms
+# fails. The first secret holds every character an encoding changes; the
+# second a non-ASCII character, "/", '"' and the "#{" that Ruby's #inspect
+# escapes and JSON does not.
+describe 'every spelling of a secret echoed in a body' do
+  root = 'https://first.example'
+  secrets = [%(a b"/+%&=<>'\\), "pw\u00e9/\"\#{x}"].freeze
+
+  def self.json_spellings(secret)
+    {
+      'JSON' => JSON.generate(secret)[1..-2],
+      'JSON \\/' => JSON.generate(secret, escape_slash: true)[1..-2],
+      'JSON \\uXXXX' => JSON.generate(secret, ascii_only: true)[1..-2],
+      'JSON \\/ and \\uXXXX' => JSON.generate(secret, escape_slash: true, ascii_only: true)[1..-2]
+    }
+  end
+
+  def self.spellings(secret)
+    json = JSON.generate(secret)[1..-2]
+    { 'raw' => secret, 'URL-encoded, %20' => ERB::Util.url_encode(secret), 'URL-encoded, +' => CGI.escape(secret),
+      'inspect' => secret.inspect[1..-2] }
+      .merge(json_spellings(secret))
+      .merge('URL-encoded JSON, %20' => ERB::Util.url_encode(json), 'URL-encoded JSON, +' => CGI.escape(json))
+  end
+
+  def stub_echo(text)
+    WebMock.reset!
+    stub_request(:any, %r{\Ahttps://first\.example/})
+      .to_return(status: 400, body: "rejected: #{text}", headers: { 'Content-Type' => 'text/plain' })
+  end
+
+  # Otherwise dropping that spelling from ApiKey.secret_forms could go unseen.
+  it 'gives each spelling a value no other spelling has, for one of the secrets' do
+    shared = self.class.spellings(secrets[0]).keys.select do |label|
+      secrets.all? do |secret|
+        forms = self.class.spellings(secret)
+        forms.count { |_, form| form == forms[label] } > 1
+      end
+    end
+    expect(shared).to eq([])
+  end
+
+  secrets.each_with_index do |secret, index|
+    spellings(secret).each do |label, form|
+      it "masks secret #{index + 1} written #{label}, as the API key and as the SMTP password" do
+        stub_echo(form)
+        TransportSweep.configure(secret, root)
+        expect { Zerobounce.credits }.to raise_error(RestClient::BadRequest) { |error|
+          expect(error.message).not_to include(form)
+        }
+
+        stub_echo(form)
+        warmup = TransportSweep.warmup('smtp-key', root)
+        expect { warmup.test_smtp_configuration('a@b.com', 'user', secret, 'smtp.example.com', 587) }
+          .to raise_error(Zerobounce::ApiResponseError) { |error| expect(error.message).not_to include(form) }
       end
     end
   end
