@@ -32,6 +32,12 @@ module Zerobounce
     ONBOARDING_MODELS = %w[self_managed zb_managed].freeze
     EMAIL_TYPES = %w[transactional newsletter marketing].freeze
 
+    # The documented email_content fields
+    # (https://www.zerobounce.net/docs/warmup-api/adding-a-sending-account).
+    EMAIL_CONTENT_FIELDS = %w[company_name company_website company_description types_of_emails example_email].freeze
+    # The documented managed_sending fields.
+    MANAGED_SENDING_FIELDS = %w[weekdays_only timezone timezone_offset warmup_start_date].freeze
+
     # Required by the schema but always replaced with the key's own team.
     ANY_TEAM_ID = 1
 
@@ -74,9 +80,12 @@ module Zerobounce
     # Adds a from-address to warmup. POST /sending-accounts
     #
     # +self_managed+ runs your own mailbox and needs +engagement_rule_id+ 0-4.
-    # +zb_managed+ has ZeroBounce provision it and takes +email_content+ and
-    # +managed_sending+; a 200 means accepted, and the mailbox is provisioned
-    # afterwards.
+    # +zb_managed+ has ZeroBounce provision it and takes +email_content+
+    # (+company_name+, +company_website+, +company_description+,
+    # +types_of_emails+, +example_email+) and +managed_sending+
+    # (+weekdays_only+, +timezone+, +timezone_offset+ -11 to 14,
+    # +warmup_start_date+); a 200 means accepted, and the mailbox is
+    # provisioned afterwards. Other keys are not sent and draw a warning.
     def add_sending_account(from_address, onboarding_model, **options)
       require_value(from_address, 'from_address')
       unless ONBOARDING_MODELS.include?(onboarding_model.to_s)
@@ -351,12 +360,33 @@ module Zerobounce
         'important_pct' => important_pct, 'click_pct' => click_pct }
     end
 
+    # The value of +key+ (a Symbol or String key) and whether it was given.
+    # Looked up with key? so a false value is kept.
+    def field(hash, key)
+      return [true, hash[key.to_sym]] if hash.key?(key.to_sym)
+      return [true, hash[key.to_s]] if hash.key?(key.to_s)
+
+      [false, nil]
+    end
+
+    # Keys that are not API fields are left out of the request, with a
+    # warning naming the documented fields, as unknown keys were always left
+    # out (silently, up to 3.0.1).
+    def warn_unknown(hash, known, name)
+      unknown = hash.keys.map(&:to_s).uniq - known
+      return if unknown.empty?
+
+      warn "Zerobounce::Warmup#add_sending_account: #{name} #{unknown.join(', ')} " \
+           "#{unknown.length == 1 ? 'is not an API field' : 'are not API fields'} and not sent; " \
+           "the fields are #{known.join(', ')}"
+    end
+
     def email_content_body(content)
       raise ArgumentError, 'email_content must be a Hash' unless content.is_a?(Hash)
 
       body = {}
-      types = content[:types_of_emails] || content['types_of_emails']
-      unless types.nil?
+      given, types = field(content, :types_of_emails)
+      if given && !types.nil?
         Array(types).each do |kind|
           unless EMAIL_TYPES.include?(kind.to_s)
             raise ArgumentError, 'types_of_emails must be transactional, newsletter and/or marketing'
@@ -364,10 +394,15 @@ module Zerobounce
         end
         body['types_of_emails'] = Array(types).map(&:to_s)
       end
-      %i[industry company_name website].each do |key|
-        value = content[key] || content[key.to_s]
-        body[key.to_s] = value unless value.nil?
+      %w[company_name company_website company_description example_email].each do |key|
+        given, value = field(content, key)
+        body[key] = value if given && !value.nil?
       end
+      # Up to 3.0.1 the SDK took the website as "website", which the API does
+      # not read; it is still accepted and sent as company_website.
+      given, website = field(content, :website)
+      body['company_website'] = website if given && !website.nil? && !body.key?('company_website')
+      warn_unknown(content, EMAIL_CONTENT_FIELDS + %w[website], 'email_content')
       body
     end
 
@@ -375,13 +410,29 @@ module Zerobounce
       raise ArgumentError, 'managed_sending must be a Hash' unless sending.is_a?(Hash)
 
       body = {}
-      offset = sending[:timezone_offset] || sending['timezone_offset']
-      body['timezone_offset'] = in_range(offset, -11, 14, 'timezone_offset') unless offset.nil?
-      start = sending[:warmup_start_date] || sending['warmup_start_date']
-      body['warmup_start_date'] = api_date(start, 'warmup_start_date') unless start.nil?
-      limit = sending[:daily_limit] || sending['daily_limit']
-      body['daily_limit'] = limit unless limit.nil?
+      given, weekdays = field(sending, :weekdays_only)
+      body['weekdays_only'] = StrictBool.parse(weekdays, 'weekdays_only') if given && !weekdays.nil?
+      given, timezone = field(sending, :timezone)
+      if given && !timezone.nil?
+        raise ArgumentError, 'timezone must be a String, e.g. Europe/Bucharest' unless timezone.is_a?(String)
+
+        body['timezone'] = timezone
+      end
+      given, offset = field(sending, :timezone_offset)
+      body['timezone_offset'] = timezone_offset(offset) if given && !offset.nil?
+      given, start = field(sending, :warmup_start_date)
+      body['warmup_start_date'] = api_date(start, 'warmup_start_date') if given && !start.nil?
+      warn_unknown(sending, MANAGED_SENDING_FIELDS, 'managed_sending')
       body
+    end
+
+    # -11 to 14, whole or fractional hours (the docs' example sends 3.0).
+    def timezone_offset(value)
+      unless (value.is_a?(Integer) || value.is_a?(Float)) && value.between?(-11, 14)
+        raise ArgumentError, 'timezone_offset must be -11 to 14'
+      end
+
+      value
     end
 
     # -- transport ----------------------------------------------------------
@@ -457,7 +508,7 @@ module Zerobounce
               response.code, (response.headers[:content_type] || '').to_s, text
             ), secrets
           ), response.code
-        )
+        ), cause: nil # the parser's error quotes the body
       end
     end
 

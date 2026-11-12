@@ -252,6 +252,62 @@ describe Zerobounce::Warmup do
       expect(body['managed_sending']['warmup_start_date']).to eq('2026-03-04')
     end
 
+    it 'sends the documented zb_managed fields, exactly' do
+      stub_ok
+      warmup.add_sending_account(
+        'a@b.com', 'zb_managed',
+        email_content: { company_name: 'Acme', company_website: 'https://acme.example',
+                         company_description: 'B2B email tools', types_of_emails: ['marketing'],
+                         example_email: 'Hi, short intro to Acme.' },
+        managed_sending: { weekdays_only: true, timezone: 'Europe/Bucharest', timezone_offset: 3.0,
+                           warmup_start_date: '2026-09-15' }
+      )
+      expect(last_json).to eq(
+        'from_address' => 'a@b.com', 'onboarding_model' => 'zb_managed',
+        'email_content' => { 'company_name' => 'Acme', 'company_website' => 'https://acme.example',
+                             'company_description' => 'B2B email tools', 'types_of_emails' => ['marketing'],
+                             'example_email' => 'Hi, short intro to Acme.' },
+        'managed_sending' => { 'weekdays_only' => true, 'timezone' => 'Europe/Bucharest',
+                               'timezone_offset' => 3.0, 'warmup_start_date' => '2026-09-15' }
+      )
+
+      # String keys work too, and a false weekdays_only is sent as false.
+      warmup.add_sending_account('a@b.com', 'zb_managed', managed_sending: { 'weekdays_only' => false })
+      expect(last_json['managed_sending']).to eq('weekdays_only' => false)
+    end
+
+    it 'sends the old website key as company_website and leaves out what the API does not read' do
+      stub_ok
+      expect(warmup).to receive(:warn).with(/email_content industry is not an API field.*company_website/)
+      expect(warmup).to receive(:warn).with(/managed_sending daily_limit is not an API field.*weekdays_only/)
+      warmup.add_sending_account(
+        'a@b.com', 'zb_managed',
+        email_content: { industry: 'SaaS', company_name: 'Acme', website: 'https://acme.example' },
+        managed_sending: { daily_limit: 50, timezone_offset: -5 }
+      )
+      expect(last_json['email_content']).to eq('company_name' => 'Acme', 'company_website' => 'https://acme.example')
+      expect(last_json['managed_sending']).to eq('timezone_offset' => -5)
+    end
+
+    it 'checks the types of the zb_managed fields' do
+      stub_ok
+      add = ->(sending) { warmup.add_sending_account('a@b.com', 'zb_managed', managed_sending: sending) }
+      ['junk', 'yes', 2, ''].each do |bad|
+        expect { add.call(weekdays_only: bad) }.to raise_error(ArgumentError, /weekdays_only/)
+      end
+      expect { add.call(timezone: 3) }.to raise_error(ArgumentError, /timezone/)
+      expect { add.call(timezone_offset: '3') }.to raise_error(ArgumentError, /timezone_offset/)
+      expect { add.call(timezone_offset: 14.5) }.to raise_error(ArgumentError, /timezone_offset/)
+      expect(request_count).to eq(0)
+
+      [['false', false], ['TRUE', true], [0, false], [1, true]].each do |value, sent|
+        WebMock.reset!
+        stub_ok
+        add.call(weekdays_only: value)
+        expect(last_json['managed_sending']['weekdays_only']).to be(sent)
+      end
+    end
+
     it 'checks the from-address search and sends paging as strings' do
       expect { warmup.list_from_addresses(search_from: 'bad search!') }.to raise_error(ArgumentError)
       expect { warmup.list_from_addresses(offset: -1) }.to raise_error(ArgumentError)

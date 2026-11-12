@@ -355,7 +355,9 @@ module Zerobounce
       begin
         JSON.parse(body)
       rescue JSON::ParserError
-        raise ApiResponseError.new('ZeroBounce returned a response that is not valid JSON.', code)
+        # cause: nil, or the parser's error, which quotes the body, would ride
+        # along as #cause.
+        raise ApiResponseError.new('ZeroBounce returned a response that is not valid JSON.', code), cause: nil
       end
     end
 
