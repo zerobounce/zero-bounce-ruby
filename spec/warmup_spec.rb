@@ -210,6 +210,23 @@ describe Zerobounce::Warmup do
       )
     end
 
+    it 'parses ignore_conflict strictly, as the client parses its boolean options' do
+      add = ->(value) { warmup.add_sending_account('a@b.com', 'self_managed', engagement_rule_id: 2, ignore_conflict: value) }
+      ['junk', 'yes', 2, '', Object.new].each do |bad|
+        expect { add.call(bad) }.to raise_error(ArgumentError, /ignore_conflict/)
+      end
+      expect(request_count).to eq(0)
+
+      [[false, false], ['false', false], ['FALSE', false], [0, false], ['0', false],
+       [true, true], ['true', true], [1, true], ['1', true]].each do |value, sent|
+        add.call(value)
+        expect(last_json['ignore_conflict']).to be(sent), "#{value.inspect} was sent as #{last_json['ignore_conflict']}"
+      end
+
+      add.call(nil)
+      expect(last_json).not_to have_key('ignore_conflict')
+    end
+
     it 'checks the zb_managed payload' do
       expect do
         warmup.add_sending_account('a@b.com', 'zb_managed',

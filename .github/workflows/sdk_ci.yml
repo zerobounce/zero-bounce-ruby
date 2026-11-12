@@ -48,3 +48,26 @@ jobs:
 
       - name: Run specs
         run: bundle exec rspec
+
+      # The gem as users install it: built from the gemspec, installed into an
+      # empty GEM_HOME and loaded from outside the checkout, so lib/ is not on
+      # the load path and a file left out of spec.files fails here.
+      - name: Build, install and load the gem
+        run: |
+          gem_file="$RUNNER_TEMP/zerobounce-sdk.gem"
+          gem build zerobounce.gemspec --output "$gem_file"
+          ruby -rrubygems/package -e 'missing = Dir["lib/**/*.rb"] - Gem::Package.new(ARGV[0]).spec.files
+                   abort "Not in the gem: #{missing.join(", ")}" unless missing.empty?' "$gem_file"
+          export GEM_HOME="$RUNNER_TEMP/gem-home" GEM_PATH="$RUNNER_TEMP/gem-home"
+          gem install --no-document rest-client -v '~> 2.1'
+          gem install --local --no-document "$gem_file"
+          cd "$RUNNER_TEMP"
+          ruby -e '
+            require "zerobounce"
+            home = ENV.fetch("GEM_HOME")
+            stray = $LOADED_FEATURES.grep(%r{/zerobounce[/.]}).reject { |f| f.start_with?(home) }
+            abort "Loaded from outside the installed gem: #{stray.join(", ")}" unless stray.empty?
+            Zerobounce.configure { |c| c.apikey = "not-a-real-key" }
+            Zerobounce::Warmup.new("not-a-real-key").inspect
+            puts "zerobounce-sdk #{Zerobounce::VERSION} loads from #{Gem.loaded_specs.fetch("zerobounce-sdk").full_gem_path}"
+          '

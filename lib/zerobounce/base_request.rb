@@ -343,7 +343,9 @@ module Zerobounce
       end
     end
 
-    def self.__parse_json_response__(response)
+    # The parsed JSON body. An HTML page, an empty body or one that is not
+    # valid JSON raises ApiResponseError with the HTTP status.
+    def self.__parse_json_body__(response)
       body = response.body.to_s
       content_type = (response.headers[:content_type] || '').to_s
       code = response.code
@@ -351,10 +353,15 @@ module Zerobounce
         raise ApiResponseError.new(ResponseError.message_from_parts(code, content_type, body), code)
       end
       begin
-        parsed = JSON.parse(body)
+        JSON.parse(body)
       rescue JSON::ParserError
         raise ApiResponseError.new('ZeroBounce returned a response that is not valid JSON.', code)
       end
+    end
+
+    def self.__parse_json_response__(response)
+      parsed = __parse_json_body__(response)
+      code = response.code
       return parsed unless parsed.is_a?(Hash)
 
       __raise_if_success_false__(response, parsed)

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'erb'
+require 'zerobounce/strict_bool'
 
 module Zerobounce
   module Priority3
@@ -290,19 +291,9 @@ module Zerobounce
       value.nil? || value.to_s.strip.empty?
     end
 
-    # A boolean option, parsed strictly: true/false, 'true'/'false' in any
-    # case, or 1/0. Anything else is an ArgumentError, so 'false' can no
-    # longer be sent as true and a typo is not silently taken as a flag.
+    # A boolean option, parsed strictly (see StrictBool).
     def __strict_bool__(value, name)
-      return value if [true, false].include?(value)
-      return value == 1 if value.is_a?(Integer) && [0, 1].include?(value)
-
-      if value.is_a?(String)
-        text = value.strip.downcase
-        return true if %w[true 1].include?(text)
-        return false if %w[false 0].include?(text)
-      end
-      raise ArgumentError, "#{name} must be true or false"
+      StrictBool.parse(value, name)
     end
 
     # A strict boolean option as the string the API expects on the wire.

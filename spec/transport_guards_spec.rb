@@ -321,6 +321,8 @@ describe 'Transport guards on every request path' do
     end
   end
 
+  # An HTML page (a proxy's or Cloudflare's "Access denied") on a 200 is an
+  # error carrying that status on every request path, never a result.
   describe 'an HTML page on a 200' do
     page = '<!DOCTYPE html><html><head><title>Access denied</title></head><body>no</body></html>'
 
@@ -330,24 +332,44 @@ describe 'Transport guards on every request path' do
         .to_return(status: 200, body: page, headers: { 'Content-Type' => 'text/html; charset=UTF-8' })
     end
 
-    %i[validate_file_get scoring_file_get email_finder_file_get domain_search_file_get].each do |name|
-      it "is an error for #{name}, not a result file" do
-        expect { TransportSweep::CALLS.fetch(name).call }
-          .to raise_error(Zerobounce::ApiResponseError) { |error|
-            expect(error.status_code).to eq(200)
-            expect(error.message).to include('Access denied')
-          }
+    def expect_page_error(&call)
+      expect(&call).to raise_error(Zerobounce::ApiResponseError) { |error|
+        expect([error.status_code, error.message]).to match([200, include('Access denied')])
+      }
+    end
+
+    TransportSweep::CALLS.each do |name, call|
+      it "is an error with the status for #{name}" do
+        expect_page_error { call.call }
       end
     end
 
-    %i[download_seeds download_statistics].each do |name|
-      it "is an error for Warmup##{name}, not CSV" do
-        warmup = TransportSweep.warmup(api_key, 'https://first.example')
-        expect { TransportSweep::WARMUP_CALLS.fetch(name).call(warmup) }
-          .to raise_error(Zerobounce::ApiResponseError) { |error|
-            expect(error.status_code).to eq(200)
-            expect(error.message).to include('Access denied')
-          }
+    TransportSweep::WARMUP_CALLS.each do |name, call|
+      it "is an error with the status for Warmup##{name}" do
+        expect_page_error { call.call(TransportSweep.warmup(api_key, 'https://first.example')) }
+      end
+    end
+  end
+  describe 'a JSON content type with a body that is not valid JSON, on a 200' do
+    before do
+      TransportSweep.configure(api_key, 'https://first.example')
+      stub_request(:any, %r{\Ahttps://first\.example/})
+        .to_return(status: 200, body: '{"success":', headers: { 'Content-Type' => 'application/json' })
+    end
+
+    def expect_error_on_ok(&call)
+      expect(&call).to raise_error(Zerobounce::ApiResponseError) { |error| expect(error.status_code).to eq(200) }
+    end
+
+    TransportSweep::CALLS.each do |name, call|
+      it "is an error with the status for #{name}" do
+        expect_error_on_ok { call.call }
+      end
+    end
+
+    TransportSweep::WARMUP_CALLS.each do |name, call|
+      it "is an error with the status for Warmup##{name}" do
+        expect_error_on_ok { call.call(TransportSweep.warmup(api_key, 'https://first.example')) }
       end
     end
   end
