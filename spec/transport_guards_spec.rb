@@ -715,30 +715,44 @@ describe 'SMTP secrets quoted in a body' do
   end
 end
 
-# Each spelling a secret can take in an echoed body, built here with the
-# encoders themselves, so dropping any one of them from ApiKey.secret_forms
-# fails. The first secret holds every character an encoding changes; the
-# second a non-ASCII character, "/", '"' and the "#{" that Ruby's #inspect
-# escapes and JSON does not.
+# Each spelling a secret can take in an echoed body, composed here from the
+# encoders themselves: {raw, JSON, JSON with \/} (each JSON form with
+# non-ASCII as is or as \uXXXX) x {as is, URL-encoded with %20, with +}, each
+# JSON form escaped twice, and #inspect. Dropping any one generator from
+# ApiKey.secret_forms fails. The first secret holds every character an
+# encoding changes; the second a non-ASCII character, a space, "/", '"' and
+# the "#{" that Ruby's #inspect escapes and JSON does not.
 describe 'every spelling of a secret echoed in a body' do
   root = 'https://first.example'
-  secrets = [%(a b"/+%&=<>'\\), "pw\u00e9/\"\#{x}"].freeze
+  secrets = [%(a b"/+%&=<>'\\), "pw\u00e9 /\"\#{x}"].freeze
 
-  def self.json_spellings(secret)
-    {
-      'JSON' => JSON.generate(secret)[1..-2],
-      'JSON \\/' => JSON.generate(secret, escape_slash: true)[1..-2],
-      'JSON \\uXXXX' => JSON.generate(secret, ascii_only: true)[1..-2],
-      'JSON \\/ and \\uXXXX' => JSON.generate(secret, escape_slash: true, ascii_only: true)[1..-2]
-    }
+  def self.escapers
+    escapers = { 'raw' => ->(text) { text } }
+    [false, true].product([false, true]).each do |slash, ascii|
+      escapers["JSON#{' \\/' if slash}#{' \\uXXXX' if ascii}"] = lambda do |text|
+        json = JSON.generate(text, ascii_only: ascii)[1..-2]
+        slash ? json.gsub('/') { '\/' } : json
+      end
+    end
+    escapers
+  end
+
+  def self.url_encoders
+    { '' => ->(text) { text }, ', URL-encoded %20' => ->(text) { ERB::Util.url_encode(text) },
+      ', URL-encoded +' => ->(text) { CGI.escape(text) } }
   end
 
   def self.spellings(secret)
-    json = JSON.generate(secret)[1..-2]
-    { 'raw' => secret, 'URL-encoded, %20' => ERB::Util.url_encode(secret), 'URL-encoded, +' => CGI.escape(secret),
-      'inspect' => secret.inspect[1..-2] }
-      .merge(json_spellings(secret))
-      .merge('URL-encoded JSON, %20' => ERB::Util.url_encode(json), 'URL-encoded JSON, +' => CGI.escape(json))
+    spellings = { 'inspect' => secret.inspect[1..-2] }
+    escapers.each do |escape_label, escape|
+      url_encoders.each { |url_label, encode| spellings[escape_label + url_label] = encode.call(escape.call(secret)) }
+      spellings["#{escape_label}, twice"] = escape.call(escape.call(secret)) unless escape_label == 'raw'
+    end
+    spellings
+  end
+
+  it 'composes every spelling' do
+    expect(self.class.spellings(secrets[0]).size).to eq(1 + (5 * 3) + 4)
   end
 
   def stub_echo(text)
@@ -760,6 +774,10 @@ describe 'every spelling of a secret echoed in a body' do
 
   secrets.each_with_index do |secret, index|
     spellings(secret).each do |label, form|
+      it "masks secret #{index + 1} written #{label} whole" do
+        expect(Zerobounce::ApiKey.redact("<#{form}>", [secret])).to eq('<***>')
+      end
+
       it "masks secret #{index + 1} written #{label}, as the API key and as the SMTP password" do
         stub_echo(form)
         TransportSweep.configure(secret, root)

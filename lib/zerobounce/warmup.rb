@@ -430,7 +430,8 @@ module Zerobounce
 
     # -11 to 14, whole or fractional hours (the docs' example sends 3.0).
     def timezone_offset(value)
-      unless (value.is_a?(Integer) || value.is_a?(Float)) && value.between?(-11, 14)
+      # NaN cannot be compared (between? raises), so it is refused first.
+      unless (value.is_a?(Integer) || (value.is_a?(Float) && value.finite?)) && value.between?(-11, 14)
         raise ArgumentError, 'timezone_offset must be -11 to 14'
       end
 

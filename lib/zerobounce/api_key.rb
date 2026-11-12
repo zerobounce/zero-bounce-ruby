@@ -22,27 +22,40 @@ module Zerobounce
       api_key
     end
 
-    # Every form a secret can take in a body or URL echoed back to us: raw,
-    # URL-encoded (%20 and + styles), JSON-escaped (with and without "\/",
-    # non-ASCII as is or as \uXXXX) and the URL-encoded JSON form (a server
-    # echoing a URL-encoded copy of a JSON request body). Longest first, so a
-    # form that contains another is masked whole.
+    # Every form a secret can take in a body or URL echoed back to us,
+    # composed from the encoders up to depth 2: {raw, JSON-escaped,
+    # JSON-escaped with "\/"} (each JSON form with non-ASCII as is or as
+    # \uXXXX) x {as is, URL-encoded with %20, URL-encoded with +}, each JSON
+    # form escaped twice (a JSON error body quoting the JSON request body),
+    # and #inspect. Longest first, so a form that contains another is masked
+    # whole.
     def secret_forms(secret)
       raw = secret.to_s
       return [] if raw.empty?
 
-      json = JSON.generate(raw)[1..-2]
-      forms = url_forms(raw) + json_forms(raw) + url_forms(json).drop(1)
+      forms = escaped_forms(raw).flat_map { |form| url_forms(form) } + twice_escaped(raw) + [raw.inspect[1..-2]]
       forms.uniq.reject(&:empty?).sort_by { |form| -form.length }
+    end
+
+    def escaped_forms(raw)
+      [raw] + json_escapers.map { |escape| escape.call(raw) }
+    end
+
+    def twice_escaped(raw)
+      json_escapers.map { |escape| escape.call(escape.call(raw)) }
     end
 
     def url_forms(raw)
       [raw, ERB::Util.url_encode(raw), URI.encode_www_form_component(raw)]
     end
 
-    def json_forms(raw)
-      [raw.inspect[1..-2], JSON.generate(raw)[1..-2], JSON.generate(raw, ascii_only: true)[1..-2],
-       slash_escaped_json(raw), slash_escaped_json(raw, ascii_only: true)]
+    # Text as it appears inside a JSON string: non-ASCII as is or as \uXXXX,
+    # "/" as is or as "\/".
+    def json_escapers
+      [->(text) { JSON.generate(text)[1..-2] },
+       ->(text) { JSON.generate(text, ascii_only: true)[1..-2] },
+       ->(text) { slash_escaped_json(text) },
+       ->(text) { slash_escaped_json(text, ascii_only: true) }]
     end
 
     # The JSON string body with "/" written "\/", as some servers do. Built

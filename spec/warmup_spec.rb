@@ -299,7 +299,7 @@ describe Zerobounce::Warmup do
       end
       WebMock.reset!
       stub_ok
-      [-11.5, 14.5].each do |offset|
+      [-11.5, 14.5, '5.5', '1e1', true, Float::NAN, Float::INFINITY, -Float::INFINITY].each do |offset|
         expect { add.call(offset) }.to raise_error(ArgumentError, /timezone_offset/)
       end
       expect(request_count).to eq(0)
