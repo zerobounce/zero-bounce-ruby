@@ -8,6 +8,7 @@ require 'rest-client'
 require 'zerobounce/api_key'
 require 'zerobounce/error'
 require 'zerobounce/response_error'
+require 'zerobounce/strict_bool'
 
 module Zerobounce
   # Client for the ZeroBounce Warmup API
@@ -92,8 +93,10 @@ module Zerobounce
           raise ArgumentError, 'email_content and managed_sending are for zb_managed'
         end
       end
-      body['ignore_conflict'] = !options[:ignore_conflict].nil? && options[:ignore_conflict] ? true : false if
-        options.key?(:ignore_conflict)
+      unless options[:ignore_conflict].nil?
+        # Parsed strictly, as the client's boolean options are: 'false' is false.
+        body['ignore_conflict'] = StrictBool.parse(options[:ignore_conflict], 'ignore_conflict')
+      end
       body['email_content'] = email_content_body(options[:email_content]) if options.key?(:email_content)
       body['managed_sending'] = managed_sending_body(options[:managed_sending]) if options.key?(:managed_sending)
 

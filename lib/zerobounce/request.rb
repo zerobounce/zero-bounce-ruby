@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'stringio'
 require 'zerobounce/base_request'
 require 'zerobounce/get_file_helper'
 
@@ -26,8 +25,7 @@ module Zerobounce
     def self.bulk_get(path, params, content_type='application/json')
       response = self._get(Zerobounce.configuration.bulk_api_root_url, path, params, content_type)
       if __json_content_type__(response.headers[:content_type])
-        response_body = response.body
-        response_body_json = JSON.parse(response_body)
+        response_body_json = __parse_json_body__(response)
         return response_body_json unless response_body_json.is_a?(Hash)
 
         if __error_value__(response_body_json['error'])
@@ -41,12 +39,9 @@ module Zerobounce
 
         return response_body_json
       else
-        if ResponseError.html?(response.body, response.headers[:content_type])
-          raise ResponseError.message_from(response)
-        end
-        content = StringIO.new(response.body)
-        content.set_encoding_by_bom
-        return content.string
+        # filestatus and deletefile answer in JSON: anything else (an HTML
+        # page, an empty or non-JSON body) raises with the HTTP status.
+        __parse_json_response__(response)
       end
     end
 
@@ -66,18 +61,12 @@ module Zerobounce
     def self.bulk_post(path, params, content_type='application/json', filepath=nil,
                        root: Zerobounce.configuration.bulk_api_root_url)
       response = self._post(root, path, params, content_type, filepath)
-      if __json_content_type__(response.headers[:content_type])
-        return __parse_json_response__(response)
-      end
-      return response.body
+      __parse_json_response__(response)
     end
 
     def self.bulk_root_get(path, params, content_type='application/json')
       response = self._get(bulk_api_root_without_v2, path, params, content_type)
-      if __json_content_type__(response.headers[:content_type])
-        return __parse_json_response__(response)
-      end
-      response.body
+      __parse_json_response__(response)
     end
 
     def self.bulk_root_getfile(path, params)
@@ -87,10 +76,7 @@ module Zerobounce
 
     def self.bulk_root_post(path, params, content_type='application/json', filepath=nil)
       response = self._post(bulk_api_root_without_v2, path, params, content_type, filepath)
-      if __json_content_type__(response.headers[:content_type])
-        return __parse_json_response__(response)
-      end
-      response.body
+      __parse_json_response__(response)
     end
 
     def self.bulk_root_form_post(path, params)
