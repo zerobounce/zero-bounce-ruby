@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'stringio'
 require 'zerobounce/api_urls'
 require 'zerobounce/response_error'
 require 'zerobounce/api_key'
@@ -14,6 +15,36 @@ module Zerobounce
 
   # Sends the HTTP request.
   class BaseRequest
+    # A file part the SDK builds from the caller's IO or String (the
+    # *_send_stream methods). It is content, not a path, so the check that
+    # keeps caller-supplied paths under the current directory does not apply
+    # to it, and nothing is written to disk. RestClient sends it as a file
+    # part named +original_filename+.
+    class Upload
+      attr_reader :original_filename
+
+      def initialize(content, file_name)
+        @io = StringIO.new(content.to_s.b)
+        @original_filename = File.basename(file_name.to_s)
+      end
+
+      # RestClient treats an object with #path and #read as a file part.
+      def path
+        @original_filename
+      end
+
+      def read(*args)
+        @io.read(*args)
+      end
+
+      def content_type
+        'text/csv'
+      end
+
+      def close
+        @io.close
+      end
+    end
 
     protected
 
@@ -99,7 +130,9 @@ module Zerobounce
       kwargs[:max_redirects] = 0
       user_agent = Zerobounce.config.headers && Zerobounce.config.headers[:user_agent]
       kwargs[:headers] = (kwargs[:headers] || {}).merge(user_agent: user_agent) if user_agent
-      RestClient::Request.execute(**kwargs)
+      response = RestClient::Request.execute(**kwargs)
+      ResponseError.raise_if_cut_short!(response)
+      response
     rescue RestClient::ExceptionWithResponse => e
       # Re-raised as the same RestClient class (RestClient::NotFound and so
       # on), so `rescue RestClient::...` and #http_code keep working as they
@@ -110,6 +143,8 @@ module Zerobounce
     rescue RestClient::Exception => e
       e.message = __redact_api_key__(e.message)
       raise e
+    rescue ApiResponseError
+      raise
     rescue StandardError => e
       # Same class and backtrace, redacted message. cause: nil, because the
       # original (unredacted) error would otherwise ride along as #cause and
@@ -145,7 +180,12 @@ module Zerobounce
         params.each do |key, value|
           params[key] = value ? 'true' : 'false' if value == true || value == false
         end
-        params[:file] = File.new(Zerobounce::BaseRequest.__safe_file_path__(filepath), 'rb')
+        params[:file] =
+          if filepath.is_a?(Upload)
+            filepath
+          else
+            File.new(Zerobounce::BaseRequest.__safe_file_path__(filepath), 'rb')
+          end
         params[:multipart] = true
         response = __execute_request__(method: :post, url: url, payload: params, timeout: 120)
 

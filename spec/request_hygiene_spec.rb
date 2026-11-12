@@ -52,6 +52,42 @@ describe 'Request URLs, optional parameters and wrapped errors' do
     end
   end
 
+  # Up to 3.0.1 these wrote a Tempfile in Dir.tmpdir and uploaded its path,
+  # which the check that keeps file paths under the current directory
+  # rejected unless the temp dir happened to be inside it.
+  describe 'stream uploads, with the real temp dir' do
+    before do
+      stub_request(:post, %r{\Ahttps://bulkapi\.zerobounce\.net/v2/(scoring/)?sendfile\z})
+        .to_return(json_reply('{"success":true,"file_id":"f1"}'))
+    end
+
+    it 'runs where the temp dir is outside the current directory, as it usually is' do
+      expect(File.realpath(Dir.tmpdir)).not_to start_with(File.realpath(Dir.pwd) + File::SEPARATOR)
+    end
+
+    {
+      validate_file_send_stream: '/v2/sendfile',
+      scoring_file_send_stream: '/v2/scoring/sendfile'
+    }.each do |name, path|
+      it "#{name} uploads an IO and a String under the given file name" do
+        [StringIO.new("email\na@example.com\n"), "email\na@example.com\n"].each do |content|
+          expect(Zerobounce.public_send(name, content, 'list.csv')).to include('file_id' => 'f1')
+          expect(last_request.uri.path).to eq(path)
+          body = last_request.body.to_s
+          expect(body).to include('filename="list.csv"', "\r\n\r\nemail\na@example.com\n\r\n")
+          expect(body).to include("name=\"api_key\"\r\n\r\n#{api_key}")
+        end
+      end
+    end
+
+    it 'still checks a file path the caller passes' do
+      expect { Zerobounce.validate_file_send('/etc/passwd') }
+        .to raise_error(ArgumentError, 'File path must be under the current directory')
+      expect { Zerobounce.scoring_file_send('../outside.csv') }
+        .to raise_error(ArgumentError, 'File path must be under the current directory')
+    end
+  end
+
   describe 'list evaluator base URL' do
     let(:file) { File.join('spec', 'fixtures', 'priority3_finder.csv') }
 

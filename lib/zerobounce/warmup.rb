@@ -411,7 +411,9 @@ module Zerobounce
         options[:payload] = body.to_json
         options[:headers][:content_type] = :json
       end
-      RestClient::Request.execute(**options)
+      response = RestClient::Request.execute(**options)
+      ResponseError.raise_if_cut_short!(response)
+      response
     rescue RestClient::ExceptionWithResponse => e
       response = e.response
       status = response.respond_to?(:code) ? response.code : 0
@@ -456,12 +458,14 @@ module Zerobounce
       end
     end
 
-    # A CSV download, returned as text.
+    # A CSV download, returned as text. An HTML page on a 200 (a proxy's
+    # "Access denied") is an error, not CSV.
     def csv(path, **params)
       response = send_request(:get, path, params, nil, [])
       text = response.body.to_s
       content_type = (response.headers[:content_type] || '').to_s
-      if text.strip.empty? || content_type.downcase.include?('application/json')
+      if text.strip.empty? || content_type.downcase.include?('application/json') ||
+         ResponseError.html?(text, content_type)
         raise ApiResponseError.new(
           redact(ResponseError.message_from_parts(response.code, content_type, text)),
           response.code
