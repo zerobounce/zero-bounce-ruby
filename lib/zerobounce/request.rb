@@ -92,7 +92,7 @@ module Zerobounce
         raise ApiResponseError.new(ResponseError.message_from_parts(response.code, content_type, body), response.code)
       end
       begin
-        parsed = JSON.parse(body)
+        parsed = StrictJson.parse(body)
       rescue JSON::ParserError
         # cause: nil, or the parser's error, which quotes the body, would ride
         # along as #cause.

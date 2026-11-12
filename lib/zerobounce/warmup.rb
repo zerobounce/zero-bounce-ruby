@@ -6,6 +6,7 @@ require 'json'
 require 'rest-client'
 
 require 'zerobounce/api_key'
+require 'zerobounce/strict_json'
 require 'zerobounce/error'
 require 'zerobounce/response_error'
 require 'zerobounce/strict_bool'
@@ -499,17 +500,18 @@ module Zerobounce
     end
 
     # The JSON payload of a success, or nil for the documented empty successes
-    # (204, and an empty 200).
+    # (204, and an empty 200). Empty means zero bytes: a blank body (spaces,
+    # a newline) is not JSON and is an error with its status.
     def json_request(method, path, params = {}, body = nil, secrets: [])
       response = send_request(method, path, params, body, secrets)
       text = response.body.to_s
-      return nil if response.code == 204 || text.strip.empty?
+      return nil if response.code == 204 || text.empty?
 
       # A page (a proxy's "Access denied") is an error even when its body parses as JSON.
       raise body_error(response, text, secrets), cause: nil if ResponseError.html?(text, content_type_of(response))
 
       begin
-        JSON.parse(text, quirks_mode: true)
+        StrictJson.parse(text)
       rescue JSON::ParserError
         raise body_error(response, text, secrets), cause: nil # the parser's error quotes the body
       end

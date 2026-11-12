@@ -5,6 +5,7 @@ require 'stringio'
 require 'zerobounce/api_urls'
 require 'zerobounce/response_error'
 require 'zerobounce/api_key'
+require 'zerobounce/strict_json'
 require 'zerobounce/error'
 
 # https://github.com/rest-client/rest-client
@@ -261,7 +262,8 @@ module Zerobounce
       # LIVE: the Inbox Placement Tester authenticates with a Bearer header.
       # Sent as an api_key parameter the request is rejected as unauthorized.
       response = __execute_with_method__(method, url, params, json: json, bearer: true)
-      return nil if response.body.to_s.strip.empty?
+      # Empty means zero bytes: a blank body is not JSON, and is an error.
+      return nil if response.body.to_s.empty?
 
       __parse_json_response__(response)
     end
@@ -359,7 +361,7 @@ module Zerobounce
         raise ApiResponseError.new(ResponseError.message_from_parts(code, content_type, body), code)
       end
       begin
-        JSON.parse(body)
+        StrictJson.parse(body)
       rescue JSON::ParserError
         # cause: nil, or the parser's error, which quotes the body, would ride
         # along as #cause.

@@ -67,16 +67,76 @@ module Zerobounce
       raw.each_char.map { |char| char == '/' ? '\/' : JSON.generate(char, **options)[1..-2] }.join
     end
 
-    # The text with every form of every secret replaced by ***.
+    # What an error says instead of text that still holds a secret in an
+    # encoding no spelling covers.
+    CREDENTIAL_OMITTED_MESSAGE =
+      'ZeroBounce returned an error; the response body was omitted because it contained a credential.'
+
+    # The text with every form of every secret replaced by ***. Then closed
+    # under encoding: if any decoded view of what is left (URL-decoding, "+"
+    # as a space, JSON unescaping incl. "\/" and \uXXXX, up to three layers
+    # in any order) still holds a secret, the whole text is replaced by
+    # CREDENTIAL_OMITTED_MESSAGE.
     def redact(text, secrets)
       value = text.to_s
+      secrets = secrets.compact.map(&:to_s).reject { |secret| secret.strip.empty? }
       secrets.each do |secret|
-        next if secret.nil? || secret.to_s.strip.empty?
-
         secret_forms(secret).each { |form| value = value.gsub(form, '***') }
       end
+      return CREDENTIAL_OMITTED_MESSAGE if holds_secret?(value, secrets)
+
       value
     end
+
+    # Whether any decoded view of the text contains one of the secrets.
+    # Compared as bytes, so text that decodes to invalid UTF-8 is still checked.
+    def holds_secret?(text, secrets)
+      return false if secrets.empty?
+
+      views = decoded_views(text)
+      secrets.any? { |secret| views.any? { |view| view.include?(secret.b) } }
+    end
+
+    # The text (as bytes) and every view of it after up to three decodings.
+    def decoded_views(text, layers = 3)
+      views = [text.to_s.b]
+      frontier = views
+      layers.times do
+        frontier = frontier.flat_map { |view| DECODERS.map { |decode| decode.call(view) } }.uniq - views
+        break if frontier.empty?
+
+        views += frontier
+      end
+      views
+    end
+
+    def url_decode(bytes)
+      bytes.gsub(/%([0-9A-Fa-f]{2})/n) { Regexp.last_match(1).hex.chr }
+    end
+
+    SURROGATE_PAIR = /\\u(d[89ab][0-9a-f]{2})\\u(d[c-f][0-9a-f]{2})/ni
+    JSON_ESCAPE = %r{\\(?:u([0-9a-fA-F]{4})|(["\\/bfnrt]))}n
+    SIMPLE_ESCAPES = { '"' => '"', '\\' => '\\', '/' => '/', 'b' => "\b", 'f' => "\f", 'n' => "\n",
+                       'r' => "\r", 't' => "\t" }.freeze
+
+    def json_unescape(bytes) # rubocop:disable Metrics/AbcSize
+      paired = bytes.gsub(SURROGATE_PAIR) do
+        high = Regexp.last_match(1).hex
+        low = Regexp.last_match(2).hex
+        [0x10000 + ((high - 0xd800) << 10) + (low - 0xdc00)].pack('U').b
+      end
+      paired.gsub(JSON_ESCAPE) do
+        code = Regexp.last_match(1)
+        code ? [code.hex].pack('U').b : SIMPLE_ESCAPES.fetch(Regexp.last_match(2)).b
+      end
+    end
+
+    DECODERS = [
+      ->(bytes) { url_decode(bytes) },
+      ->(bytes) { url_decode(bytes.tr('+', ' ')) },
+      ->(bytes) { bytes.tr('+', ' ') },
+      ->(bytes) { json_unescape(bytes) }
+    ].freeze
 
     # Refuses Marshal and YAML serialisation of an object that holds an API
     # key: the dump would carry the key to wherever it is written.

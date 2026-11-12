@@ -730,8 +730,8 @@ describe 'every spelling of a secret echoed in a body' do
     escapers = { 'raw' => ->(text) { text } }
     [false, true].product([false, true]).each do |slash, ascii|
       escapers["JSON#{' \\/' if slash}#{' \\uXXXX' if ascii}"] = lambda do |text|
-        json = JSON.generate(text, ascii_only: ascii)[1..-2]
-        slash ? json.gsub('/') { '\/' } : json
+        # escape_slash is the generator's own "\/" (json >= 2.6, as both lockfiles pin).
+        JSON.generate(text, ascii_only: ascii, escape_slash: slash)[1..-2]
       end
     end
     escapers
@@ -819,6 +819,259 @@ describe 'serialising an object that holds the API key' do
     it "still copies a #{label} with dup" do
       expect(build.call.dup).to be_a(build.call.class)
     end
+  end
+end
+# E7: the shared strict JSON corpus. spec/fixtures/strict-json-corpus.tsv is a
+# byte-identical copy of sdk-docs/skills/zerobounce-sdk/references/
+# strict-json-corpus.tsv (zerobounce/sdk-docs); refresh it from there. Each
+# line's second field is a JSON-encoded string holding the exact body.
+module StrictJsonCorpus
+  FILE = File.expand_path('fixtures/strict-json-corpus.tsv', __dir__)
+
+  def self.rows
+    File.readlines(FILE, encoding: 'UTF-8', chomp: true).reject { |line| line.empty? || line.start_with?('#') }
+        .map do |line|
+      verdict, encoded = line.split("\t", 2)
+      [verdict, JSON.parse(encoded, quirks_mode: true)]
+    end
+  end
+
+  # Downloads are not JSON calls: any JSON body is an error there.
+  DOWNLOADS = %i[validate_file_get scoring_file_get email_finder_file_get domain_search_file_get].freeze
+  WARMUP_DOWNLOADS = %i[download_seeds download_statistics].freeze
+
+  def self.calls(root)
+    TransportSweep::CALLS.except(*DOWNLOADS).map { |name, call| [name.to_s, call] } +
+      TransportSweep::WARMUP_CALLS.except(*WARMUP_DOWNLOADS).map do |name, call|
+        ["warmup.#{name}", -> { call.call(TransportSweep.warmup('corpus-key', root)) }]
+      end
+  end
+
+  # An empty 200 (zero bytes) is the documented empty success of the Warmup
+  # calls and of delete_inbox_placement_test (check E8); a blank body is never
+  # empty. Every Inbox Placement call here still returns nil for an empty
+  # body: an open decision (E8), not part of the JSON check.
+  def self.empty_success?(name, body)
+    body.empty? && (name.start_with?('warmup.') || name.include?('inbox_placement'))
+  end
+end
+
+describe 'the strict JSON corpus on every JSON call' do
+  root = 'https://first.example'
+
+  around do |example|
+    saved = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    example.run
+  ensure
+    Zerobounce.configuration = saved
+  end
+
+  before do
+    allow(Zerobounce).to receive(:warn)
+    TransportSweep.configure('corpus-key', root)
+  end
+
+  def answer(body)
+    WebMock.reset!
+    stub_request(:any, %r{\Ahttps://first\.example/})
+      .to_return(status: 200, body: body.b, headers: { 'Content-Type' => 'application/json' })
+  end
+
+  it 'has both verdicts' do
+    verdicts = StrictJsonCorpus.rows.map(&:first)
+    expect(verdicts.uniq.sort).to eq(%w[ACCEPT REJECT])
+    expect(verdicts.count('REJECT')).to be > 30
+  end
+
+  it 'rejects every REJECT body with an ApiResponseError carrying status 200' do
+    wrong = []
+    StrictJsonCorpus.rows.select { |verdict, _| verdict == 'REJECT' }.each do |_, body|
+      answer(body)
+      StrictJsonCorpus.calls(root).each do |name, call|
+        next if StrictJsonCorpus.empty_success?(name, body)
+
+        begin
+          call.call
+          wrong << [name, body, 'accepted']
+        rescue Zerobounce::ApiResponseError => e
+          wrong << [name, body, e.status_code] unless e.status_code == 200
+        rescue StandardError => e
+          wrong << [name, body, e.class.name]
+        end
+      end
+    end
+    expect(wrong).to eq([])
+  end
+
+  it 'rejects no ACCEPT body as an API error' do
+    wrong = []
+    StrictJsonCorpus.rows.select { |verdict, _| verdict == 'ACCEPT' }.each do |_, body|
+      answer(body)
+      StrictJsonCorpus.calls(root).each do |name, call|
+        call.call
+      rescue Zerobounce::ApiResponseError => e
+        # A body that does not parse is the only API error a 2xx without an
+        # error field gives; a result of the wrong shape is a different error.
+        wrong << [name, body, e.message] if e.status_code == 200
+      rescue StandardError
+        nil
+      end
+    end
+    expect(wrong).to eq([])
+  end
+
+  it 'pins allow_nan: false and checks the untrimmed body' do
+    expect { Zerobounce::StrictJson.parse('{"a":NaN}') }.to raise_error(JSON::ParserError)
+    expect { Zerobounce::StrictJson.parse("\u{a0}{}") }.to raise_error(JSON::ParserError)
+    body = " \t\r\n{\"a\":[1,-0.5e-3,\"\\u00e9\\/\"]}\n"
+    expect(Zerobounce::StrictJson.parse(body)).to eq('a' => [1, -0.0005, "\u{e9}/"])
+  end
+end
+
+# S4/S7: redaction is closed under encoding (standard.md). A secret under any
+# sequence of up to three encodings (URL with %20, URL with +, JSON, JSON with
+# \/) never survives in any decoded view of the error. The decoder here is the
+# spec's own, independent of the SDK's.
+module EncodingFuzz
+  SECRET = %(k y"/\\+%&=<>'z)
+
+  ENCODERS = {
+    'URL %20' => ->(text) { ERB::Util.url_encode(text) },
+    'URL +' => ->(text) { CGI.escape(text) },
+    'JSON' => ->(text) { JSON.generate(text)[1..-2] },
+    'JSON \\/' => ->(text) { JSON.generate(text, escape_slash: true)[1..-2] }
+  }.freeze
+
+  SIMPLE = { '"' => '"', '\\' => '\\', '/' => '/', 'b' => "\b", 'f' => "\f", 'n' => "\n", 'r' => "\r",
+             't' => "\t" }.freeze
+
+  DECODERS = [
+    ->(text) { text.b.gsub(/%([0-9A-Fa-f]{2})/n) { [Regexp.last_match(1)].pack('H2') } },
+    ->(text) { text.b.tr('+', ' ').gsub(/%([0-9A-Fa-f]{2})/n) { [Regexp.last_match(1)].pack('H2') } },
+    ->(text) { text.b.tr('+', ' ') },
+    lambda do |text|
+      text.b.gsub(%r{\\(u[0-9a-fA-F]{4}|["\\/bfnrt])}n) do
+        escape = Regexp.last_match(1)
+        escape.start_with?('u') ? [escape[1..].hex].pack('U').b : SIMPLE.fetch(escape).b
+      end
+    end
+  ].freeze
+
+  def self.views(text)
+    views = [text.to_s.b]
+    frontier = views
+    3.times do
+      frontier = frontier.flat_map { |view| DECODERS.map { |decode| decode.call(view) } }.uniq - views
+      views += frontier
+    end
+    views
+  end
+
+  # Every sequence of up to three encodings, and random ones (fixed seed).
+  def self.forms(secret)
+    names = ENCODERS.keys
+    sequences = (1..3).flat_map { |depth| names.repeated_permutation(depth).to_a }
+    rng = Random.new(8259)
+    sequences += Array.new(60) { Array.new(rng.rand(1..3)) { names.sample(random: rng) } }
+    sequences.map do |sequence|
+      [sequence.join(' > '), sequence.reduce(secret) do |form, name|
+                               ENCODERS[name].call(form)
+                             end]
+    end
+  end
+
+  BODIES = [
+    ->(form) { [400, 'text/plain', "rejected: #{form}"] },
+    ->(form) { [200, 'application/json', %({"error":"Invalid API key #{form}"})] },
+    ->(form) { [200, 'application/json', %({"success":false,"message":"rejected #{form}"})] },
+    ->(form) { [400, 'application/json', %({"message":"bad request #{form}"})] },
+    ->(form) { [200, 'text/html', "<html><title>denied #{form}</title></html>"] }
+  ].freeze
+
+  # Message, inspect, every instance variable of the SDK's own error, and the
+  # whole cause chain (full_message adds only the backtrace). A RestClient
+  # error's #response keeps the server's body as sent: an open decision (S5),
+  # not checked here.
+  def self.texts(error)
+    texts = []
+    while error
+      texts << error.message << error.inspect
+      if error.is_a?(Zerobounce::ApiResponseError)
+        texts += error.instance_variables.map { |name| error.instance_variable_get(name).inspect }
+      end
+      error = error.cause
+    end
+    texts
+  end
+
+  # Each form goes to eight calls drawn at random (fixed seed), so every call
+  # meets many forms without sending forms x calls requests.
+  def self.leaks(secret, calls, stub) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    rng = Random.new(7)
+    leaks = []
+    forms(secret).each do |label, form|
+      status, type, body = BODIES.sample(random: rng).call(form)
+      stub.call(status, type, body)
+      calls.to_a.sample(8, random: rng).each do |name, call|
+        call.call
+      rescue StandardError => e
+        leaks << [name, label, status] if texts(e).any? { |text| views(text).any? { |view| view.include?(secret.b) } }
+      end
+    end
+    leaks
+  end
+end
+
+describe 'a secret echoed under any composition of encodings' do
+  root = 'https://first.example'
+  secret = EncodingFuzz::SECRET
+
+  around do |example|
+    saved = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    example.run
+  ensure
+    Zerobounce.configuration = saved
+  end
+
+  before { allow(Zerobounce).to receive(:warn) }
+
+  let(:stub) do
+    lambda do |status, type, body|
+      WebMock.reset!
+      stub_request(:any, %r{\Ahttps://first\.example/})
+        .to_return(status: status, body: body, headers: { 'Content-Type' => type })
+    end
+  end
+
+  it 'never leaves the API key in an error from the client' do
+    TransportSweep.configure(secret, root)
+    expect(EncodingFuzz.leaks(secret, TransportSweep::CALLS, stub)).to eq([])
+  end
+
+  it 'never leaves the Warmup key in an error from the Warmup client' do
+    calls = TransportSweep::WARMUP_CALLS.transform_values do |call|
+      lambda {
+        call.call(TransportSweep.warmup(secret, root))
+      }
+    end
+    expect(EncodingFuzz.leaks(secret, calls, stub)).to eq([])
+  end
+
+  it 'never leaves the SMTP password or username in an error' do
+    warmup = TransportSweep.warmup('smtp-key', root)
+    username = "smtp#{secret}"
+    password_call = { password: -> { warmup.test_smtp_configuration('a@b.com', 'u', secret, 'smtp.example.com', 587) } }
+    username_call = { username: lambda {
+                                  warmup.test_smtp_configuration('a@b.com', username, 'p', 'smtp.example.com', 587)
+                                } }
+    expect(EncodingFuzz.leaks(secret, password_call, stub)).to eq([])
+    expect(EncodingFuzz.leaks(username, username_call, stub)).to eq([])
+  end
+
+  it 'keeps a message that holds no secret' do
+    expect(Zerobounce::ApiKey.redact('Invalid email a+b%20c\\/d', [secret])).to eq('Invalid email a+b%20c\\/d')
   end
 end
 # rubocop:enable Metrics/BlockLength, Metrics/ModuleLength
