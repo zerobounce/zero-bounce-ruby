@@ -126,6 +126,18 @@ module Zerobounce
       ResponseError.message_from(error.response)
     end
 
+    # The error's response keeps the request it answered (URL with api_key,
+    # payload with api_key) and Net::HTTP's response keeps the URL: drop both,
+    # so the error a caller rescues does not carry the key. Status, headers
+    # and body stay; #request is nil and #cookies is unavailable on it.
+    def self.__detach_request__(response)
+      return if response.nil?
+
+      response.instance_variable_set(:@request, nil) if response.instance_variable_defined?(:@request)
+      net = response.instance_variable_get(:@net_http_res) if response.instance_variable_defined?(:@net_http_res)
+      net.instance_variable_set(:@uri, nil) if net&.instance_variable_defined?(:@uri)
+    end
+
     def self.__execute_request__(**kwargs)
       kwargs[:max_redirects] = 0
       user_agent = Zerobounce.config.headers && Zerobounce.config.headers[:user_agent]
@@ -139,6 +151,7 @@ module Zerobounce
       # did up to 2.1.8. Only the message changes: the API's short error text,
       # with the key redacted.
       e.message = __redact_api_key__(__http_error_message__(e))
+      __detach_request__(e.response)
       raise e
     rescue RestClient::Exception => e
       e.message = __redact_api_key__(e.message)

@@ -268,11 +268,13 @@ Zerobounce.validate_file_send(validate_file_path)
 #  "file_id"=>"75d854a6-565c-49f9-b4c8-b3344480ec4c"}
 ### file_id will be required for next steps
 ### optional named parameters:
-#   email_address_column: 1,
-#   first_name_column: 2,
+#   email_address_column: 1,   # the default
+#   first_name_column: 2,      # this and the columns below are sent only when given
 #   last_name_column: 3,
 #   gender_column: 4,
-#   has_header_row: true,
+#   ip_address_column: 5,
+#   has_header_row: true,      # the default
+#   remove_duplicate: false,   # sent only when given; the API removes duplicates by default
 #   return_url: nil,        ### results callback url
 #   allow_phase_2: true     ### optional; validation bulk sendfile only (omit or nil to skip)
 Zerobounce.validate_file_send(validate_file_path, email_address_column: 1, gender_column: 4)
@@ -340,6 +342,7 @@ Zerobounce.scoring_file_send(scoring_file_path)
 ### optional named parameters
 #   email_address_column: 1,
 #   has_header_row: true,
+#   remove_duplicate: false, ### sent only when given
 #   return_url: nil         ### results callback url
 Zerobounce.scoring_file_send(scoring_file_path, email_address_column: 1)
 ```

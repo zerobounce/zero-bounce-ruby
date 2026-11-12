@@ -452,4 +452,114 @@ describe 'Transport guards on every request path' do
     end
   end
 end
+
+# What an error carries, not only what it prints: every string reachable from
+# the raised error, its #cause chain and their instance variables (a
+# RestClient error keeps the response, whose request keeps the URL and the
+# API-Key header). The key and the SMTP credentials must be in none of them.
+module ErrorContents
+  module_function
+
+  LEAVES = [Symbol, Numeric, NilClass, TrueClass, FalseClass, Module].freeze
+
+  def strings(object, seen = {}, depth = 0, out = [])
+    return out if depth > 12 || seen.key?(object.__id__) || LEAVES.any? { |leaf| object.is_a?(leaf) }
+
+    seen[object.__id__] = true
+    out << object.to_s if object.is_a?(String) # RestClient::Response is a String with ivars
+    children(object).each { |child| strings(child, seen, depth + 1, out) }
+    out
+  end
+
+  def children(object)
+    case object
+    when Hash then object.to_a.flatten(1)
+    when Array, Struct then object.to_a
+    else
+      own = object.instance_variables.map { |name| object.instance_variable_get(name) }
+      object.is_a?(Exception) ? own + [object.message.to_s, object.cause] : own
+    end
+  end
+
+  def leaks(error, secrets)
+    found = strings(error)
+    secrets.flat_map { |s| [s, CGI.escape(s), ERB::Util.url_encode(s)] }.uniq.select do |form|
+      found.any? { |text| text.include?(form) }
+    end
+  end
+end
+
+describe 'errors from the Warmup client' do
+  key = 'carried+key/0123456789'
+  password = 'smtp+pass/0123456789'
+  root = 'https://first.example'
+
+  def stub_any
+    stub_request(:any, %r{\Ahttps://first\.example/})
+  end
+
+  calls = TransportSweep::WARMUP_CALLS.merge(
+    test_smtp_configuration: ->(w) { w.test_smtp_configuration('a@b.com', 'u', password, 'smtp.example.com', 587) }
+  )
+
+  it 'sweeps every public method' do
+    expect(Zerobounce::Warmup.public_instance_methods(false).sort - %i[inspect] - calls.keys).to eq([])
+  end
+
+  text = { 'Content-Type' => 'text/plain' }
+  json = { 'Content-Type' => 'application/json' }
+  failures = {
+    '400 text' => -> { stub_any.to_return(status: 400, body: 'Bad request', headers: text) },
+    '404 JSON' => -> { stub_any.to_return(status: 404, body: '{"detail":"Not found"}', headers: json) },
+    '429' => -> { stub_any.to_return(status: 429, body: '', headers: {}) },
+    '500 JSON' => -> { stub_any.to_return(status: 500, body: '{"error":"boom"}', headers: json) },
+    'read timeout' => -> { stub_any.to_raise(Net::ReadTimeout) },
+    'open timeout' => -> { stub_any.to_raise(Net::OpenTimeout) }
+  }.freeze
+
+  calls.each do |name, call|
+    it "raises an ApiResponseError carrying no secret from Warmup##{name}" do
+      failures.each do |label, stub|
+        WebMock.reset!
+        instance_exec(&stub)
+        warmup = TransportSweep.warmup(key, root)
+        expect { call.call(warmup) }.to raise_error(Zerobounce::ApiResponseError) { |error|
+          status = label.to_i
+          expect(error.status_code).to eq(status), "#{label}: status #{error.status_code}"
+          expect(error.message).not_to be_empty, label
+          expect(ErrorContents.leaks(error, [key, password])).to eq([]), "#{label}: #{error.class}: #{error.message}"
+        }
+      end
+    end
+  end
+end
+
+describe 'errors from the client' do
+  key = 'carried+key/0123456789'
+
+  text = { 'Content-Type' => 'text/plain' }
+  json = { 'Content-Type' => 'application/json' }
+  failures = {
+    '400 text' => ->(s) { s.to_return(status: 400, body: 'Bad request', headers: text) },
+    '404 JSON' => ->(s) { s.to_return(status: 404, body: '{"error":"Not found"}', headers: json) },
+    '500 JSON' => ->(s) { s.to_return(status: 500, body: '{"error":"boom"}', headers: json) },
+    'read timeout' => ->(s) { s.to_raise(Net::ReadTimeout) }
+  }.freeze
+
+  before { TransportSweep.configure(key, 'https://first.example') }
+
+  # Up to 3.0.1 the RestClient error raised for an HTTP error status kept its
+  # response's request, whose URL or payload holds api_key.
+  TransportSweep::CALLS.each do |name, call|
+    it "carries no key in any error from #{name}" do
+      failures.each do |label, stub|
+        WebMock.reset!
+        stub.call(stub_request(:any, %r{\Ahttps://first\.example/}))
+        expect { call.call }.to raise_error(StandardError) { |error|
+          expect(ErrorContents.leaks(error, [key])).to eq([]), "#{label}: #{error.class}: #{error.message}"
+        }
+      end
+    end
+  end
+end
 # rubocop:enable Metrics/BlockLength, Metrics/ModuleLength

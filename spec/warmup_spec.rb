@@ -289,6 +289,22 @@ describe Zerobounce::Warmup do
       expect(last_json['managed_sending']).to eq('timezone_offset' => -5)
     end
 
+    it 'accepts a fractional timezone_offset and rejects one outside -11 to 14' do
+      add = ->(offset) { warmup.add_sending_account('a@b.com', 'zb_managed', managed_sending: { timezone_offset: offset }) }
+      [5.5, 3.0, -11, 14].each do |offset|
+        WebMock.reset!
+        stub_ok
+        add.call(offset)
+        expect(last_json['managed_sending']).to eq('timezone_offset' => offset)
+      end
+      WebMock.reset!
+      stub_ok
+      [-11.5, 14.5].each do |offset|
+        expect { add.call(offset) }.to raise_error(ArgumentError, /timezone_offset/)
+      end
+      expect(request_count).to eq(0)
+    end
+
     it 'checks the types of the zb_managed fields' do
       stub_ok
       add = ->(sending) { warmup.add_sending_account('a@b.com', 'zb_managed', managed_sending: sending) }

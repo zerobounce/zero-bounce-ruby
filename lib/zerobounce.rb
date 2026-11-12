@@ -331,8 +331,13 @@ module Zerobounce
     # @option [Int] :first_name_column Specify which column the first name is on
     # @option [Int] :last_name_column Specify which column the last name is on
     # @option [Int] :gender_column Specify which column the gender is on
-    # @option [Int] :has_header_row Specify whether the file includes a header row or not
-    # @option [Int] :return_url Specify a callback URL (if nil, no callback will be performed)
+    # @option [Int] :ip_address_column Specify which column the signup IP address is on
+    # @option [Boolean] :has_header_row Specify whether the file includes a header row or not
+    # @option [Boolean] :remove_duplicate Whether the API removes duplicate emails (the API's default is true)
+    # @option [String] :return_url Specify a callback URL (if nil, no callback will be performed)
+    #
+    # The column options, +remove_duplicate+ and +allow_phase_2+ are sent only
+    # when given.
     #
     # @return [Hash]
     # {
@@ -344,10 +349,12 @@ module Zerobounce
     def validate_file_send(
         filepath,
         email_address_column: 1,
-        first_name_column: 2,
-        last_name_column: 3,
-        gender_column: 4,
+        first_name_column: nil,
+        last_name_column: nil,
+        gender_column: nil,
+        ip_address_column: nil,
         has_header_row: true,
+        remove_duplicate: nil,
         return_url: nil,
         allow_phase_2: nil
       )
@@ -356,6 +363,8 @@ module Zerobounce
       params[:first_name_column] = first_name_column unless first_name_column.nil?
       params[:last_name_column] = last_name_column unless last_name_column.nil?
       params[:gender_column] = gender_column unless gender_column.nil?
+      params[:ip_address_column] = ip_address_column unless ip_address_column.nil?
+      params[:remove_duplicate] = __wire_bool__(remove_duplicate, 'remove_duplicate') unless remove_duplicate.nil?
       params[:return_url] = return_url unless return_url.nil? || return_url.to_s.empty?
       unless allow_phase_2.nil?
         params[:allow_phase_2] = __wire_bool__(allow_phase_2, 'allow_phase_2')
@@ -371,8 +380,10 @@ module Zerobounce
     # @option [Int] :first_name_column
     # @option [Int] :last_name_column
     # @option [Int] :gender_column
-    # @option [Int] :has_header_row
-    # @option [Int] :return_url
+    # @option [Int] :ip_address_column
+    # @option [Boolean] :has_header_row
+    # @option [Boolean] :remove_duplicate
+    # @option [String] :return_url
     # @option [Boolean] :allow_phase_2 When set, sends allow_phase_2 (validation bulk only).
     # @return [Hash] same as validate_file_send
     def validate_file_send_stream(io, file_name, **opts)
@@ -442,8 +453,9 @@ module Zerobounce
     #
     # @param [String] :filepath Path to the file to be uploaded
     # @option [Int] :email_address_column Specify which column the email address is on
-    # @option [Int] :has_header_row Specify whether the file includes a header row or not
-    # @option [Int] :return_url Specify a callback URL (if nil, no callback will be performed)
+    # @option [Boolean] :has_header_row Specify whether the file includes a header row or not
+    # @option [Boolean] :remove_duplicate Whether the API removes duplicate emails; sent only when given
+    # @option [String] :return_url Specify a callback URL (if nil, no callback will be performed)
     #
     # @return [Hash]
     # {
@@ -456,10 +468,12 @@ module Zerobounce
         filepath,
         email_address_column: 1,
         has_header_row: true,
+        remove_duplicate: nil,
         return_url: nil
       )
       params = { email_address_column: email_address_column }
       params[:has_header_row] = __wire_bool__(has_header_row, 'has_header_row') unless has_header_row.nil?
+      params[:remove_duplicate] = __wire_bool__(remove_duplicate, 'remove_duplicate') unless remove_duplicate.nil?
       params[:return_url] = return_url if return_url
       @@request.bulk_post('scoring/sendfile', params, 'multipart/form-data', filepath)
     end
@@ -469,8 +483,9 @@ module Zerobounce
     # @param [IO, String] io Stream or string content to upload
     # @param [String] file_name Filename for the upload (e.g. "emails.csv")
     # @option [Int] :email_address_column (same as scoring_file_send)
-    # @option [Int] :has_header_row
-    # @option [Int] :return_url
+    # @option [Boolean] :has_header_row
+    # @option [Boolean] :remove_duplicate
+    # @option [String] :return_url
     # @return [Hash] same as scoring_file_send
     def scoring_file_send_stream(io, file_name, **opts)
       content = io.respond_to?(:read) ? io.read : io.to_s

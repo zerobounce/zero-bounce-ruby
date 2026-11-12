@@ -469,12 +469,21 @@ module Zerobounce
       ResponseError.raise_if_cut_short!(response)
       response
     rescue RestClient::ExceptionWithResponse => e
+      # Every error is raised with cause: nil. The RestClient error would
+      # otherwise ride along as #cause, and its response keeps the request,
+      # whose headers hold the API key (and its payload the SMTP password).
       response = e.response
+      if response.nil?
+        # A read or open timeout (RestClient::Exceptions::Timeout) has no
+        # response: a transport failure, status 0.
+        raise ApiResponseError.new(redact(e.message.to_s, secrets), 0), cause: nil
+      end
+
       status = response.respond_to?(:code) ? response.code : 0
       if status >= 300 && status < 400
         raise ApiResponseError.new(
           'ZeroBounce returned a redirect, which this client does not follow.', status
-        )
+        ), cause: nil
       end
       raise ApiResponseError.new(
         redact(
@@ -482,7 +491,7 @@ module Zerobounce
             status, (response.headers[:content_type] || '').to_s, response.body.to_s
           ), secrets
         ), status
-      )
+      ), cause: nil
     rescue ApiResponseError
       raise
     rescue StandardError => e

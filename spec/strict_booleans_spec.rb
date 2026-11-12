@@ -15,7 +15,7 @@ module StrictBooleanSweep
 
   # Parameter names that take a boolean.
   BOOLEAN_NAMES = %w[activity_data verify_plus domain_info greylist_processing has_header_row allow_phase_2
-                     remove_duplicates ignore_conflict auto_enable].freeze
+                     remove_duplicate remove_duplicates ignore_conflict auto_enable].freeze
 
   # Client-side switches that choose how a request is sent, not API fields.
   CLIENT_SWITCHES = %w[use_post].freeze
@@ -24,7 +24,7 @@ module StrictBooleanSweep
   OTHER_NAMES = %w[api_key body bucket c_from callback_url click_pct company_name dkim_selector domain
                    domain_column email email_address_column emails end_date engagement_rule_id export_bucket
                    export_path file_id file_name filepath first_name first_name_column from_address
-                   full_name_column gender_column important_pct io ip_address ip_addresses last_name
+                   full_name_column gender_column important_pct io ip_address ip_address_column ip_addresses last_name
                    last_name_column limit middle_name middle_name_column name new_from_address offset
                    old_from_address onboarding_model options opts password port reply_pct return_url rule
                    rule_id search search_from server start_date status_id target test_id timeout username value
@@ -33,8 +33,8 @@ module StrictBooleanSweep
   # The booleans a method takes through **options, which its signature does
   # not name. Every method with a ** parameter is listed, with [] when none.
   KEYREST_BOOLEANS = {
-    validate_file_send_stream: %w[has_header_row allow_phase_2],
-    scoring_file_send_stream: %w[has_header_row],
+    validate_file_send_stream: %w[has_header_row remove_duplicate allow_phase_2],
+    scoring_file_send_stream: %w[has_header_row remove_duplicate],
     validate_s3_file: %w[remove_duplicates],
     score_s3_file: %w[remove_duplicates],
     email_finder_s3_file: %w[remove_duplicates],
