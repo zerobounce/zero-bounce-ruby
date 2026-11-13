@@ -1164,8 +1164,8 @@ describe 'JSON of the wrong shape on every call' do
     expect(Zerobounce.list_s3_files).to eq('success' => true, 'files' => [])
     answer('{"Credits":"7"}')
     expect(Zerobounce.credits).to eq(7)
-    answer('{"Credits":7}')
-    expect(Zerobounce.credits).to eq(7)
+    answer('{"Credits":"-1"}')
+    expect(Zerobounce.credits).to eq(-1)
   end
 end
 
@@ -1274,11 +1274,155 @@ describe 'the redaction decode check' do
     end
   end
 
+  it 'decodes every UTF-8 sequence length of a \\u escape' do
+    { 1 => 'z', 2 => "\u{e9}", 3 => "\u{20ac}", 4 => "\u{1F600}" }.each do |length, char|
+      expect(char.bytesize).to eq(length)
+      secret = "zq#{char}ZQXMARK"
+      # Every UTF-16 unit \u-escaped, ASCII too: a spelling no mask form covers.
+      body = secret.encode('UTF-16BE').unpack('n*').map { |unit| format('\\u%04x', unit) }.join
+      expect(Zerobounce::ApiKey.redact("rejected #{body}", [secret])).to eq(omitted), "#{length} bytes"
+      expect(Zerobounce::ApiKey.redact("rejected #{lower_hex(body)}", [secret])).to eq(omitted), "#{length} bytes, %xx"
+    end
+  end
+
+  it 'reads + as a space without %-decoding, as a step of its own' do
+    expect(Zerobounce::ApiKey.redact('rejected zq+x%41ZQXMARK', ['zq x%41ZQXMARK'])).to eq(omitted)
+  end
+
   it 'joins a \\u-escaped surrogate pair' do
     secret = "pw\u{1F600}ZQXMARK"
     once = JSON.generate(secret, ascii_only: true)[1..-2]
     body = once.chars.map { |char| format('\\u%04x', char.ord) }.join
     expect(Zerobounce::ApiKey.redact(body, [secret])).to eq(omitted)
+  end
+end
+
+# E7: the fields the standard names. Credits must be a JSON string holding an
+# integer; a validate result and every validate_batch row carry address and
+# status as strings (the greylist {"Message": "..."} answer is a result). The
+# other fields of a Hash result pass through as sent.
+describe 'field types on the typed fields' do
+  root = 'https://first.example'
+
+  around do |example|
+    saved = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    example.run
+  ensure
+    Zerobounce.configuration = saved
+  end
+
+  before do
+    allow(Zerobounce).to receive(:warn)
+    TransportSweep.configure('fields-key', root)
+  end
+
+  def answer(body)
+    WebMock.reset!
+    stub_request(:any, %r{\Ahttps://first\.example/})
+      .to_return(status: 200, body: body, headers: { 'Content-Type' => 'application/json' })
+  end
+
+  def expect_shape_error(body, &call)
+    answer(body)
+    expect(&call).to raise_error(Zerobounce::ApiResponseError, /unexpected shape/) { |e|
+      expect(e.status_code).to eq(200), body
+    }
+  end
+
+  it 'requires Credits to be a string holding an integer' do
+    ['{}', '{"Credits":null}', '{"Credits":true}', '{"Credits":5}', '{"Credits":-1}', '{"Credits":1.5}',
+     '{"Credits":"abc"}', '{"Credits":"5.0"}', '{"Credits":""}', '{"Credits":" 5"}', '{"Credits":"5\n"}',
+     '{"Credits":"٥"}', '{"Credits":[1]}', '{"Credits":{"a":1}}'].each do |body|
+      expect_shape_error(body) { Zerobounce.credits }
+    end
+    answer('{"Credits":"-1"}')
+    expect(Zerobounce.credits).to eq(-1)
+    answer('{"Credits":"2375323"}')
+    expect(Zerobounce.credits).to eq(2_375_323)
+  end
+
+  it 'requires a string address and status from validate, on GET and POST' do
+    ['{}', '{"address":"a@b.c"}', '{"status":"valid"}', '{"address":null,"status":"valid"}',
+     '{"address":"a@b.c","status":null}', '{"address":true,"status":"valid"}', '{"address":"a@b.c","status":5}',
+     '{"address":"a@b.c","status":["valid"]}'].each do |body|
+      expect_shape_error(body) { Zerobounce.validate('a@example.com') }
+      expect_shape_error(body) { Zerobounce.validate('a@example.com', use_post: true) }
+    end
+  end
+
+  it 'requires a string address and status in every validate_batch row' do
+    ['{"email_batch":[{"status":"valid"}],"errors":[]}', '{"email_batch":[{"address":"a@b.c"}],"errors":[]}',
+     '{"email_batch":[{"address":"a@b.c","status":null}],"errors":[]}',
+     '{"email_batch":[{"address":"a@b.c","status":5}],"errors":[]}',
+     '{"email_batch":[{"address":"a@b.c","status":"valid"},{}],"errors":[]}',
+     '{"email_batch":["x"],"errors":[]}'].each do |body|
+      expect_shape_error(body) { Zerobounce.validate_batch(['a@example.com']) }
+    end
+  end
+
+  it 'still parses the documented examples and the greylist answer' do
+    validate = '{"address":"flowerjill@aol.com","status":"valid","sub_status":"","free_email":true,' \
+               '"did_you_mean":null,"account":"flowerjill","domain":"aol.com","domain_age_days":"9692",' \
+               '"active_in_days":"180","smtp_provider":"yahoo","mx_found":"true",' \
+               '"mx_record":"mx-aol.mail.gm0.yahoodns.net","firstname":"Jill","lastname":"Stein","gender":"female",' \
+               '"country":"United States","region":"Florida","city":"West Palm Beach","zipcode":"33401",' \
+               '"processed_at":"2017-04-01 02:48:02.592"}'
+    answer(validate)
+    expect(Zerobounce.validate('a@example.com')['status']).to eq('valid')
+    answer('{"Message":"Greylist validation still in progress..."}')
+    expect(Zerobounce.validate('a@example.com', use_post: true)['Message']).to start_with('Greylist')
+    answer('{"address":"a@b.c","status":"brand_new"}')
+    expect(Zerobounce.validate('a@example.com')['status']).to eq('brand_new')
+    answer("{\"email_batch\":[#{validate}],\"errors\":[]}")
+    expect(Zerobounce.validate_batch(['a@example.com'])['email_batch'].size).to eq(1)
+    answer('{"email_batch":[],"errors":[{"error":"Invalid email","email_address":"x"}]}')
+    expect(Zerobounce.validate_batch(['x'])['errors'].size).to eq(1)
+  end
+end
+
+# E2: a dead-key body on a 200 ({"error"}, {"error_message"}, {"Error"}, no
+# "success") is an ApiResponseError with status 200 on every call, the
+# sendfile-family uploads and the downloads included: never a result.
+describe 'a dead key on a 200 on every call' do
+  root = 'https://first.example'
+  uploads = %i[validate_file_send validate_file_send_stream scoring_file_send scoring_file_send_stream
+               send_email_finder_file send_domain_search_file send_list_evaluator_file send_evaluated_file]
+
+  around do |example|
+    saved = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    example.run
+  ensure
+    Zerobounce.configuration = saved
+  end
+
+  before do
+    allow(Zerobounce).to receive(:warn)
+    TransportSweep.configure('dead-key', root)
+  end
+
+  it 'names every sendfile-family upload' do
+    expect(TransportSweep::CALLS.keys).to include(*uploads)
+  end
+
+  ['{"error":"Invalid API key or your account ran out of credits"}', '{"error_message":"Invalid API key"}',
+   '{"Error":"Invalid API key or your account ran out of credits"}'].each do |body|
+    it "raises with status 200 for #{body}" do
+      WebMock.reset!
+      stub_request(:any, %r{\Ahttps://first\.example/})
+        .to_return(status: 200, body: body, headers: { 'Content-Type' => 'application/json' })
+      wrong = []
+      TransportSweep::CALLS.each do |name, call|
+        call.call
+        wrong << [name, 'accepted']
+      rescue Zerobounce::ApiResponseError => e
+        wrong << [name, e.status_code, e.message] unless e.status_code == 200 && e.message.include?('Invalid API key')
+      rescue StandardError => e
+        wrong << [name, e.class.name]
+      end
+      expect(wrong).to eq([])
+    end
   end
 end
 # rubocop:enable Metrics/BlockLength, Metrics/ModuleLength

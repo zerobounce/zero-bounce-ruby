@@ -144,7 +144,8 @@ describe 'Strict boolean parameters' do
 
   before do
     stub_request(:any, /.*/)
-      .to_return(status: 200, body: '{"success":true}', headers: { 'Content-Type' => 'application/json' })
+      .to_return(status: 200, body: '{"success":true,"address":"a@example.com","status":"valid"}',
+                 headers: { 'Content-Type' => 'application/json' })
   end
 
   def last_request
