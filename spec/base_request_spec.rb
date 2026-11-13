@@ -295,3 +295,65 @@ RSpec.describe 'request errors' do
     end
   end
 end
+
+RSpec.describe 'file-job and getfile answers by content type' do
+  before do
+    Zerobounce.configure { |c| c.apikey = 'dummy_key' }
+  end
+
+  text_plain = { 'Content-Type' => 'text/plain' }
+  text_csv = { 'Content-Type' => 'text/csv' }
+  json = { 'Content-Type' => 'application/json' }
+
+  # The bulk_get file-job calls, with the path each one requests.
+  file_job_calls = {
+    'filestatus' => -> { Zerobounce.validate_file_check('f1') },
+    'deletefile' => -> { Zerobounce.validate_file_delete('f1') },
+    'scoring/filestatus' => -> { Zerobounce.scoring_file_check('f1') },
+    'scoring/deletefile' => -> { Zerobounce.scoring_file_delete('f1') }
+  }
+
+  # The getfile calls, each a download answered through process_getfile_response.
+  getfile_calls = {
+    'getfile' => -> { Zerobounce.validate_file_get('f1') },
+    'scoring/getfile' => -> { Zerobounce.scoring_file_get('f1') },
+    'email-finder/getfile' => -> { Zerobounce.email_finder_file_get('f1') },
+    'domain-search/getfile' => -> { Zerobounce.domain_search_file_get('f1') }
+  }
+
+  it 'checks the field types of a file-job answer sent as text/plain, with its path (request.rb bulk_get)' do
+    file_job_calls.each do |path, call|
+      stub_request(:get, %r{/#{Regexp.escape(path)}\?})
+        .to_return(status: 200, headers: text_plain, body: '{"success":true,"file_id":5,"file_name":"f.csv"}')
+      expect { call.call }.to raise_error(Zerobounce::ApiResponseError, /file_id/) { |error|
+        expect(error.status_code).to eq(200), path
+      }
+    end
+  end
+
+  it 'accepts a list message on a file-job answer, returned as received (no join)' do
+    file_job_calls.each do |path, call|
+      stub_request(:get, %r{/#{Regexp.escape(path)}\?})
+        .to_return(status: 200, headers: json, body: '{"success":true,"message":["File Deleted","Queued"],"file_id":"f1"}')
+      expect(call.call['message']).to eq(['File Deleted', 'Queued']), path
+    end
+  end
+
+  it 'treats each HTML-sniff marker alone, as text/csv, as an HTML page on every getfile call' do
+    bodies = {
+      '<!DOCTYPE html>' => "<!DOCTYPE html>\nemail,status\na@example.com,valid\n",
+      '<html>' => "<html>\nemail,status\na@example.com,valid\n",
+      '<head>' => "<head>\nemail,status\na@example.com,valid\n",
+      '<body>' => "<body>\nemail,status\na@example.com,valid\n"
+    }
+    bodies.each do |marker, body|
+      getfile_calls.each do |path, call|
+        stub_request(:get, %r{/#{Regexp.escape(path)}\?})
+          .to_return(status: 200, headers: text_csv, body: body)
+        expect { call.call }.to raise_error(Zerobounce::ApiResponseError, /HTML error page/) { |error|
+          expect(error.status_code).to eq(200), "#{path} #{marker}"
+        }
+      end
+    end
+  end
+end
