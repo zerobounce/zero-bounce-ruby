@@ -56,7 +56,7 @@ module Zerobounce
         raise ArgumentError, 'base_url must be an https:// URL'
       end
 
-      @api_key = api_key
+      @api_key = ApiKey::Secret.new(api_key)
       root = base_url.to_s
       root = root.chomp('/') while root.end_with?('/')
       @root = "#{root}#{BASE_PATH}"
@@ -324,7 +324,11 @@ module Zerobounce
 
     private
 
-    attr_reader :api_key, :root
+    attr_reader :root
+
+    def api_key
+      @api_key.value
+    end
 
     # -- argument checks ----------------------------------------------------
 

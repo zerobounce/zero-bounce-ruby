@@ -9,7 +9,7 @@ module Zerobounce
 
     def initialize(apikey)
       ApiKey.check!(apikey) unless apikey.nil? || apikey.to_s.strip.empty?
-      @apikey = apikey
+      @apikey = apikey.nil? ? nil : ApiKey::Secret.new(apikey)
     end
 
     # Keeps the API key out of logs and consoles.
@@ -18,15 +18,21 @@ module Zerobounce
     end
 
     def validate(email, ip_address = nil, **options)
-      Zerobounce.with_api_key(@apikey) { Zerobounce.validate(email, ip_address, **options) }
+      Zerobounce.with_api_key(key) { Zerobounce.validate(email, ip_address, **options) }
     end
 
     def credits
-      Zerobounce.with_api_key(@apikey) { Zerobounce.credits }
+      Zerobounce.with_api_key(key) { Zerobounce.credits }
     end
 
     def validate_batch(emails, ip_addresses = [], **options)
-      Zerobounce.with_api_key(@apikey) { Zerobounce.validate_batch(emails, ip_addresses, **options) }
+      Zerobounce.with_api_key(key) { Zerobounce.validate_batch(emails, ip_addresses, **options) }
+    end
+
+    private
+
+    def key
+      @apikey&.value
     end
   end
 end

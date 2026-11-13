@@ -157,5 +157,23 @@ module Zerobounce
         marshal_dump
       end
     end
+
+    # The key a client holds. Its text is masked, so a dump of the client's
+    # instance variables (instance_variables, instance_variable_get, pp) shows
+    # [FILTERED] rather than the key. Read the key with #value.
+    class Secret
+      include RefusesDump
+
+      attr_reader :value
+
+      def initialize(value)
+        @value = value
+      end
+
+      def inspect
+        '[FILTERED]'
+      end
+      alias to_s inspect
+    end
   end
 end

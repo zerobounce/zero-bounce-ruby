@@ -61,7 +61,7 @@ module Zerobounce
     def self.bulk_post(path, params, content_type='application/json', filepath=nil,
                        root: Zerobounce.configuration.bulk_api_root_url)
       response = self._post(root, path, params, content_type, filepath)
-      __parse_json_response__(response)
+      __parse_json_response__(response, path)
     end
 
     def self.bulk_root_get(path, params, content_type='application/json')
@@ -76,7 +76,7 @@ module Zerobounce
 
     def self.bulk_root_post(path, params, content_type='application/json', filepath=nil)
       response = self._post(bulk_api_root_without_v2, path, params, content_type, filepath)
-      __parse_json_response__(response)
+      __parse_json_response__(response, path)
     end
 
     def self.bulk_root_form_post(path, params)

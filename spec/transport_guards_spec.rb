@@ -1519,3 +1519,456 @@ describe 'the examples on zerobounce.net' do
   end
 end
 # rubocop:enable Metrics/BlockLength, Metrics/ModuleLength
+
+# rubocop:disable Metrics/BlockLength
+# Round 16 (C, B, D, E, A). The documented shape of every typed call is written
+# out here from zerobounce.net and the other SDKs, not read from the SDK, so a
+# table the SDK gets wrong fails these tests. Field kinds: :string; :flag (a
+# JSON boolean, or the "true"/"false" string the API also sends); :int; :number;
+# :array; :text_or_array (a string, or an array of strings).
+module DocumentedAnswers
+  VALIDATE = {
+    'address' => :string, 'status' => :string, 'sub_status' => :string, 'account' => :string,
+    'domain' => :string, 'did_you_mean' => :string, 'domain_age_days' => :string, 'active_in_days' => :string,
+    'active_first_seen' => :string, 'free_email' => :flag, 'mx_found' => :flag, 'mx_record' => :string,
+    'smtp_provider' => :string, 'catchall_domain' => :flag, 'firstname' => :string, 'lastname' => :string,
+    'gender' => :string, 'city' => :string, 'region' => :string, 'zipcode' => :string, 'country' => :string,
+    'processed_at' => :string, 'domain_website_exists' => :string, 'domain_registrant_company_name' => :string,
+    'message' => :string, 'Message' => :string
+  }.freeze
+  API_USAGE = %w[
+    total status_valid status_invalid status_catch_all status_do_not_mail status_spamtrap
+    status_unknown sub_status_toxic sub_status_disposable sub_status_role_based
+    sub_status_possible_trap sub_status_global_suppression sub_status_timeout_exceeded
+    sub_status_mail_server_temporary_error sub_status_mail_server_did_not_respond
+    sub_status_greylisted sub_status_antispam_system sub_status_does_not_accept_mail
+    sub_status_exception_occurred sub_status_failed_syntax_check sub_status_mailbox_not_found
+    sub_status_unroutable_ip_address sub_status_possible_typo sub_status_no_dns_entries
+    sub_status_role_based_catch_all sub_status_mailbox_quota_exceeded
+    sub_status_forcible_disconnect sub_status_failed_smtp_connection sub_status_accept_all
+    sub_status_mx_forward sub_status_alternate sub_status_allowed sub_status_blocked
+    sub_status_gold sub_status_role_based_accept_all sub_status_leading_period_removed
+    sub_status_alias_address
+  ].to_h { |name| [name, :int] }
+              .merge('start_date' => :string, 'end_date' => :string).freeze
+  ACTIVITY = { 'found' => :flag, 'active_in_days' => :string, 'active_first_seen' => :string }.freeze
+  SCORE = { 'email' => :string, 'score' => :int }.freeze
+  FILE_STATUS = {
+    'success' => :flag, 'message' => :text_or_array, 'file_id' => :string, 'file_name' => :string,
+    'upload_date' => :string, 'file_status' => :string, 'file_phase_2_status' => :string,
+    'complete_percentage' => :string, 'error_reason' => :string, 'return_url' => :string
+  }.freeze
+  SEND_FILE = {
+    'success' => :flag, 'message' => :text_or_array, 'file_name' => :string, 'file_id' => :string
+  }.freeze
+  LIST_EVALUATOR = {
+    'file_id' => :string, 'status' => :string, 'progress' => :number, 'invalid_percentage' => :number,
+    'catch_all_percentage' => :number, 'activity_data_percentage' => :number, 'abuse' => :flag,
+    'do_not_mail' => :flag, 'spam_trap' => :flag, 'total_risky_percentage' => :number, 'error_message' => :string
+  }.freeze
+  GUESS = {
+    'email' => :string, 'domain' => :string, 'company_name' => :string, 'format' => :string,
+    'status' => :string, 'sub_status' => :string, 'confidence' => :string, 'email_confidence' => :string,
+    'failure_reason' => :string, 'did_you_mean' => :string, 'other_domain_formats' => :array
+  }.freeze
+  DOMAIN_FORMAT = { 'format' => :string, 'confidence' => :string }.freeze
+  BATCH_ERROR = { 'error' => :string, 'email_address' => :string }.freeze
+  BATCH = { 'email_batch' => :array, 'errors' => :array }.freeze
+
+  # Every JSON type a documented field of each kind does not allow.
+  WRONG = {
+    string: [5, 5.5, true, [], {}],
+    flag: [5, 5.5, [], {}],
+    int: ['5', 5.5, true, [], {}],
+    number: ['5', true, [], {}],
+    array: [5, 'x', true, {}],
+    text_or_array: [5, 5.5, true, {}, [5]]
+  }.freeze
+  VALID = { string: 'x', flag: true, int: 5, number: 5.5, array: [], text_or_array: 'x' }.freeze
+
+  FILE = 'spec/fixtures/priority3_finder.csv'
+  ONE = ['a@example.com'].freeze
+
+  # name => [call, fields, required fields, nested arrays (name => [fields, required])]
+  CALLS = {
+    'validate' => [-> { Zerobounce.validate('a@example.com') }, VALIDATE, %w[address status], {}],
+    'validate (POST)' => [-> { Zerobounce.validate('a@example.com', use_post: true) }, VALIDATE,
+                          %w[address status], {}],
+    'validate_batch' => [-> { Zerobounce.validate_batch(ONE) }, BATCH, [],
+                         { 'email_batch' => [VALIDATE, %w[address status]], 'errors' => [BATCH_ERROR, []] }],
+    'api_usage' => [-> { Zerobounce.api_usage(Date.new(2024, 1, 1), Date.new(2024, 1, 2)) }, API_USAGE, [], {}],
+    'activity' => [-> { Zerobounce.activity('a@example.com') }, ACTIVITY, [], {}],
+    'score_email' => [-> { Zerobounce.score_email('a@example.com') }, SCORE, [], {}],
+    'score_email (POST)' => [-> { Zerobounce.score_email('a@example.com', use_post: true) }, SCORE, [], {}],
+    'validate_file_check' => [-> { Zerobounce.validate_file_check('f1') }, FILE_STATUS, [], {}],
+    'scoring_file_check' => [-> { Zerobounce.scoring_file_check('f1') }, FILE_STATUS, [], {}],
+    'email_finder_file_status' => [-> { Zerobounce.email_finder_file_status('f1') }, FILE_STATUS, [], {}],
+    'domain_search_file_status' => [-> { Zerobounce.domain_search_file_status('f1') }, FILE_STATUS, [], {}],
+    'validate_file_send' => [-> { Zerobounce.validate_file_send(FILE) }, SEND_FILE, [], {}],
+    'scoring_file_send' => [-> { Zerobounce.scoring_file_send(FILE) }, SEND_FILE, [], {}],
+    'send_email_finder_file' => [-> { Zerobounce.send_email_finder_file(FILE, domain_column: 1, first_name_column: 2) },
+                                 SEND_FILE, [], {}],
+    'send_domain_search_file' => [-> { Zerobounce.send_domain_search_file(FILE, domain_column: 1) }, SEND_FILE, [], {}],
+    'send_evaluated_file' => [-> { Zerobounce.send_evaluated_file('f1') }, SEND_FILE, [], {}],
+    'validate_file_delete' => [-> { Zerobounce.validate_file_delete('f1') }, SEND_FILE, [], {}],
+    'scoring_file_delete' => [-> { Zerobounce.scoring_file_delete('f1') }, SEND_FILE, [], {}],
+    'email_finder_file_delete' => [-> { Zerobounce.email_finder_file_delete('f1') }, SEND_FILE, [], {}],
+    'domain_search_file_delete' => [-> { Zerobounce.domain_search_file_delete('f1') }, SEND_FILE, [], {}],
+    'guessformat' => [-> { Zerobounce.guessformat('example.com') }, GUESS, [],
+                      { 'other_domain_formats' => [DOMAIN_FORMAT, []] }],
+    'find_email' => [-> { Zerobounce.find_email('Ann', domain: 'example.com') }, GUESS, [],
+                     { 'other_domain_formats' => [DOMAIN_FORMAT, []] }],
+    'find_domain' => [-> { Zerobounce.find_domain(domain: 'example.com') }, GUESS, [],
+                      { 'other_domain_formats' => [DOMAIN_FORMAT, []] }],
+    'send_list_evaluator_file' => [-> { Zerobounce.send_list_evaluator_file(FILE, email_address_column: 1) },
+                                   LIST_EVALUATOR, [], {}],
+    'get_list_evaluator_result' => [-> { Zerobounce.get_list_evaluator_result('f1') }, LIST_EVALUATOR, [], {}]
+  }.freeze
+
+  # A documented answer with every field valid; +overrides+ replace some of them. The
+  # error text of a body with no "success" is "" (the documented empty value).
+  def self.body(fields, overrides = {})
+    fields.to_h { |name, kind| [name, name == 'error_message' ? '' : VALID.fetch(kind)] }.merge(overrides)
+  end
+end
+
+describe 'documented field types on every typed call' do
+  root = 'https://first.example'
+
+  around do |example|
+    saved = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    example.run
+  ensure
+    Zerobounce.configuration = saved
+  end
+
+  before do
+    allow(Zerobounce).to receive(:warn)
+    TransportSweep.configure('types-key', root)
+  end
+
+  def answer(body)
+    WebMock.reset!
+    stub_request(:any, %r{\Ahttps://first\.example/})
+      .to_return(status: 200, body: body, headers: { 'Content-Type' => 'application/json' })
+  end
+
+  # Runs the call on +body+: :ok for a result, or the error's status.
+  def outcome(call, body)
+    answer(JSON.generate(body))
+    call.call
+    :ok
+  rescue Zerobounce::ApiResponseError => e
+    e.message.include?('unexpected shape') ? e.status_code : [e.status_code, e.message]
+  rescue StandardError => e
+    e.class.name
+  end
+
+  it 'accepts every documented field with a value of its type' do
+    DocumentedAnswers::CALLS.each do |name, (call, fields, _required, _nested)|
+      answer(JSON.generate(DocumentedAnswers.body(fields)))
+      expect(call.call).to be_a(Hash), name
+    end
+  end
+
+  it 'rejects every wrong JSON type in every documented field, with status 200' do
+    wrong = []
+    count = 0
+    DocumentedAnswers::CALLS.each do |name, (call, fields, _required, _nested)|
+      fields.each do |field, kind|
+        DocumentedAnswers::WRONG.fetch(kind).each do |value|
+          count += 1
+          result = outcome(call, DocumentedAnswers.body(fields, field => value))
+          wrong << [name, field, value, result] unless result == 200
+        end
+      end
+    end
+    expect(count).to be > 300
+    expect(wrong).to eq([])
+  end
+
+  it 'reads null in an optional field as absent, and rejects null in a required one' do
+    wrong = []
+    DocumentedAnswers::CALLS.each do |name, (call, fields, required, _nested)|
+      fields.each_key do |field|
+        result = outcome(call, DocumentedAnswers.body(fields, field => nil))
+        if required.include?(field)
+          wrong << [name, field, result] unless result == 200
+        else
+          wrong << [name, field, result] unless result == :ok
+        end
+      end
+    end
+    expect(wrong).to eq([])
+  end
+
+  it 'checks every field of every item of a documented array, on every call that has one' do
+    wrong = []
+    count = 0
+    DocumentedAnswers::CALLS.each do |name, (call, fields, _required, nested)|
+      nested.each do |array, (item_fields, _item_required)|
+        item_fields.each do |field, kind|
+          DocumentedAnswers::WRONG.fetch(kind).each do |value|
+            count += 1
+            item = DocumentedAnswers.body(item_fields, field => value)
+            result = outcome(call, DocumentedAnswers.body(fields, array => [item]))
+            wrong << [name, array, field, value, result] unless result == 200
+          end
+        end
+      end
+    end
+    expect(count).to be > 60
+    expect(wrong).to eq([])
+  end
+
+  it 'keeps a message list as sent (a Hash result passes every field through)' do
+    answer('{"success":true,"message":["File Accepted","Queued"],"file_id":"f1","file_name":"a.csv"}')
+    expect(Zerobounce.validate_file_send(TransportSweep::FILE)['message']).to eq(['File Accepted', 'Queued'])
+  end
+end
+
+# Round 16 (D, E, A). An HTML page served as text/csv is an error on every
+# download (the sniff reads the body, not only the content type); return_url is
+# sent only when given; a "success":"false" string is a failure; the documented
+# batch and API usage answers parse; the key is not in a client's dump.
+describe 'round 16 guards: HTML downloads, return_url, string false, examples, key dumps' do
+  root = 'https://first.example'
+  html = '<!DOCTYPE html><html><head><title>Access denied</title></head><body>Denied</body></html>'
+
+  around do |example|
+    saved = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    example.run
+  ensure
+    Zerobounce.configuration = saved
+  end
+
+  before do
+    allow(Zerobounce).to receive(:warn)
+    TransportSweep.configure('guard-key-123', root)
+  end
+
+  def answer(body, content_type: 'application/json')
+    WebMock.reset!
+    stub_request(:any, %r{\Ahttps://first\.example/})
+      .to_return(status: 200, body: body, headers: { 'Content-Type' => content_type })
+  end
+
+  describe 'an HTML page under a CSV content type' do
+    it 'is an error on every getfile call and on the Warmup downloads' do
+      calls = {
+        validate_file_get: -> { Zerobounce.validate_file_get('f1') },
+        scoring_file_get: -> { Zerobounce.scoring_file_get('f1') },
+        email_finder_file_get: -> { Zerobounce.email_finder_file_get('f1') },
+        domain_search_file_get: -> { Zerobounce.domain_search_file_get('f1') }
+      }
+      calls.each do |name, call|
+        answer(html, content_type: 'text/csv')
+        expect(&call).to raise_error(Zerobounce::ApiResponseError), name.to_s
+      end
+      %i[download_seeds download_statistics].each do |name|
+        answer(html, content_type: 'text/csv')
+        warmup = TransportSweep.warmup('guard-key-123', root)
+        expect { TransportSweep::WARMUP_CALLS.fetch(name).call(warmup) }
+          .to raise_error(Zerobounce::ApiResponseError), name.to_s
+      end
+    end
+
+    it 'is an error with an HTML body under a text/html type as well' do
+      answer(html, content_type: 'text/html')
+      expect { Zerobounce.validate_file_get('f1') }.to raise_error(Zerobounce::ApiResponseError)
+    end
+  end
+
+  describe 'a message-only finder body' do
+    it 'is an error with status 200 even when the message is null, and a message beside a result is not' do
+      answer('{"message":null}')
+      expect { Zerobounce.find_domain(domain: 'example.com') }.to raise_error(Zerobounce::ApiResponseError,
+                                                                              'Request failed') { |e|
+                                                                    expect(e.status_code).to eq(200)
+                                                                  }
+      answer('{"domain":"example.com","format":"first.last","message":null}')
+      expect(Zerobounce.find_domain(domain: 'example.com')['format']).to eq('first.last')
+    end
+  end
+
+  describe 'return_url' do
+    it 'is not sent unless the caller gives one' do
+      answer('{"success":true,"message":"File Accepted","file_id":"f1","file_name":"f.csv"}')
+      Zerobounce.validate_file_send(TransportSweep::FILE)
+      Zerobounce.scoring_file_send(TransportSweep::FILE)
+      expect(a_request(:post, %r{/sendfile|/scoring/sendfile}).with { |req| req.body.to_s.include?('return_url') })
+        .not_to have_been_made
+    end
+
+    it 'is sent when given' do
+      answer('{"success":true,"message":"File Accepted","file_id":"f1","file_name":"f.csv"}')
+      Zerobounce.validate_file_send(TransportSweep::FILE, return_url: TransportSweep::DONE)
+      expect(a_request(:post, %r{/sendfile}).with { |req| req.body.to_s.include?(TransportSweep::DONE) })
+        .to have_been_made
+    end
+  end
+
+  describe 'a "success":"false" string' do
+    it 'is a failure with status 200 on every bulk status, send and delete call' do
+      body = '{"success":"false","message":"File cannot be found."}'
+      [-> { Zerobounce.validate_file_check('f1') }, -> { Zerobounce.validate_file_delete('f1') },
+       -> { Zerobounce.scoring_file_check('f1') }, -> { Zerobounce.email_finder_file_status('f1') },
+       -> { Zerobounce.domain_search_file_delete('f1') }, -> { Zerobounce.validate_file_send(TransportSweep::FILE) }]
+        .each do |call|
+        answer(body)
+        expect(&call).to raise_error(Zerobounce::ApiResponseError, 'File cannot be found.') { |e|
+          expect(e.status_code).to eq(200)
+        }
+      end
+    end
+  end
+
+  describe 'the documented answers (verbatim from zerobounce.net)' do
+    it 'parses the batch-validate success answer with three rows' do
+      answer(<<~JSON)
+        {
+              "email_batch": [
+                  {
+                      "address": "john.doe@zerobounce.net",
+                      "status": "valid",
+                      "sub_status": "",
+                      "free_email": false,
+                      "catchall_domain": true,
+                      "did_you_mean": null,
+                      "account": "johndoe",
+                      "domain": "zerobounce.net",
+                      "domain_age_days": "3431",
+                      "active_in_days": "30",
+                      "active_first_seen": "2026-02-25",
+                      "smtp_provider": "g-suite",
+                      "mx_found": "true",
+                      "mx_record": "aspmx.l.google.com",
+                      "firstname": "dan",
+                      "lastname": "cotet",
+                      "gender": "male",
+                      "country": null,
+                      "region": null,
+                      "city": null,
+                      "zipcode": null,
+                      "processed_at": "2026-06-18 07:05:00.033"
+                  },
+                  {
+                      "address": "invalid@example.com",
+                      "status": "invalid",
+                      "sub_status": "mailbox_not_found",
+                      "free_email": false,
+                      "did_you_mean": null,
+                      "account": null,
+                      "domain": null,
+                      "domain_age_days": "9692",
+                      "active_in_days": "365",
+                      "active_first_seen": "2026-02-25",
+                      "smtp_provider": "example",
+                      "mx_found": "true",
+                      "mx_record": "mx.example.com",
+                      "catchall_domain": false,
+                      "firstname": "zero",
+                      "lastname": "bounce",
+                      "gender": "male",
+                      "country": null,
+                      "region": null,
+                      "city": null,
+                      "zipcode": null,
+                      "processed_at": "2020-09-17 17:43:11.830"
+                  },
+                  {
+                      "address": "disposable@example.com",
+                      "status": "do_not_mail",
+                      "sub_status": "disposable",
+                      "free_email": false,
+                      "did_you_mean": null,
+                      "account": null,
+                      "domain": null,
+                      "domain_age_days": "9692",
+                      "active_in_days": "365",
+                      "active_first_seen": "2026-02-25",
+                      "smtp_provider": "example",
+                      "mx_found": "true",
+                      "mx_record": "mx.example.com",
+                      "catchall_domain": false,
+                      "firstname": "zero",
+                      "lastname": "bounce",
+                      "gender": "male",
+                      "country": null,
+                      "region": null,
+                      "city": null,
+                      "zipcode": null,
+                      "processed_at": "2020-09-17 17:43:11.830"
+                  }
+              ],
+              "errors": []
+          }
+      JSON
+      expect(Zerobounce.validate_batch(['john.doe@zerobounce.net'])['email_batch'].map { |row| row['status'] })
+        .to eq(%w[valid invalid do_not_mail])
+    end
+
+    it 'parses the get-api-usage success answer' do
+      answer(<<~JSON)
+        {
+              "total": 120,
+              "status_valid": 17,
+              "status_invalid": 69,
+              "status_catch_all": 9,
+              "status_do_not_mail": 16,
+              "status_spamtrap": 0,
+              "status_unknown": 6,
+              "sub_status_toxic": 0,
+              "sub_status_disposable": 1,
+              "sub_status_role_based": 1,
+              "sub_status_possible_trap": 0,
+              "sub_status_global_suppression": 14,
+              "sub_status_timeout_exceeded": 0,
+              "sub_status_mail_server_temporary_error": 0,
+              "sub_status_mail_server_did_not_respond": 0,
+              "sub_status_greylisted": 6,
+              "sub_status_antispam_system": 0,
+              "sub_status_does_not_accept_mail": 27,
+              "sub_status_exception_occurred": 0,
+              "sub_status_failed_syntax_check": 20,
+              "sub_status_mailbox_not_found": 12,
+              "sub_status_unroutable_ip_address": 0,
+              "sub_status_possible_typo": 0,
+              "sub_status_no_dns_entries": 10,
+              "sub_status_role_based_catch_all": 0,
+              "sub_status_mailbox_quota_exceeded": 0,
+              "sub_status_forcible_disconnect": 0,
+              "sub_status_failed_smtp_connection": 0,
+              "sub_status_leading_period_removed": 0,
+              "sub_status_alias_address": 2,
+              "sub_status_mx_forward": 0,
+              "sub_status_alternate": 0,
+              "sub_status_blocked": 0,
+              "sub_status_allowed": 0,
+              "start_date": "1/1/2023",
+              "end_date": "1/30/2024"
+            }
+      JSON
+      usage = Zerobounce.api_usage(Date.new(2023, 1, 1), Date.new(2024, 1, 30))
+      expect(usage['total']).to eq(120)
+      expect(usage['sub_status_alias_address']).to eq(2)
+    end
+  end
+
+  describe 'the API key in a client dump' do
+    it 'is not in the instance variables or the inspect of a Client or a Warmup client' do
+      client = Zerobounce::Client.new('dump-key-123')
+      warmup = Zerobounce::Warmup.new('dump-key-123')
+      [client, warmup].each do |object|
+        values = object.instance_variables.map { |name| object.instance_variable_get(name) }
+        expect(values.map(&:inspect).join).not_to include('dump-key-123'), object.class.name
+        expect(object.inspect).not_to include('dump-key-123'), object.class.name
+        expect(object.to_s).not_to include('dump-key-123'), object.class.name
+        expect(PP.pp(object, +'')).not_to include('dump-key-123'), object.class.name
+      end
+    end
+  end
+end
+# rubocop:enable Metrics/BlockLength

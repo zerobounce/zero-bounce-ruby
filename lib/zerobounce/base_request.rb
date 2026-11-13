@@ -7,6 +7,7 @@ require 'zerobounce/response_error'
 require 'zerobounce/api_key'
 require 'zerobounce/strict_json'
 require 'zerobounce/error'
+require 'zerobounce/response_shape'
 
 # https://github.com/rest-client/rest-client
 require 'rest-client'
@@ -335,8 +336,15 @@ module Zerobounce
       return if parsed.empty? || parsed.key?('success')
       return unless parsed.keys.all? { |key| MESSAGE_KEYS.include?(key) }
 
-      text = MESSAGE_KEYS.map { |key| parsed[key] }.find { |value| __error_text__(value) }
-      raise ApiResponseError.new(ResponseError.strip_prefix(text), response.code) if text
+      # A message that is null, blank or not text still makes the body a rejection.
+      text = MESSAGE_KEYS.filter_map { |key| __message_text__(parsed[key]) }.first || 'Request failed'
+      raise ApiResponseError.new(ResponseError.strip_prefix(text), response.code)
+    end
+
+    # The text of a message value: a non-blank String, or the first non-blank String of an Array.
+    def self.__message_text__(value)
+      value = value.find { |item| __error_text__(item) } if value.is_a?(Array)
+      __error_text__(value) ? value : nil
     end
 
     # A dead or invalid key on an HTTP 200: no "success" field and a non-empty
@@ -379,7 +387,8 @@ module Zerobounce
     # API error with the HTTP status, never a result.
     def self.__require_shape__(response, parsed, path)
       return parsed if parsed.is_a?(Array) && ARRAY_PATHS.include?(path)
-      return parsed if parsed.is_a?(Hash) && !ARRAY_PATHS.include?(path)
+      # The documented field types of the answer (ResponseShape), for the calls that have a shape.
+      return ResponseShape.check!(parsed, path, response.code) if parsed.is_a?(Hash) && !ARRAY_PATHS.include?(path)
       return parsed if parsed.is_a?(Hash) && path == 'listS3files' && parsed['files'].is_a?(Array)
 
       expected = { 'filters/list' => 'an array', 'listS3files' => 'an object with files, or an array' }

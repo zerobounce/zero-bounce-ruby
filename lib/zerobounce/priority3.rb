@@ -2,6 +2,7 @@
 
 require 'erb'
 require 'zerobounce/strict_bool'
+require 'zerobounce/response_shape'
 
 module Zerobounce
   module Priority3
@@ -74,8 +75,11 @@ module Zerobounce
       params = { email_address_column: email_address_column }
       # The same base URL as get_list_evaluator_result, not the bulk one. The
       # endpoint is the base URL itself, with its trailing slash.
-      zb_request.bulk_post('', params, 'multipart/form-data', filepath,
-                           root: Zerobounce.configuration.list_evaluator_root_url)
+      ResponseShape.check!(
+        zb_request.bulk_post('', params, 'multipart/form-data', filepath,
+                             root: Zerobounce.configuration.list_evaluator_root_url),
+        :list_evaluator
+      )
     end
 
     def get_list_evaluator_result(file_id)
@@ -83,11 +87,14 @@ module Zerobounce
 
       # The list evaluator has its own base URL, not a path built from the bulk
       # one, and the file id is one path segment, so a slash must stay encoded.
-      zb_request.root_request(
-        :get,
-        Zerobounce.configuration.list_evaluator_root_url,
-        "#{ERB::Util.url_encode(file_id.to_s.strip)}/",
-        {}
+      ResponseShape.check!(
+        zb_request.root_request(
+          :get,
+          Zerobounce.configuration.list_evaluator_root_url,
+          "#{ERB::Util.url_encode(file_id.to_s.strip)}/",
+          {}
+        ),
+        :list_evaluator
       )
     end
 

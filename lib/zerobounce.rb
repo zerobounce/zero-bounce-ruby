@@ -16,6 +16,7 @@ require 'zerobounce/validate_sub_status'
 require 'zerobounce/request'
 require 'zerobounce/configuration'
 require 'zerobounce/api_urls'
+require 'zerobounce/response_shape'
 require 'zerobounce/priority3'
 require 'zerobounce/warmup'
 
@@ -137,7 +138,6 @@ module Zerobounce
                else
                  @@request.get('validate', params)
                end
-      __require_validate_fields__(result, '')
       result
     end
 
@@ -329,12 +329,7 @@ module Zerobounce
       params[:timeout] = timeout.to_s unless timeout.nil?
       params[:activity_data] = __strict_bool__(activity_data, 'activity_data') unless activity_data.nil?
       params[:verify_plus] = __strict_bool__(verify_plus, 'verify_plus') unless verify_plus.nil?
-      results = @@request.post('validatebatch', params)
-      rows = results['email_batch']
-      if rows.is_a?(Array)
-        rows.each_with_index { |row, index| __require_validate_fields__(row, "email_batch[#{index}].") }
-      end
-      results
+      @@request.post('validatebatch', params)
     end
 
     # Validate CSV file
@@ -725,27 +720,6 @@ module Zerobounce
       params[:company_name] = company_name unless company_name.nil? || company_name.empty?
 
       @@request.get('guessformat', params)
-    end
-
-    private
-
-    # E7: a validate result (or validate_batch row) carries +address+ and
-    # +status+ as JSON strings; missing, null or another type is the wrong
-    # shape for the call (status 200). The greylist answer {"Message": "..."}
-    # has neither and is a result. The other fields of the Hash pass through.
-    def __require_validate_fields__(result, where)
-      unless result.is_a?(Hash)
-        raise ApiResponseError.new("ZeroBounce returned JSON of an unexpected shape: #{where.chomp('.')} is not an object.", 200)
-      end
-      greylist = result['Message'].is_a?(String) || result['message'].is_a?(String)
-      return if where.empty? && greylist && !result.key?('address') && !result.key?('status')
-
-      %w[address status].each do |field|
-        next if result[field].is_a?(String)
-
-        problem = result[field].nil? ? 'is missing' : 'is not a string'
-        raise ApiResponseError.new("ZeroBounce returned JSON of an unexpected shape: #{where}#{field} #{problem}.", 200)
-      end
     end
 
   end
