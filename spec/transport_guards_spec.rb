@@ -1136,7 +1136,11 @@ describe 'JSON of the wrong shape on every call' do
 
   it 'rejects an array where an object is expected' do
     bodies = lambda { |name|
-      array_calls.include?(name) || either_calls.include?(name) ? [] : ['[]', '[{"status":"valid"}]']
+      # Empty, one string, and positional arrays holding a call's own field values in order.
+      next [] if array_calls.include?(name) || either_calls.include?(name)
+
+      ['[]', '["x"]', '[{"status":"valid"}]', '["a@example.com",10]', '[true,"3"]', '["a@example.com","valid"]',
+       '["2375323"]', '[2375323]']
     }
     expect(wrong(bodies)).to eq([])
   end
@@ -1297,8 +1301,8 @@ describe 'the redaction decode check' do
   end
 end
 
-# E7: the fields the standard names. Credits must be a JSON string holding an
-# integer; a validate result and every validate_batch row carry address and
+# E7: the fields the standard names. Credits must be an integer, sent as a JSON
+# string or a JSON integer; a validate result and every validate_batch row carry address and
 # status as strings (the greylist {"Message": "..."} answer is a result). The
 # other fields of a Hash result pass through as sent.
 describe 'field types on the typed fields' do
@@ -1330,16 +1334,18 @@ describe 'field types on the typed fields' do
     }
   end
 
-  it 'requires Credits to be a string holding an integer' do
-    ['{}', '{"Credits":null}', '{"Credits":true}', '{"Credits":5}', '{"Credits":-1}', '{"Credits":1.5}',
-     '{"Credits":"abc"}', '{"Credits":"5.0"}', '{"Credits":""}', '{"Credits":" 5"}', '{"Credits":"5\n"}',
-     '{"Credits":"٥"}', '{"Credits":[1]}', '{"Credits":{"a":1}}'].each do |body|
+  it 'requires Credits to be an integer, as a JSON string or a JSON number' do
+    ['{}', '{"Credits":null}', '{"Credits":true}', '{"Credits":false}', '{"Credits":1.5}', '{"Credits":5.0}',
+     '{"Credits":1e3}', '{"Credits":"abc"}', '{"Credits":"5.0"}', '{"Credits":""}', '{"Credits":" 5"}',
+     '{"Credits":"5\n"}', '{"Credits":"٥"}', '{"Credits":[1]}', '{"Credits":{"a":1}}'].each do |body|
       expect_shape_error(body) { Zerobounce.credits }
     end
-    answer('{"Credits":"-1"}')
-    expect(Zerobounce.credits).to eq(-1)
-    answer('{"Credits":"2375323"}')
-    expect(Zerobounce.credits).to eq(2_375_323)
+    # The live API sends a JSON string; zerobounce.net's example a JSON number.
+    { '{"Credits":"-1"}' => -1, '{"Credits":"2375323"}' => 2_375_323, '{"Credits":2375323}' => 2_375_323,
+      '{"Credits":-1}' => -1, '{"Credits":0}' => 0 }.each do |body, credits|
+      answer(body)
+      expect(Zerobounce.credits).to eq(credits), body
+    end
   end
 
   it 'requires a string address and status from validate, on GET and POST' do
@@ -1356,9 +1362,50 @@ describe 'field types on the typed fields' do
      '{"email_batch":[{"address":"a@b.c","status":null}],"errors":[]}',
      '{"email_batch":[{"address":"a@b.c","status":5}],"errors":[]}',
      '{"email_batch":[{"address":"a@b.c","status":"valid"},{}],"errors":[]}',
-     '{"email_batch":["x"],"errors":[]}'].each do |body|
+     '{"email_batch":["x"],"errors":[]}', '{"email_batch":[5],"errors":[]}', '{"email_batch":[null],"errors":[]}',
+     '{"email_batch":[true],"errors":[]}', '{"email_batch":[1.5],"errors":[]}',
+     '{"email_batch":[["a@b.c","valid"]],"errors":[]}'].each do |body|
       expect_shape_error(body) { Zerobounce.validate_batch(['a@example.com']) }
     end
+  end
+
+  # Every wrong JSON type at every nested path Ruby types (each batch row, and
+  # its address and status), substituted into the documented batch answer.
+  it 'rejects every wrong JSON type at every nested path of a validate_batch answer' do
+    row = { 'address' => 'valid@example.com', 'status' => 'valid', 'sub_status' => '', 'free_email' => false }
+    example = { 'email_batch' => [row, row.merge('address' => 'b@example.com')], 'errors' => [] }
+    mutations = []
+    not_objects = [5, 1.5, true, false, nil, 'x', [], ['x'], [row['address'], row['status']]]
+    not_strings = [5, 1.5, true, false, nil, [], ['valid'], {}, { 'a' => 1 }]
+    example['email_batch'].each_index do |index|
+      not_objects.each do |wrong|
+        mutations << ["email_batch[#{index}]", wrong, index, nil]
+      end
+      %w[address status].each do |field|
+        not_strings.each do |wrong|
+          mutations << ["email_batch[#{index}].#{field}", example['email_batch'][index].merge(field => wrong), index,
+                        field]
+        end
+      end
+    end
+    answer(JSON.generate(example))
+    expect(Zerobounce.validate_batch(['a@example.com'])['email_batch'].size).to eq(2)
+    wrong = mutations.filter_map do |path, value, index, _field|
+      rows = example['email_batch'].dup
+      rows[index] = value
+      body = JSON.generate(example.merge('email_batch' => rows))
+      answer(body)
+      begin
+        Zerobounce.validate_batch(['a@example.com'])
+        [path, body, 'accepted']
+      rescue Zerobounce::ApiResponseError => e
+        [path, body, e.status_code, e.message] unless e.status_code == 200 && e.message.include?('unexpected shape')
+      rescue StandardError => e
+        [path, body, e.class.name]
+      end
+    end
+    expect(mutations.size).to be > 30
+    expect(wrong).to eq([])
   end
 
   it 'still parses the documented examples and the greylist answer' do
@@ -1422,6 +1469,52 @@ describe 'a dead key on a 200 on every call' do
         wrong << [name, e.class.name]
       end
       expect(wrong).to eq([])
+    end
+  end
+end
+
+# Example responses copied verbatim from zerobounce.net/docs, kept in
+# spec/fixtures/zerobounce_net_examples.json. Success examples must parse; the
+# documented error examples must be API errors with status 200.
+describe 'the examples on zerobounce.net' do
+  root = 'https://first.example'
+  examples = JSON.parse(File.read(File.expand_path('fixtures/zerobounce_net_examples.json', __dir__)))
+
+  around do |example|
+    saved = Zerobounce.configuration
+    Zerobounce.configuration = Zerobounce::Configuration.new
+    example.run
+  ensure
+    Zerobounce.configuration = saved
+  end
+
+  before do
+    allow(Zerobounce).to receive(:warn)
+    TransportSweep.configure('examples-key', root)
+  end
+
+  def answer(body)
+    WebMock.reset!
+    stub_request(:any, %r{\Ahttps://first\.example/})
+      .to_return(status: 200, body: body, headers: { 'Content-Type' => 'application/json' })
+  end
+
+  it 'parses every documented result' do
+    expect(examples['results'].size).to be >= 9
+    examples['results'].each do |entry|
+      answer(entry['body'])
+      expect(TransportSweep::CALLS.fetch(entry['call'].to_sym).call).not_to be_nil, entry['body']
+    end
+    answer('{"Credits":2375323}')
+    expect(Zerobounce.credits).to eq(2_375_323)
+  end
+
+  it 'reports every documented error with status 200' do
+    expect(examples['errors'].size).to be >= 10
+    examples['errors'].each do |entry|
+      answer(entry['body'])
+      expect { TransportSweep::CALLS.fetch(entry['call'].to_sym).call }
+        .to raise_error(Zerobounce::ApiResponseError) { |e| expect(e.status_code).to eq(200), entry['body'] }
     end
   end
 end

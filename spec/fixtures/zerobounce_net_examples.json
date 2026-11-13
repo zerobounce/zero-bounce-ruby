@@ -1,0 +1,102 @@
+{
+  "_comment": "Example responses copied verbatim from zerobounce.net/docs; 'source' names the docs page each came from (its path, with / written as _). results must parse; errors must be API errors with status 200.",
+  "results": [
+    {
+      "call": "scoring_file_check",
+      "source": "ai-scoring-api_ai-scoring-api__file-status_api-file-status-response.html",
+      "body": "{\n          \"success\": true,\n          \"file_id\": \"aaaaaaaa-zzzz-xxxx-yyyy-5003727fffff\",\n          \"file_name\": \"Your file name.csv\",\n          \"upload_date\": \"2023-04-28T15:25:41Z\",\n          \"file_status\": \"Complete\",\n          \"complete_percentage\": \"100%\",\n          \"return_url\": \"Your return URL if provided when calling sendfile API\"\n      }"
+    },
+    {
+      "call": "scoring_file_send",
+      "source": "ai-scoring-api_ai-scoring-api__send-file_api-send-file-response.html",
+      "body": "{\n          \"success\": true,\n          \"message\": \"File Accepted\",\n          \"file_name\": \"Your file name.csv\",\n          \"file_id\": \"aaaaaaaa-zzzz-xxxx-yyyy-5003727fffff\"\n      }"
+    },
+    {
+      "call": "scoring_file_delete",
+      "source": "ai-scoring-api_ai_scoring_delete_file_scoring__delete-file.html",
+      "body": "{\n        \"success\": true,\n        \"message\": \"File Deleted\",\n        \"file_name\": \"test2\",\n        \"file_id\": \"b222a0fd-90d5-416c-8f1a-9cc3851fc823\"\n    }"
+    },
+    {
+      "call": "credits",
+      "source": "email-validation-api-quickstart_v2-credit-balance_response.html",
+      "body": "{\"Credits\":2375323}"
+    },
+    {
+      "call": "validate_file_delete",
+      "source": "email-validation-api-quickstart_v2-delete-file_response.html",
+      "body": "{\n    \"success\": true,\n    \"message\": \"File Deleted\",\n    \"file_name\": \"test2\",\n    \"file_id\": \"b222a0fd-90d5-416c-8f1a-9cc3851fc823\"\n  }"
+    },
+    {
+      "call": "validate_file_check",
+      "source": "email-validation-api-quickstart_v2-file-status_response.html",
+      "body": "{\n    \"success\": true,\n    \"file_id\": \"aaaaaaaa-zzzz-xxxx-yyyy-5003727fffff\",\n    \"file_name\": \"Your file name.csv\",\n    \"upload_date\": \"2023-04-28T15:25:41Z\",\n    \"file_status\": \"Complete\",\n    \"file_phase_2_status\": \"N/A\",\n    \"complete_percentage\": \"100%\",\n    \"return_url\": \"Your return URL if provided when calling sendfile API\"\n  }"
+    },
+    {
+      "call": "validate_file_check",
+      "source": "email-validation-api-quickstart_v2-file-status_response.html",
+      "body": "{\n    \"success\": true,\n    \"file_id\": \"aaaaaaaa-zzzz-xxxx-yyyy-5003727fffff\",\n    \"file_name\": \"Your file name.csv\",\n    \"upload_date\": \"2023-04-28T15:25:41Z\",\n    \"file_status\": \"Complete\",\n    \"file_phase_2_status\": \"Complete\",\n    \"complete_percentage\": \"100%\",\n    \"return_url\": \"Your return URL if provided when calling sendfile API\"\n  }"
+    },
+    {
+      "call": "validate_file_send",
+      "source": "email-validation-api-quickstart_v2-send-file_response.html",
+      "body": "{\n      \"success\": true,\n      \"message\": \"File Accepted\",\n      \"file_name\": \"Your file name.csv\",\n      \"file_id\": \"aaaaaaaa-zzzz-xxxx-yyyy-5003727fffff\"\n    }"
+    },
+    {
+      "call": "validate",
+      "source": "email-validation-api-quickstart_v2-validate-emails_response.html",
+      "body": "{\n      \"address\": \"john.doe@zerobounce.net\",\n      \"status\": \"valid\",\n      \"sub_status\": \"\",\n      \"free_email\": false,\n      \"catchall_domain\": true,\n      \"did_you_mean\": null,\n      \"account\": \"johndoe\",\n      \"domain\": \"zerobounce.net\",\n      \"domain_age_days\": \"3431\",\n      \"active_in_days\": \"30\",\n      \"active_first_seen\": \"2026-02-25\",\n      \"smtp_provider\": \"g-suite\",\n      \"mx_found\": \"true\",\n      \"mx_record\": \"aspmx.l.google.com\",\n      \"firstname\": \"dan\",\n      \"lastname\": \"cotet\",\n      \"gender\": \"male\",\n      \"country\": null,\n      \"region\": null,\n      \"city\": null,\n      \"zipcode\": null,\n      \"processed_at\": \"2026-06-18 07:05:00.033\"\n  }"
+    }
+  ],
+  "errors": [
+    {
+      "call": "scoring_file_check",
+      "source": "ai-scoring-api_ai-scoring-api__file-status_api-file-status-response.html",
+      "body": "{\n          \"success\": false,\n          \"message\": \"Error messages\"\n      }"
+    },
+    {
+      "call": "scoring_file_send",
+      "source": "ai-scoring-api_ai-scoring-api__send-file_api-send-file-response.html",
+      "body": "{\n          \"success\": false,\n          \"message\": [\n              \"Error messages\"\n          ]\n      }"
+    },
+    {
+      "call": "scoring_file_delete",
+      "source": "ai-scoring-api_ai_scoring_delete_file_scoring__delete-file.html",
+      "body": "{\n        \"success\": false,\n        \"message\": \"File cannot be found.\"\n    }"
+    },
+    {
+      "call": "validate_batch",
+      "source": "email-validation-api-quickstart_v2-batch-validate-emails_response.html",
+      "body": "{\n      \"email_batch\": [],\n      \"errors\": [\n          {\n              \"error\": \"Invalid API Key or your account ran out of credits\",\n              \"email_address\": \"all\"\n          }\n      ]\n    }"
+    },
+    {
+      "call": "validate_file_delete",
+      "source": "email-validation-api-quickstart_v2-delete-file_response.html",
+      "body": "{\n    \"success\": false,\n    \"error_message\": \"File cannot be found.\"\n  }"
+    },
+    {
+      "call": "validate_file_check",
+      "source": "email-validation-api-quickstart_v2-file-status_response.html",
+      "body": "{      \n    \"success\": false,\n    \"error_message\": \"Error messages\"\n  }"
+    },
+    {
+      "call": "api_usage",
+      "source": "email-validation-api-quickstart_v2-get-api-usage_response.html",
+      "body": "{\"error\":\"Invalid API Key\"}"
+    },
+    {
+      "call": "api_usage",
+      "source": "email-validation-api-quickstart_v2-get-api-usage_response.html",
+      "body": "{\"error\":\"Invalid Date\"}"
+    },
+    {
+      "call": "validate_file_send",
+      "source": "email-validation-api-quickstart_v2-send-file_response.html",
+      "body": "{\n      \"success\": false,\n      \"error_message\": \"Error messages\"\n    }"
+    },
+    {
+      "call": "validate",
+      "source": "email-validation-api-quickstart_v2-validate-emails_response.html",
+      "body": "{\"error\":\"Invalid API Key or your account ran out of credits\"}"
+    }
+  ]
+}

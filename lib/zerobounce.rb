@@ -148,12 +148,14 @@ module Zerobounce
       json = @@request.get('getcredits', {})
       credits = json['Credits']
       return credits.to_i if credits.is_a?(String) && credits.match?(/\A-?[0-9]+\z/)
+      # zerobounce.net's example sends a JSON integer: {"Credits":2375323}.
+      return credits if credits.is_a?(Integer)
 
-      # E7: Credits is documented as a JSON string holding an integer ("-1",
-      # "12345"). A missing or null Credits, a bare number, "abc" or "5.0" is
+      # E7: Credits is an integer, sent as a JSON string ("-1", "12345") or a
+      # JSON integer. A missing or null Credits, "abc", "5.0", 5.5 or true is
       # the wrong shape for this call, not 0 credits (and not the NoMethodError
       # [1].to_i raises).
-      raise ApiResponseError.new('ZeroBounce returned JSON of an unexpected shape: Credits is not a string holding an integer.', 200)
+      raise ApiResponseError.new('ZeroBounce returned JSON of an unexpected shape: Credits is not an integer.', 200)
     end
 
     # Convenience method for checking if an email address is valid.
