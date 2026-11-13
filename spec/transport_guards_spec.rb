@@ -1805,7 +1805,7 @@ describe 'round 16 guards: HTML downloads, return_url, string false, examples, k
     it 'is sent when given' do
       answer('{"success":true,"message":"File Accepted","file_id":"f1","file_name":"f.csv"}')
       Zerobounce.validate_file_send(TransportSweep::FILE, return_url: TransportSweep::DONE)
-      expect(a_request(:post, %r{/sendfile}).with { |req| req.body.to_s.include?(TransportSweep::DONE) })
+      expect(a_request(:post, %r{/sendfile}).with { |req| req.body.to_s[/name="return_url"\r?\n\r?\n([^\r\n]*)/, 1] == TransportSweep::DONE })
         .to have_been_made
     end
   end
