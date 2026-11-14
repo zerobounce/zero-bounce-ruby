@@ -410,6 +410,20 @@ describe Zerobounce::Warmup do
       end.to raise_error(Zerobounce::ApiResponseError, 'No statistics for this address.')
     end
 
+    it 'treats BOM + JSON and problem+json downloads as errors, with the status' do
+      [["\uFEFF{\"message\":\"No seeds.\"}", 'text/csv', 'No seeds.'],
+       ['[1,2]', 'text/csv', '[1,2]'],
+       ['plain text', 'application/problem+json', 'plain text'],
+       ['{"detail":"Nope"}', 'application/problem+json', 'Nope']].each do |body, ct, message|
+        [-> { warmup.download_seeds }, -> { warmup.download_statistics('a@b.com') }].each do |call|
+          stub_ok(body, content_type: ct)
+          expect { call.call }.to raise_error(Zerobounce::ApiResponseError, message) { |e|
+            expect(e.status_code).to eq(200)
+          }
+        end
+      end
+    end
+
     it 'puts the HTTP status on the error' do
       stub_ok('{"message":"Custom rule was updated less than 7 days ago."}', status: 429)
       expect { warmup.update_custom_engagement('a@b.com', 10, 10, 5) }

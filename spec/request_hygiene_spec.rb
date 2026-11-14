@@ -125,10 +125,10 @@ describe 'Request URLs, optional parameters and wrapped errors' do
   describe 'Warmup transport errors' do
     it 'does not keep the unredacted original as #cause' do
       warmup = Zerobounce::Warmup.new(api_key)
-      allow(RestClient::Request).to receive(:execute)
-        .and_raise(SocketError, "getaddrinfo failed, key=#{api_key}")
+      stub_request(:any, %r{\Ahttps://}).to_raise(SocketError.new("getaddrinfo failed, key=#{api_key}"))
 
-      expect { warmup.seeds }.to raise_error(SocketError) { |error|
+      expect { warmup.seeds }.to raise_error(Zerobounce::ApiResponseError) { |error|
+        expect(error.status_code).to eq(0)
         expect(error.message).not_to include(api_key)
         expect(error.cause).to be_nil
         expect(error.full_message(highlight: false)).not_to include(api_key)

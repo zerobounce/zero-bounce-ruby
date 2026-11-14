@@ -1,5 +1,5 @@
 # ZeroBounce Ruby SDK – test image (Ruby 3.4, as in the SDK CI matrix)
-FROM ruby:3.4-alpine
+FROM ruby:3.4-alpine@sha256:68d60620b4458fc58c1e1d04a79ee26b85564fdd5387f3071ae077e2c56ae766
 
 RUN apk add --no-cache build-base git
 

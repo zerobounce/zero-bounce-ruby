@@ -9,9 +9,7 @@ require 'zerobounce/strict_json'
 require 'zerobounce/error'
 require 'zerobounce/response_shape'
 
-# https://github.com/rest-client/rest-client
-require 'rest-client'
-
+require 'zerobounce/http_transport'
 
 module Zerobounce
 
@@ -20,8 +18,8 @@ module Zerobounce
     # A file part the SDK builds from the caller's IO or String (the
     # *_send_stream methods). It is content, not a path, so the check that
     # keeps caller-supplied paths under the current directory does not apply
-    # to it, and nothing is written to disk. RestClient sends it as a file
-    # part named +original_filename+.
+    # to it, and nothing is written to disk. It is sent as a file part named
+    # +original_filename+.
     class Upload
       attr_reader :original_filename
 
@@ -30,13 +28,8 @@ module Zerobounce
         @original_filename = File.basename(file_name.to_s)
       end
 
-      # RestClient treats an object with #path and #read as a file part.
-      def path
-        @original_filename
-      end
-
-      def read(*args)
-        @io.read(*args)
+      def content
+        @io.string
       end
 
       def content_type
@@ -110,54 +103,50 @@ module Zerobounce
     end
 
     # The message for an HTTP error status.
-    def self.__http_error_message__(error)
-      code = error.http_code.to_i
-      # max_redirects is 0, so a 3xx is never followed; say so rather than
-      # reporting its (usually empty) body as an "Empty response".
+    def self.__http_error_message__(response)
+      code = response.code.to_i
+      # Redirects are never followed; say so rather than reporting the (usually
+      # empty) body as an "Empty response".
       if code.between?(300, 399)
         return "ZeroBounce answered with a redirect (HTTP #{code}), which is not followed"
       end
 
-      ResponseError.message_from(error.response)
+      ResponseError.message_from(response)
     end
 
-    # The error's response keeps the request it answered (URL with api_key,
-    # payload with api_key) and Net::HTTP's response keeps the URL: drop both,
-    # so the error a caller rescues does not carry the key. Status, headers
-    # and body stay; #request is nil and #cookies is unavailable on it.
-    def self.__detach_request__(response)
-      return if response.nil?
+    # The content of a stream the caller passed to a *_send_stream method.
+    # A read that fails is the SDK's error, and nothing is sent.
+    def self.read_stream(io)
+      return io.to_s unless io.respond_to?(:read)
 
-      response.instance_variable_set(:@request, nil) if response.instance_variable_defined?(:@request)
-      net = response.instance_variable_get(:@net_http_res) if response.instance_variable_defined?(:@net_http_res)
-      net.instance_variable_set(:@uri, nil) if net&.instance_variable_defined?(:@uri)
+      io.read.to_s
+    rescue StandardError => e
+      raise ApiResponseError.new(
+        __redact_api_key__("Could not read the upload stream (#{e.class}): #{e.message}"), 0
+      ), cause: nil
     end
 
-    def self.__execute_request__(**kwargs)
-      kwargs[:max_redirects] = 0
+    # Sends one request. An HTTP error status (4xx, 5xx, and a 3xx, which is
+    # never followed) raises ApiResponseError with that status; a transport
+    # failure raises it with status 0. Messages are redacted of the API key.
+    def self.__execute_request__(method:, url:, query: nil, headers: {}, body: nil)
       user_agent = Zerobounce.config.headers && Zerobounce.config.headers[:user_agent]
-      kwargs[:headers] = (kwargs[:headers] || {}).merge(user_agent: user_agent) if user_agent
-      response = RestClient::Request.execute(**kwargs)
-      ResponseError.raise_if_cut_short!(response)
+      headers = headers.merge(user_agent: user_agent) if user_agent
+      response = HttpTransport.execute(
+        method: method, url: url, query: query, headers: headers, body: body,
+        redact: ->(text) { __redact_api_key__(text) }
+      )
+      if response.code >= 300
+        raise ApiResponseError.new(__redact_api_key__(__http_error_message__(response)), response.code), cause: nil
+      end
+
       response
-    rescue RestClient::ExceptionWithResponse => e
-      # Re-raised as the same RestClient class (RestClient::NotFound and so
-      # on), so `rescue RestClient::...` and #http_code keep working as they
-      # did up to 2.1.8. Only the message changes: the API's short error text,
-      # with the key redacted.
-      e.message = __redact_api_key__(__http_error_message__(e))
-      __detach_request__(e.response)
-      raise e
-    rescue RestClient::Exception => e
-      e.message = __redact_api_key__(e.message)
-      raise e
     rescue ApiResponseError
       raise
     rescue StandardError => e
-      # Same class and backtrace, redacted message. cause: nil, because the
-      # original (unredacted) error would otherwise ride along as #cause and
-      # be printed by #full_message.
-      raise e.exception(__redact_api_key__(e.message)), cause: nil
+      # cause: nil, because the original (unredacted) error would otherwise
+      # ride along as #cause and be printed by #full_message.
+      raise HttpTransport.failure(e, ->(text) { __redact_api_key__(text) }), cause: nil
     end
 
     def self._get(root, path, params, content_type='application/json')
@@ -171,8 +160,28 @@ module Zerobounce
       url = "#{Zerobounce::BaseRequest.__root_without_trailing_slashes__(root)}/#{path}"
       Zerobounce::BaseRequest.__require_https__(url)
 
-      response = __execute_request__(method: :get, url: url, timeout: 120, headers: { params: params })
+      response = __execute_request__(method: :get, url: url, query: params)
       return response
+    end
+
+    # The file part of a multipart upload: the content is read up front, so a
+    # file that cannot be read is an error before anything is sent.
+    def self.__file_part__(filepath)
+      if filepath.is_a?(Upload)
+        return { name: 'file', filename: filepath.original_filename, content: filepath.content,
+                 content_type: filepath.content_type }
+      end
+
+      path = __safe_file_path__(filepath)
+      begin
+        content = File.binread(path)
+      rescue SystemCallError, IOError => e
+        raise ApiResponseError.new(
+          __redact_api_key__("Could not read the upload file (#{e.class}): #{e.message}"), 0
+        ), cause: nil
+      end
+      type = File.extname(path).casecmp('.csv').zero? ? 'text/csv' : 'application/octet-stream'
+      { name: 'file', filename: File.basename(path), content: content, content_type: type }
     end
 
     def self._post(root, path, params, content_type='application/json', filepath=nil)
@@ -188,25 +197,21 @@ module Zerobounce
         params.each do |key, value|
           params[key] = value ? 'true' : 'false' if value == true || value == false
         end
-        params[:file] =
-          if filepath.is_a?(Upload)
-            filepath
-          else
-            File.new(Zerobounce::BaseRequest.__safe_file_path__(filepath), 'rb')
-          end
-        params[:multipart] = true
-        response = __execute_request__(method: :post, url: url, payload: params, timeout: 120)
+        file = __file_part__(filepath)
+        multipart_type, body = HttpTransport.multipart(params, file)
+        response = __execute_request__(method: :post, url: url, body: body,
+                                       headers: { content_type: multipart_type })
 
       elsif content_type == 'application/json'
         response = __execute_request__(
           method: :post,
           url: url,
-          payload: params.to_json,
-          timeout: 120,
-          headers: { content_type: :json, accept: :json }
+          body: params.to_json,
+          headers: { content_type: 'application/json', accept: 'application/json' }
         )
       elsif content_type == 'application/x-www-form-urlencoded'
-        response = __execute_request__(method: :post, url: url, payload: params, timeout: 120)
+        response = __execute_request__(method: :post, url: url, body: HttpTransport.encode_query(params),
+                                       headers: { content_type: 'application/x-www-form-urlencoded' })
       else
         # this shouldn't happen
         raise Error.new('Unknown content type specified in request.'\
@@ -235,15 +240,13 @@ module Zerobounce
       end
       Zerobounce::BaseRequest.__require_https__(url)
 
-      options = { method: method, url: url, timeout: 120 }
+      options = { method: method, url: url, query: params, headers: extra }
       if form
-        options[:payload] = form
-        options[:headers] = extra.merge(params: params, content_type: 'application/x-www-form-urlencoded')
+        options[:body] = HttpTransport.encode_query(form)
+        options[:headers] = extra.merge(content_type: 'application/x-www-form-urlencoded')
       elsif json
-        options[:payload] = json.to_json
-        options[:headers] = extra.merge(params: params, content_type: :json, accept: :json)
-      else
-        options[:headers] = extra.merge(params: params)
+        options[:body] = json.to_json
+        options[:headers] = extra.merge(content_type: 'application/json', accept: 'application/json')
       end
 
       __execute_request__(**options)

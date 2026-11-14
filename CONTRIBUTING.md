@@ -10,7 +10,7 @@ By participating in this project, you agree to uphold our [Code of Conduct](CODE
 
 ### Prerequisites
 
-* Ruby 3.2+ (see [.ruby-version](.ruby-version))
+* Ruby 3.4 for development (see [.ruby-version](.ruby-version)); the gem itself supports Ruby 3.0 and newer (CI tests 3.0, 3.4 and 4.0)
 * [Bundler](https://bundler.io/) ~> 2.4
 
 ### Setup

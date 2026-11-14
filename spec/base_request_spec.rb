@@ -237,24 +237,24 @@ RSpec.describe 'request errors' do
   end
 
   describe 'HTTP error statuses' do
-    it 'raises the RestClient class for the status, as 2.1.8 did, with the short API message' do
+    it 'raises the SDK error with the HTTP status and the short API message' do
       stub_request(:get, %r{bulkapi\.zerobounce\.net/v2/filestatus})
         .to_return(status: 404, headers: json, body: '{"error":"Error: File not found"}')
       expect { Zerobounce.validate_file_check('missing') }
-        .to raise_error(RestClient::NotFound, 'File not found') { |error|
-          expect(error.http_code).to eq(404)
+        .to raise_error(Zerobounce::ApiResponseError, 'File not found') { |error|
+          expect(error.status_code).to eq(404)
           expect(error).to be_a(RuntimeError)
         }
     end
 
-    it 'keeps an HTML error page out of the message but on the RestClient error' do
+    it 'keeps an HTML error page out of the message but keeps its status' do
       page = '<!DOCTYPE html><html><head><title>Access denied | zerobounce.net</title></head>' \
              '<body>blocked</body></html>'
       stub_request(:get, %r{api\.zerobounce\.net/v2/getcredits})
         .to_return(status: 403, headers: { 'Content-Type' => 'text/html' }, body: page)
       expect { Zerobounce.credits }
-        .to raise_error(RestClient::Forbidden) { |error|
-          expect(error.http_code).to eq(403)
+        .to raise_error(Zerobounce::ApiResponseError) { |error|
+          expect(error.status_code).to eq(403)
           expect(error.message).to include('Access denied')
           expect(error.message).not_to include('<body>')
         }
@@ -265,7 +265,9 @@ RSpec.describe 'request errors' do
         .to_return(status: 302, headers: { 'Location' => 'https://elsewhere.example/collect' }, body: '')
       stub_request(:any, /elsewhere\.example/)
       expect { Zerobounce.validate('person@example.com') }
-        .to raise_error(RestClient::Found, 'ZeroBounce answered with a redirect (HTTP 302), which is not followed')
+        .to raise_error(Zerobounce::ApiResponseError, 'ZeroBounce answered with a redirect (HTTP 302), which is not followed') { |error|
+          expect(error.status_code).to eq(302)
+        }
       expect(a_request(:any, /elsewhere\.example/)).not_to have_been_made
     end
   end

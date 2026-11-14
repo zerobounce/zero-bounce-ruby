@@ -4,6 +4,38 @@ require 'spec_helper'
 require 'webmock/rspec'
 
 describe 'Bulk getfile v2' do
+  describe 'download sniff (JSON bodies are never file content)' do
+    let(:bulk) { %r{\Ahttps://bulkapi\.zerobounce\.net/v2/(scoring/)?getfile} }
+    let(:calls) do
+      [-> { Zerobounce.validate_file_get('f1') }, -> { Zerobounce.scoring_file_get('f1') }]
+    end
+
+    before { Zerobounce.configure { |c| c.apikey = 'test-key-bulk-v2' } }
+
+    {
+      'array' => ['text/csv', '[1,2]'],
+      'neutral object' => ['text/csv', '{"foo":1}'],
+      'BOM + success false' => ['text/csv', "\uFEFF{\"success\":false,\"message\":\"No such file\"}"],
+      'BOM bytes' => ['text/csv', "\xEF\xBB\xBF{\"message\":\"No such file\"}".b],
+      'problem+json, JSON body' => ['application/problem+json; charset=utf-8', '{"detail":"No such file"}'],
+      'problem+json, text body' => ['application/problem+json', 'plain text'],
+      'vnd +json' => ['application/vnd.api+json', 'x,y']
+    }.each do |name, (ct, body)|
+      it "raises on #{name} with status 200, never returning the body" do
+        calls.each do |call|
+          stub_request(:get, bulk).to_return(status: 200, body: body, headers: { 'Content-Type' => ct })
+          expect { call.call }.to raise_error(Zerobounce::ApiResponseError) { |e| expect(e.status_code).to eq(200) }
+        end
+      end
+    end
+
+    it 'still returns a CSV that merely starts with a bracket-less header' do
+      stub_request(:get, bulk)
+        .to_return(status: 200, body: "{not json,x\n1,2\n", headers: { 'Content-Type' => 'text/csv' })
+      expect(Zerobounce.validate_file_get('f1')).to eq("{not json,x\n1,2\n")
+    end
+  end
+
   let(:api_key) { ENV.fetch('ZEROBOUNCE_API_KEY', 'test-key-bulk-v2') }
 
   before do
@@ -15,8 +47,16 @@ describe 'Bulk getfile v2' do
       expect(Zerobounce.get_file_json_indicates_error?('{"success":false,"message":""}')).to be(true)
     end
 
-    it 'returns false for neutral JSON without error shape' do
-      expect(Zerobounce.get_file_json_indicates_error?('{"file_id":"x"}')).to be(false)
+    it 'treats any JSON object or array as an API answer, not a file' do
+      ['{"file_id":"x"}', '[1,2]', "\uFEFF{\"success\":false}"].each do |body|
+        expect(Zerobounce.get_file_json_indicates_error?(body)).to be(true), body
+      end
+    end
+
+    it 'leaves CSV and malformed JSON alone' do
+      ['a,b', '{not json', '[broken', ''].each do |body|
+        expect(Zerobounce.get_file_json_indicates_error?(body)).to be(false), body
+      end
     end
   end
 

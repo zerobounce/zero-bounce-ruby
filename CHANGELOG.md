@@ -7,41 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** the SDK no longer depends on rest-client; HTTP goes through Ruby's built-in `Net::HTTP` (no runtime dependency). An HTTP error status now raises `Zerobounce::ApiResponseError` with the status in `#status_code` (a `RuntimeError`), where up to 3.0.1 the validation client raised `RestClient::NotFound`, `RestClient::Forbidden` and so on (`#http_code`). Code that rescued `RestClient::ExceptionWithResponse` must rescue `ApiResponseError` (or `RuntimeError`). 3xx statuses are still not followed and raise with their status. Public method signatures are unchanged.
+- Timeouts are explicit: open 30 s, read 120 s (write 120 s). Multipart uploads are built by the SDK; the file name is sent as raw UTF-8 with `"` as `%22` and CR/LF removed.
+- Removed the `rest-client` gemspec dependency (and with it mime-types, http-cookie, netrc, domain_name, unf); regenerated `Gemfile.lock` and `gemfiles/ruby_3.0.gemfile.lock`; the `addressable` floor is now `>= 2.9.1` (the floor lockfile moves from 2.9.0 to 2.9.2, clearing its advisories).
+- The README states the minimum Ruby (3.0, as the gemspec); CONTRIBUTING separates the development Ruby (3.4) from the supported floor. `.ruby-version` is 3.4.12 (was 3.2.1, end of life). The test image base is pinned by digest, and Dependabot keeps it current.
+- The publish workflow checks the tag out by name in the test and publish jobs and stops unless it is the commit validate-tag checked; the tag input reaches shell steps only through env, publishes are serialised, and the RubyGems credentials step no longer names an API-token secret (publishing is trusted publishing only). The `release` environment is on the publishing job only.
+
+### Removed
+
+- `RESTCLIENT_LOG` / `RestClient.log` no longer apply; the SDK does no HTTP logging (it never enables `Net::HTTP` debug output). README says so.
+
 ### Fixed
 
-- `validate` and every `validate_batch` row require `address` and `status` as JSON strings, and each `validate_batch` row must be a JSON object: a 2xx result where either is missing, `null` or another JSON type raises `ApiResponseError` with `status_code` 200 ("ZeroBounce returned JSON of an unexpected shape: ..."). The greylist answer `{"Message": "..."}` is still returned as the result, and an unknown `status` string is kept. Up to 3.0.1 such a body was returned as the result. The other fields of these Hash results are passed through as sent.
-- A 2xx body that is strict JSON but the wrong shape for the call (`0`, `"x"`, `null`, `true`, an array where an object is expected, an object where `list_filters` expects an array, an `errors` entry that is not an object) raises `ApiResponseError` with `status_code` 200 on every `Zerobounce` call. Up to 3.0.1 it was returned as the result, or raised a raw `TypeError` / `NoMethodError`. `list_s3_files` accepts a bare array or an object with a `files` array. `credits` raises the same error when `Credits` is missing, `null` or not an integer (`true`, `5.5`, `"abc"` or `"5.0"`); it returns the Integer for `Credits` sent as a JSON string (`"-1"`, `"12345"`, as the live API sends it) or as a JSON integer (`2375323`, as zerobounce.net's example shows). Up to 3.0.1 it returned 0 for a missing or non-numeric value, read `"5.0"` as 5 and raised `NoMethodError` for an array.
-- A blank 2xx body (spaces, tabs or newlines only) on a `Zerobounce::Warmup` JSON call or an Inbox Placement call raises `ApiResponseError` with `status_code` 200: it is not JSON. Only a 204 or a 200 with no body at all is an empty success (`nil`). Up to 3.0.1 a blank body was returned as `nil` too.
-- Every JSON call (the client, the raw-JSON, Inbox Placement and list evaluator calls, and `Zerobounce::Warmup`) parses a response body as strict RFC 8259 JSON: the body is checked first, untrimmed, by a small validator (`Zerobounce::StrictJson`; only space, tab, CR and LF may surround the value), then parsed with `allow_nan: false`. A body that is not strict JSON is an `ApiResponseError` with `status_code` 200. Up to 3.0.1 `JSON.parse` accepted `/* */` and `//` comments, and with some json versions other non-JSON (such as `\x41` escapes), so `/*c*/{"a":1}` on a 200 read as a success on 72 of 78 calls, Warmup included.
-- `validate_file_send_stream` and `scoring_file_send_stream` work again. From 2.0.1 to 3.0.1 they raised `ArgumentError` ("File path must be under the current directory") whenever the system temp directory is outside the current directory, as it usually is: they wrote the content to a Tempfile in the system temp directory and uploaded its path, which the path check added in 2.0.1 rejects. 2.0.0 was not affected. The content is now uploaded from memory under the given `file_name` (2.0.0 sent the temp file's random name); file paths passed to `validate_file_send` and the other upload methods are still checked as before.
-- A response whose body is cut short (the connection closes before `Content-Length` bytes arrive) raises `Zerobounce::ApiResponseError` with `status_code` 0 on every request, including the result-file downloads and `Zerobounce::Warmup`. Up to 3.0.1 Net::HTTP returned the bytes that had arrived, so a truncated result file or JSON body after a 200 header was returned as a success.
-- `Zerobounce::Warmup#download_seeds` and `#download_statistics` raise `Zerobounce::ApiResponseError` (with the HTTP status) for a JSON object or array under a CSV content type (such as `text/csv` with `{"error": "..."}`). Up to 3.0.1 only a JSON content type was rejected, so that body was returned as the CSV text.
-- `Zerobounce::Warmup#download_seeds` and `#download_statistics` raise `Zerobounce::ApiResponseError` (with the HTTP status) for an HTML page on a 200, such as a proxy's "Access denied" page, as the Python SDK does. Up to 3.0.1 the page was returned as the CSV text.
-- An HTML page on a 200 (such as a proxy's "Access denied" page), or a JSON content type with a body that does not parse, raises `Zerobounce::ApiResponseError` with `status_code` 200 from every request method, as the Python and PHP SDKs do; so does any other non-JSON body from the calls that answer in JSON. Up to 3.0.1 `validate_file_send`, `scoring_file_send` (and their `_stream` forms), `send_email_finder_file`, `send_domain_search_file`, `email_finder_file_status`, `email_finder_file_delete`, `domain_search_file_status`, `domain_search_file_delete`, `send_list_evaluator_file`, `send_evaluated_file` and `list_s3_files` returned an HTML or other non-JSON body as a successful `String`; `validate_file_check`, `validate_file_delete`, `scoring_file_check` and `scoring_file_delete` raised a plain `RuntimeError` with no status for an HTML page, and `JSON::ParserError` for a JSON content type with a body that does not parse.
-- Every `Zerobounce::Warmup` method that answers in JSON raises `Zerobounce::ApiResponseError` with `status_code` 200 for a `text/html` response, even when its body parses as JSON, as the client and the Python SDK do. Up to 3.0.1 such a body was returned as the result.
-- `Zerobounce::Warmup#add_sending_account` parses `ignore_conflict` strictly, as the client parses its boolean options: `true`/`false`, `'true'`/`'false'` (any case) and `1`/`0` are accepted, and anything else raises `ArgumentError` before a request is sent. Up to 3.0.1 any truthy value was sent as `true`, so `ignore_conflict: 'false'` sent `true`. `ignore_conflict: nil` now leaves the field out (3.0.1 sent `false`).
-- `Zerobounce::Warmup#add_sending_account` sends the documented ZeroBounce Managed fields: `email_content` takes `company_name`, `company_website`, `company_description`, `types_of_emails` and `example_email`, and `managed_sending` takes `weekdays_only`, `timezone`, `timezone_offset` and `warmup_start_date`, as the Python SDK and the API docs have them. Up to 3.0.1 it dropped `company_website`, `company_description`, `example_email`, `weekdays_only` and `timezone` without a word and sent `industry`, `website` and `daily_limit`, which the API does not read. The old `website` key is still accepted and sent as `company_website`; `industry`, `daily_limit` and any other unknown key are left out, as unknown keys always were, but now with a warning that names the documented fields. `weekdays_only` is parsed strictly (`'false'` is false; anything that is not a boolean raises `ArgumentError`), `timezone` must be a String, and `timezone_offset` takes fractional hours (-11 to 14, e.g. `3.0`), which 3.0.1 rejected; it must be an Integer or a finite Float (a String, `NaN` or `Infinity` raises `ArgumentError`).
-- `Zerobounce::Warmup` raises `Zerobounce::ApiResponseError` with `status_code` 0 and a redacted message when a request times out (a read or open timeout). Up to 3.0.1 every Warmup method raised `NoMethodError` ("undefined method 'headers' for nil") instead.
-- `validate_file_send` (and `validate_file_send_stream`) take `ip_address_column:` and `remove_duplicate:`, and `scoring_file_send` (and `scoring_file_send_stream`) take `remove_duplicate:`; each is sent only when given, `remove_duplicate` parsed strictly like the other booleans. Up to 3.0.1 neither documented field could be sent.
-- **Behaviour change:** `validate_file_send` sends `first_name_column`, `last_name_column` and `gender_column` only when given, as the other SDKs do. Up to 3.0.1 it sent `first_name_column=2`, `last_name_column=3` and `gender_column=4` on every upload that did not set them, so any file with a second, third or fourth column had those mapped as first name, last name and gender. Pass them explicitly (`first_name_column: 2, last_name_column: 3, gender_column: 4`) to keep the old mapping. `email_address_column` (1) and `has_header_row` (`true`) keep their defaults.
+- A gzip-encoded 200 cut short of its `Content-Length` read as a success on most calls (Net::HTTP decompresses and drops `Content-Length`). Requests now send `Accept-Encoding: identity`, the raw byte count is checked against `Content-Length`, and a short or chunked-then-cut body is an error with status 0 on every call, Warmup included.
+- A refused connection raised a raw `Errno::ECONNREFUSED` and a cut chunked body `RestClient::ServerBrokeConnection`. Every transport failure (refused, reset, DNS, timeout, TLS, truncation) now raises `ApiResponseError` with `#status_code` 0 and a key-redacted message, on every call including Warmup.
+- A file name containing a quote or CR/LF corrupted the multipart `Content-Disposition` header. Upload stream read failures (`*_send_stream`) raise `ApiResponseError` before anything is sent.
+- **Behaviour change:** the four getfile downloads (`validate_file_get`, `scoring_file_get`, and their file-option variants) and Warmup `download_seeds` / `download_statistics` no longer return a JSON answer as file content. A body that, after an optional byte-order mark and white space, is any JSON object or array (`[1,2]`, `{"foo":1}`, BOM + `{"success":false,...}`) now raises `ApiResponseError` with the HTTP status; before, only objects with an error-shaped key were caught by getfile, and a BOM hid the JSON from both. A `Content-Type` of `application/json` or any `*/*+json` (`application/problem+json`) is an error whatever the body, where before only a type containing `application/json` was. The error carries the API's message, never the file content.
+- `validate` and every `validate_batch` row require `address` and `status` as JSON strings, and each `validate_batch` row must be a JSON object: a 2xx result where either is missing, `null` or another JSON type raises `ApiResponseError` with `status_code` 200 ("ZeroBounce returned JSON of an unexpected shape: ..."). The greylist answer `{"Message": "..."}` is still returned as the result, and an unknown `status` string is kept. Up to 3.0.0 such a body was returned as the result. The other fields of these Hash results are passed through as sent.
+- A 2xx body that is strict JSON but the wrong shape for the call (`0`, `"x"`, `null`, `true`, an array where an object is expected, an object where `list_filters` expects an array, an `errors` entry that is not an object) raises `ApiResponseError` with `status_code` 200 on every `Zerobounce` call. Up to 3.0.0 it was returned as the result, or raised a raw `TypeError` / `NoMethodError`. `list_s3_files` accepts a bare array or an object with a `files` array. `credits` raises the same error when `Credits` is missing, `null` or not an integer (`true`, `5.5`, `"abc"` or `"5.0"`); it returns the Integer for `Credits` sent as a JSON string (`"-1"`, `"12345"`, as the live API sends it) or as a JSON integer (`2375323`, as zerobounce.net's example shows). Up to 3.0.0 it returned 0 for a missing or non-numeric value, read `"5.0"` as 5 and raised `NoMethodError` for an array.
+- A blank 2xx body (spaces, tabs or newlines only) on a `Zerobounce::Warmup` JSON call or an Inbox Placement call raises `ApiResponseError` with `status_code` 200: it is not JSON. Only a 204 or a 200 with no body at all is an empty success (`nil`). Up to 3.0.0 a blank body was returned as `nil` too.
+- Every JSON call (the client, the raw-JSON, Inbox Placement and list evaluator calls, and `Zerobounce::Warmup`) parses a response body as strict RFC 8259 JSON: the body is checked first, untrimmed, by a small validator (`Zerobounce::StrictJson`; only space, tab, CR and LF may surround the value), then parsed with `allow_nan: false`. A body that is not strict JSON is an `ApiResponseError` with `status_code` 200. Up to 3.0.0 `JSON.parse` accepted `/* */` and `//` comments, and with some json versions other non-JSON (such as `\x41` escapes), so `/*c*/{"a":1}` on a 200 read as a success on 72 of 78 calls, Warmup included.
+- `validate_file_send_stream` and `scoring_file_send_stream` work again. From 2.0.1 to 3.0.0 they raised `ArgumentError` ("File path must be under the current directory") whenever the system temp directory is outside the current directory, as it usually is: they wrote the content to a Tempfile in the system temp directory and uploaded its path, which the path check added in 2.0.1 rejects. 2.0.0 was not affected. The content is now uploaded from memory under the given `file_name` (2.0.0 sent the temp file's random name); file paths passed to `validate_file_send` and the other upload methods are still checked as before.
+- A response whose body is cut short (the connection closes before `Content-Length` bytes arrive) raises `Zerobounce::ApiResponseError` with `status_code` 0 on every request, including the result-file downloads and `Zerobounce::Warmup`. Up to 3.0.0 Net::HTTP returned the bytes that had arrived, so a truncated result file or JSON body after a 200 header was returned as a success.
+- `Zerobounce::Warmup#download_seeds` and `#download_statistics` raise `Zerobounce::ApiResponseError` (with the HTTP status) for a JSON object or array under a CSV content type (such as `text/csv` with `{"error": "..."}`). Up to 3.0.0 only a JSON content type was rejected, so that body was returned as the CSV text.
+- `Zerobounce::Warmup#download_seeds` and `#download_statistics` raise `Zerobounce::ApiResponseError` (with the HTTP status) for an HTML page on a 200, such as a proxy's "Access denied" page, as the Python SDK does. Up to 3.0.0 the page was returned as the CSV text.
+- An HTML page on a 200 (such as a proxy's "Access denied" page), or a JSON content type with a body that does not parse, raises `Zerobounce::ApiResponseError` with `status_code` 200 from every request method, as the Python and PHP SDKs do; so does any other non-JSON body from the calls that answer in JSON. Up to 3.0.0 `validate_file_send`, `scoring_file_send` (and their `_stream` forms), `send_email_finder_file`, `send_domain_search_file`, `email_finder_file_status`, `email_finder_file_delete`, `domain_search_file_status`, `domain_search_file_delete`, `send_list_evaluator_file`, `send_evaluated_file` and `list_s3_files` returned an HTML or other non-JSON body as a successful `String`; `validate_file_check`, `validate_file_delete`, `scoring_file_check` and `scoring_file_delete` raised a plain `RuntimeError` with no status for an HTML page, and `JSON::ParserError` for a JSON content type with a body that does not parse.
+- Every `Zerobounce::Warmup` method that answers in JSON raises `Zerobounce::ApiResponseError` with `status_code` 200 for a `text/html` response, even when its body parses as JSON, as the client and the Python SDK do. Up to 3.0.0 such a body was returned as the result.
+- `Zerobounce::Warmup#add_sending_account` parses `ignore_conflict` strictly, as the client parses its boolean options: `true`/`false`, `'true'`/`'false'` (any case) and `1`/`0` are accepted, and anything else raises `ArgumentError` before a request is sent. Up to 3.0.0 any truthy value was sent as `true`, so `ignore_conflict: 'false'` sent `true`. `ignore_conflict: nil` now leaves the field out (3.0.0 sent `false`).
+- `Zerobounce::Warmup#add_sending_account` sends the documented ZeroBounce Managed fields: `email_content` takes `company_name`, `company_website`, `company_description`, `types_of_emails` and `example_email`, and `managed_sending` takes `weekdays_only`, `timezone`, `timezone_offset` and `warmup_start_date`, as the Python SDK and the API docs have them. Up to 3.0.0 it dropped `company_website`, `company_description`, `example_email`, `weekdays_only` and `timezone` without a word and sent `industry`, `website` and `daily_limit`, which the API does not read. The old `website` key is still accepted and sent as `company_website`; `industry`, `daily_limit` and any other unknown key are left out, as unknown keys always were, but now with a warning that names the documented fields. `weekdays_only` is parsed strictly (`'false'` is false; anything that is not a boolean raises `ArgumentError`), `timezone` must be a String, and `timezone_offset` takes fractional hours (-11 to 14, e.g. `3.0`), which 3.0.0 rejected; it must be an Integer or a finite Float (a String, `NaN` or `Infinity` raises `ArgumentError`).
+- `Zerobounce::Warmup` raises `Zerobounce::ApiResponseError` with `status_code` 0 and a redacted message when a request times out (a read or open timeout). Up to 3.0.0 every Warmup method raised `NoMethodError` ("undefined method 'headers' for nil") instead.
+- `validate_file_send` (and `validate_file_send_stream`) take `ip_address_column:` and `remove_duplicate:`, and `scoring_file_send` (and `scoring_file_send_stream`) take `remove_duplicate:`; each is sent only when given, `remove_duplicate` parsed strictly like the other booleans. Up to 3.0.0 neither documented field could be sent.
+- **Behaviour change:** `validate_file_send` sends `first_name_column`, `last_name_column` and `gender_column` only when given, as the other SDKs do. Up to 3.0.0 it sent `first_name_column=2`, `last_name_column=3` and `gender_column=4` on every upload that did not set them, so any file with a second, third or fourth column had those mapped as first name, last name and gender. Pass them explicitly (`first_name_column: 2, last_name_column: 3, gender_column: 4`) to keep the old mapping. `email_address_column` (1) and `has_header_row` (`true`) keep their defaults.
 
-- Every documented field of every typed call has its JSON type checked, not only `Credits` and the `address` and `status` of `validate` and its batch rows. The calls are `validate`, `validate_batch` (each row and each `errors` entry), `api_usage`, `activity`, `score_email`, the file status, send and delete calls of every file family, `guessformat`, `find_domain`, `find_email` and the list evaluator. A field that arrives with another JSON type (such as `"score": "abc"`, `"email_batch": 5`, `"errors": 5`, `"processed_at": 5` or `"mx_found": 5`) raises `Zerobounce::ApiResponseError` with status 200, and `null` is accepted for every optional field. Up to 3.0.1 those fields were returned as results. The answers are still the Hashes the API sent.
+- Every documented field of every typed call has its JSON type checked, not only `Credits` and the `address` and `status` of `validate` and its batch rows. The calls are `validate`, `validate_batch` (each row and each `errors` entry), `api_usage`, `activity`, `score_email`, the file status, send and delete calls of every file family, `guessformat`, `find_domain`, `find_email` and the list evaluator. A field that arrives with another JSON type (such as `"score": "abc"`, `"email_batch": 5`, `"errors": 5`, `"processed_at": 5` or `"mx_found": 5`) raises `Zerobounce::ApiResponseError` with status 200, and `null` is accepted for every optional field. Up to 3.0.0 those fields were returned as results. The answers are still the Hashes the API sent.
 
-- A finder or domain search body made only of message keys whose message is null, blank or not text raises `Zerobounce::ApiResponseError` with status 200 ("Request failed" when there is no text), as one with a text message already did. Up to 3.0.1 `{"message": null}` was returned as a result, and so was `{"message": ["..."]}`.
+- A finder or domain search body made only of message keys whose message is null, blank or not text raises `Zerobounce::ApiResponseError` with status 200 ("Request failed" when there is no text), as one with a text message already did. Up to 3.0.0 `{"message": null}` was returned as a result, and so was `{"message": ["..."]}`.
 
 ### Security
 
-- Redaction is closed under encoding. After the known spellings of the API key, the Warmup key and the SMTP username and password are masked, every error message is decoded up to four layers deep (the SDK's own request encoding plus three echo layers), in any order (URL-decoding, `+` as a space, JSON unescaping including `\/` and `\uXXXX`); if any decoded view still holds a secret, the message is replaced by "ZeroBounce returned an error; the response body was omitted because it contained a credential." (`Zerobounce::ApiKey::CREDENTIAL_OMITTED_MESSAGE`). Up to 3.0.1 a key URL-encoded twice (a server echoing a URL-encoded copy of a form body) came back unmasked, for example from `send_evaluated_file`, the filters and the S3/SFTP jobs.
-- No error raised by the SDK carries the API key when a response body quotes it. Messages built from a body (a 2xx `{"error": "Invalid API key <key>"}`, a `{"success": false, "message": ...}`, a batch `"all"` error, an HTML page's title, a result-file download's JSON error) were passed on unredacted on every client method up to 3.0.1; only HTTP error statuses were redacted. `Zerobounce::ApiResponseError` now redacts its message itself (raw, URL-encoded and JSON-escaped forms), so every path that raises it is covered. A body that is not valid JSON no longer keeps the parser's error, which quotes the body, as `#cause` (client and `Zerobounce::Warmup`).
-- `Zerobounce::Warmup` also masks the Warmup API key and the SMTP username and password of `test_smtp_configuration` in their JSON-escaped forms (`"` as `\"`, `/` as `\/`, non-ASCII as `\uXXXX`) and URL-encoded with `+` for spaces, in every error built from a response body, as the client now does for its key. Up to 3.0.1 only the raw and `%20`-encoded forms were masked, so a key or password containing `"` came back unmasked when a JSON body quoted it.
-- The API key, the Warmup key and the SMTP username and password are also masked in the URL-encoded form of their JSON-escaped text (spaces as `+` and as `%20`, `/` as is or as `\/`, non-ASCII as is or as `\uXXXX`), which a server echoing a URL-encoded copy of a JSON request body returns, and JSON-escaped twice (a JSON error body quoting the JSON request body), on the client and on `Zerobounce::Warmup`. Up to 3.0.1 a secret containing `"`, `/` or `\` came back unmasked in those forms.
-- `Zerobounce::Configuration`, `Zerobounce::Client` and `Zerobounce::Warmup` refuse `Marshal.dump` and `YAML.dump` (`to_yaml`): both raise `TypeError` without the key. Up to 3.0.1 the dump contained the API key in clear. `dup` and `clone` work as before.
-- No error from `Zerobounce::Warmup` carries the Warmup API key or the SMTP credentials. Up to 3.0.1 every `ApiResponseError` raised for an HTTP error status kept the `RestClient` error as its `#cause`, whose `response.request` held the `API-Key` header (and, for `test_smtp_configuration`, the password in its payload). Errors are now raised with no cause.
-- The `RestClient` errors the client re-raises for an HTTP error status (`RestClient::BadRequest` and so on) no longer carry the API key. Up to 3.0.1 their `response.request` held the request URL or payload with `api_key`, and the underlying `Net::HTTP` response its URL. The status, headers and body are unchanged; `e.response.request` is now `nil`, so `e.response.cookies` is not available on these errors.
+- Redaction is closed under encoding. After the known spellings of the API key, the Warmup key and the SMTP username and password are masked, every error message is decoded up to four layers deep (the SDK's own request encoding plus three echo layers), in any order (URL-decoding, `+` as a space, JSON unescaping including `\/` and `\uXXXX`); if any decoded view still holds a secret, the message is replaced by "ZeroBounce returned an error; the response body was omitted because it contained a credential." (`Zerobounce::ApiKey::CREDENTIAL_OMITTED_MESSAGE`). Up to 3.0.0 a key URL-encoded twice (a server echoing a URL-encoded copy of a form body) came back unmasked, for example from `send_evaluated_file`, the filters and the S3/SFTP jobs.
+- No error raised by the SDK carries the API key when a response body quotes it. Messages built from a body (a 2xx `{"error": "Invalid API key <key>"}`, a `{"success": false, "message": ...}`, a batch `"all"` error, an HTML page's title, a result-file download's JSON error) were passed on unredacted on every client method up to 3.0.0; only HTTP error statuses were redacted. `Zerobounce::ApiResponseError` now redacts its message itself (raw, URL-encoded and JSON-escaped forms), so every path that raises it is covered. A body that is not valid JSON no longer keeps the parser's error, which quotes the body, as `#cause` (client and `Zerobounce::Warmup`).
+- `Zerobounce::Warmup` also masks the Warmup API key and the SMTP username and password of `test_smtp_configuration` in their JSON-escaped forms (`"` as `\"`, `/` as `\/`, non-ASCII as `\uXXXX`) and URL-encoded with `+` for spaces, in every error built from a response body, as the client now does for its key. Up to 3.0.0 only the raw and `%20`-encoded forms were masked, so a key or password containing `"` came back unmasked when a JSON body quoted it.
+- The API key, the Warmup key and the SMTP username and password are also masked in the URL-encoded form of their JSON-escaped text (spaces as `+` and as `%20`, `/` as is or as `\/`, non-ASCII as is or as `\uXXXX`), which a server echoing a URL-encoded copy of a JSON request body returns, and JSON-escaped twice (a JSON error body quoting the JSON request body), on the client and on `Zerobounce::Warmup`. Up to 3.0.0 a secret containing `"`, `/` or `\` came back unmasked in those forms.
+- `Zerobounce::Configuration`, `Zerobounce::Client` and `Zerobounce::Warmup` refuse `Marshal.dump` and `YAML.dump` (`to_yaml`): both raise `TypeError` without the key. Up to 3.0.0 the dump contained the API key in clear. `dup` and `clone` work as before.
+- No error from `Zerobounce::Warmup` carries the Warmup API key or the SMTP credentials. Up to 3.0.0 every `ApiResponseError` raised for an HTTP error status kept the `RestClient` error as its `#cause`, whose `response.request` held the `API-Key` header (and, for `test_smtp_configuration`, the password in its payload). Errors are now raised with no cause.
+- The `RestClient` errors the client re-raises for an HTTP error status (`RestClient::BadRequest` and so on) no longer carry the API key. Up to 3.0.0 their `response.request` held the request URL or payload with `api_key`, and the underlying `Net::HTTP` response its URL. The status, headers and body are unchanged; `e.response.request` is now `nil`, so `e.response.cookies` is not available on these errors.
 
-- The API key is no longer an instance variable of `Zerobounce::Client` or `Zerobounce::Warmup` in plain text: it is held in a masked holder, so `instance_variables`, `instance_variable_get` and `pp` show `[FILTERED]`, as `inspect` already did. Up to 3.0.1 `@apikey` and `@api_key` held the key.
+- The API key is no longer an instance variable of `Zerobounce::Client` or `Zerobounce::Warmup` in plain text: it is held in a masked holder, so `instance_variables`, `instance_variable_get` and `pp` show `[FILTERED]`, as `inspect` already did. Up to 3.0.0 `@apikey` and `@api_key` held the key.
 
-## [3.0.1] - 2026-11-11
+## [3.0.1] - 2026-11-12 (tagged, never published to RubyGems)
 
 ### Fixed
 
@@ -53,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A `Zerobounce::Warmup` transport error (for example a `SocketError`) no longer keeps the unredacted original error as `#cause`, which `#full_message` prints. Its own message was already redacted; the main client's errors already dropped the cause.
 
-## [3.0.0] - 2026-11-12
+## [3.0.0] - 2026-11-11
 
 ### Breaking
 
@@ -138,7 +154,13 @@ These change behaviour that 2.1.8 callers can rely on. Check each before upgradi
 
 - `Gemfile.lock` matches the gemspec version, so a frozen install can resolve the gem.
 
-## [2.1.6] - 2026-06-18
+## [2.1.7] - 2026-06-17
+
+### Changed
+
+- First published release with the 2.1.6 `validate_batch` fix (2.1.6 was tagged but not published); `Gemfile.lock` bumped to the new version.
+
+## [2.1.6] - 2026-06-17 (tagged, never published to RubyGems; shipped in 2.1.7)
 
 ### Fixed
 
@@ -150,7 +172,13 @@ These change behaviour that 2.1.8 callers can rely on. Check each before upgradi
 
 - `catchall_domain` on validation results.
 
-## [2.1.1] - 2026-04-08
+## [2.1.4] - 2026-04-18
+
+### Changed
+
+- Development stack: tests run on Ruby 3.5+/4, VCR 6.4; `yard` raised for a Dependabot security advisory (the tagged, unpublished 2.1.2 and 2.1.3 hold the same line of work).
+
+## [2.1.1] - 2026-04-09
 
 ### Security
 
@@ -162,25 +190,73 @@ These change behaviour that 2.1.8 callers can rely on. Check each before upgradi
 
 - Optional bulk get-file parameters, including download type and activity data.
 
-## [2.0.12] - 2026-03-03
+## [2.0.13] - 2026-03-03
+
+### Changed
+
+- Version bump only (publish workflow checks; no library change from 2.0.12).
+
+## [2.0.12] - 2026-03-03 (tagged, never published to RubyGems)
 
 ### Changed
 
 - License the project under MIT.
 
-## [2.0.1] - 2026-03-03
+## [2.0.1] - 2026-03-03 (tagged, never published to RubyGems)
 
 ### Security
 
 - Uploaded file paths must stay under the current directory.
 
-## [2.0.0] - 2026-03-03
+## [2.0.0] - 2026-03-03 (tagged, never published to RubyGems)
 
 ### Changed
 
 - Release the 2.0 line of the gem.
 
-## [1.3.0] - 2025-10-22
+## [1.2.0] - 2025-10-22
+
+### Changed
+
+- Live tests fixed; version bump (the same day's 1.3.0 tag adds `find_email` and `find_domain`).
+
+## [1.1.2] - 2025-08-28
+
+### Changed
+
+- Version bump only.
+
+## [1.1.1] - 2024-02-06
+
+### Changed
+
+- Version bump only.
+
+## [1.1.0] - 2023-09-04
+
+### Added
+
+- `guessformat` (email finder) and its live tests.
+
+## [1.0.1] - 2023-05-13
+
+### Added
+
+- Activity data on `validate`.
+
+## [1.0.0] - 2023-05-05
+
+### Changed
+
+- Gem renamed `zerobounce-sdk`; VCR-backed mock specs.
+
+## [0.4.0] - 2023-05-05
+
+### Changed
+
+- Published to RubyGems; no matching commit in this repository (the next published version, 1.0.0, is the same day).
+
+## [1.3.0] - 2025-10-22 (tagged, never published to RubyGems)
 
 ### Added
 
@@ -190,46 +266,61 @@ These change behaviour that 2.1.8 callers can rely on. Check each before upgradi
 
 - `guessformat`. Use `find_email` or `find_domain`.
 
-## [0.3.0] - 2023-09-18
+## [0.3.0] - 2023-09-18 (never published to RubyGems)
 
 ### Changed
 
 - Ruby and Bundler version requirements.
 
-## [0.2.0] - 2023-09-12
+## [0.2.0] - 2023-09-12 (never published to RubyGems)
 
 ### Changed
 
 - Faraday requirements, and the minimum Ruby version is 2.5.
 
-## [0.1.2] - 2023-04-18
+## [0.1.2] - 2023-04-18 (never published to RubyGems)
 
 ### Fixed
 
 - Error-body detection no longer depends on a quote immediately after the colon.
 
-## [0.1.1] - 2023-04-12
+## [0.1.1] - 2023-04-12 (never published to RubyGems)
 
 ### Fixed
 
 - Removed safe-navigation calls so the client runs on older Ruby.
 
-## [0.1.0] - 2023-04-07
+## [0.1.0] - 2023-04-07 (never published to RubyGems)
 
 ### Added
 
 - Initial client for ZeroBounce API v2.
 
-[Unreleased]: https://github.com/zerobounce/zero-bounce-ruby/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/zerobounce/zero-bounce-ruby/compare/v3.0.0...HEAD
 [3.0.1]: https://github.com/zerobounce/zero-bounce-ruby/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.2.0...v3.0.0
 [2.2.0]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.8...v2.2.0
-[2.1.8]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.6...v2.1.8
+[2.1.8]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.7...v2.1.8
+[2.1.7]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.6...v2.1.7
 [2.1.6]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.5...v2.1.6
-[2.1.5]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.1...v2.1.5
+[2.1.5]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.4...v2.1.5
+[2.1.4]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.1...v2.1.4
 [2.1.1]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.1.0...v2.1.1
-[2.1.0]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.0.12...v2.1.0
+[2.1.0]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.0.13...v2.1.0
+[2.0.13]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.0.12...v2.0.13
 [2.0.12]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.0.1...v2.0.12
 [2.0.1]: https://github.com/zerobounce/zero-bounce-ruby/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/zerobounce/zero-bounce-ruby/compare/v1.3.0...v2.0.0
 [1.3.0]: https://github.com/zerobounce/zero-bounce-ruby/releases/tag/v1.3.0
+[1.2.0]: https://github.com/zerobounce/zero-bounce-ruby/commit/28fcc43
+[1.1.2]: https://github.com/zerobounce/zero-bounce-ruby/releases/tag/v1.1.2
+[1.1.1]: https://github.com/zerobounce/zero-bounce-ruby/commit/ee18dc5
+[1.1.0]: https://github.com/zerobounce/zero-bounce-ruby/commit/26b463f
+[1.0.1]: https://github.com/zerobounce/zero-bounce-ruby/commit/0d1b29e
+[1.0.0]: https://github.com/zerobounce/zero-bounce-ruby/commit/5ed7d51
+[0.4.0]: https://rubygems.org/gems/zerobounce-sdk/versions/0.4.0
+[0.3.0]: https://github.com/zerobounce/zero-bounce-ruby/commit/86ccabe
+[0.2.0]: https://github.com/zerobounce/zero-bounce-ruby/commits/f143791
+[0.1.2]: https://github.com/zerobounce/zero-bounce-ruby/commits/f143791
+[0.1.1]: https://github.com/zerobounce/zero-bounce-ruby/commits/f143791
+[0.1.0]: https://github.com/zerobounce/zero-bounce-ruby/commits/f143791

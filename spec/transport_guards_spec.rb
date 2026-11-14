@@ -283,8 +283,8 @@ describe 'Transport guards on every request path' do
     end
   end
 
-  # Every request is sent with an explicit timeout: RestClient's own
-  # defaults would otherwise apply.
+  # Every request is sent on a real Net::HTTP client with the SDK's timeouts
+  # (open 30 s, read 120 s), read off the client the public API builds.
   describe 'timeouts' do
     let(:sent) { [] }
 
@@ -292,9 +292,11 @@ describe 'Transport guards on every request path' do
       TransportSweep.configure(api_key, 'https://first.example')
       stub_request(:any, %r{\Ahttps://first\.example/})
         .to_return(status: 200, body: '{"success":true}', headers: { 'Content-Type' => 'application/json' })
-      allow(RestClient::Request).to receive(:execute).and_wrap_original do |original, *args, **kwargs, &block|
-        sent << (args.first || kwargs)
-        original.call(*args, **kwargs, &block)
+      allow(Net::HTTP).to receive(:start).and_wrap_original do |original, *args, **kwargs, &block|
+        original.call(*args, **kwargs) do |http|
+          sent << { open: http.open_timeout, read: http.read_timeout }
+          block.call(http)
+        end
       end
     end
 
@@ -305,7 +307,7 @@ describe 'Transport guards on every request path' do
         nil # Only the options the request went out with matter here.
       end
       expect(sent).not_to be_empty, "#{name} sent no request"
-      sent.each { |options| expect(options[:timeout]).to eq(120), "#{name} was sent without its timeout" }
+      sent.each { |t| expect(t).to eq(open: 30, read: 120), "#{name} was sent without its timeouts" }
     end
 
     TransportSweep::CALLS.each do |name, call|
@@ -781,7 +783,7 @@ describe 'every spelling of a secret echoed in a body' do
       it "masks secret #{index + 1} written #{label}, as the API key and as the SMTP password" do
         stub_echo(form)
         TransportSweep.configure(secret, root)
-        expect { Zerobounce.credits }.to raise_error(RestClient::BadRequest) { |error|
+        expect { Zerobounce.credits }.to raise_error(Zerobounce::ApiResponseError) { |error|
           expect(error.message).not_to include(form)
         }
 

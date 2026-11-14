@@ -53,7 +53,7 @@ CI runs `bundle exec rspec` only. `rake default` also runs RuboCop, which report
 - **A body that is nothing but `Message` means different things per endpoint.** On the validate endpoints it is a rejection; on `/filters/add`, `/filters/delete` and `/filters/list` it is the success. `Request::FILTER_PATHS` is the exception list.
 - **`Gemfile.lock` pins the gem's own version.** A version bump must update both `lib/zerobounce/version.rb` and `Gemfile.lock`, or `bundle install --deployment` in CI fails.
 - **Offline tests only, in `spec/`.** Never call the live API from a spec. The live suite is the separate, opt-in `live/live_api.rb`.
-- **Errors carry the HTTP status.** The Warmup client raises `Zerobounce::ApiResponseError`, whose `#status_code` lets callers tell a Cloudflare 403 from an API 400/404 and a Warmup 429. The validation client raises the `RestClient` exception for an HTTP error status (`#http_code`, compatible with 2.1.8) and a `RuntimeError` for an error reported with an HTTP 200, both with the same short, key-redacted message.
+- **Errors carry the HTTP status.** Every client raises `Zerobounce::ApiResponseError`, whose `#status_code` lets callers tell a Cloudflare 403 from an API 400/404 and a Warmup 429; a transport failure (refused, reset, timeout, TLS, a body cut short) has status 0. Transport is Ruby's built-in Net::HTTP (`lib/zerobounce/http_transport.rb`, no runtime dependency; open 30 s / read 120 s; identity encoding; no redirects; no logging). Messages are short and key-redacted.
 
 ## Releasing
 

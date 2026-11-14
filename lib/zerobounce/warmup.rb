@@ -3,11 +3,12 @@
 require 'date'
 require 'erb'
 require 'json'
-require 'rest-client'
+require 'zerobounce/http_transport'
 
 require 'zerobounce/api_key'
 require 'zerobounce/strict_json'
 require 'zerobounce/error'
+require 'zerobounce/get_file_helper'
 require 'zerobounce/response_error'
 require 'zerobounce/strict_bool'
 
@@ -455,52 +456,33 @@ module Zerobounce
     end
 
     def send_request(method, path, params, body, secrets)
-      url = "#{root}#{path}"
-      options = {
-        method: method,
-        url: url,
-        timeout: 120,
-        max_redirects: 0,
-        headers: { 'API-Key' => api_key, accept: :json, params: params }
-      }
-      if body
-        options[:payload] = body.to_json
-        options[:headers][:content_type] = :json
-      end
-      response = RestClient::Request.execute(**options)
-      ResponseError.raise_if_cut_short!(response)
-      response
-    rescue RestClient::ExceptionWithResponse => e
-      # Every error is raised with cause: nil. The RestClient error would
-      # otherwise ride along as #cause, and its response keeps the request,
-      # whose headers hold the API key (and its payload the SMTP password).
-      response = e.response
-      if response.nil?
-        # A read or open timeout (RestClient::Exceptions::Timeout) has no
-        # response: a transport failure, status 0.
-        raise ApiResponseError.new(redact(e.message.to_s, secrets), 0), cause: nil
-      end
-
-      status = response.respond_to?(:code) ? response.code : 0
+      headers = { 'API-Key' => api_key, 'Accept' => 'application/json' }
+      headers['Content-Type'] = 'application/json' if body
+      response = HttpTransport.execute(
+        method: method, url: "#{root}#{path}", query: params, headers: headers,
+        body: body&.to_json, redact: ->(text) { redact(text, secrets) }
+      )
+      status = response.code
       if status >= 300 && status < 400
         raise ApiResponseError.new(
           'ZeroBounce returned a redirect, which this client does not follow.', status
         ), cause: nil
       end
-      raise ApiResponseError.new(
-        redact(
-          ResponseError.message_from_parts(
-            status, (response.headers[:content_type] || '').to_s, response.body.to_s
-          ), secrets
-        ), status
-      ), cause: nil
+      if status >= 400
+        raise ApiResponseError.new(
+          redact(
+            ResponseError.message_from_parts(status, content_type_of(response), response.body.to_s), secrets
+          ), status
+        ), cause: nil
+      end
+
+      response
     rescue ApiResponseError
       raise
     rescue StandardError => e
-      # Rebuilt rather than re-raised: the original holds the URL and headers.
-      # cause: nil, or the unredacted original would ride along as #cause and
-      # be printed by #full_message.
-      raise e.class, redact(e.message, secrets), cause: nil
+      # Every failure is rebuilt as the SDK's error, status 0, with cause: nil:
+      # the original holds the URL and headers.
+      raise HttpTransport.failure(e, ->(text) { redact(text, secrets) }), cause: nil
     end
 
     # The JSON payload of a success, or nil for the documented empty successes
@@ -539,26 +521,14 @@ module Zerobounce
       response = send_request(:get, path, params, nil, [])
       text = response.body.to_s
       content_type = (response.headers[:content_type] || '').to_s
-      if text.strip.empty? || content_type.downcase.include?('application/json') ||
-         ResponseError.html?(text, content_type) || json_body?(text)
+      if GetFileHelper.strip_bom(text).strip.empty? || GetFileHelper.json_type?(content_type) ||
+         ResponseError.html?(text, content_type) || GetFileHelper.json_container?(text)
         raise ApiResponseError.new(
-          redact(ResponseError.message_from_parts(response.code, content_type, text)),
+          redact(ResponseError.message_from_parts(response.code, content_type, GetFileHelper.strip_bom(text))),
           response.code
         )
       end
       text
-    end
-
-    # Whether a CSV download's body is a JSON object or array: an API error
-    # under a CSV content type.
-    def json_body?(text)
-      stripped = text.strip
-      return false unless stripped.start_with?('{', '[')
-
-      JSON.parse(stripped)
-      true
-    rescue JSON::ParserError
-      false
     end
   end
 end

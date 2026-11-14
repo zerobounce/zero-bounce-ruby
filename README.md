@@ -2,6 +2,10 @@
 # Zerobounce
 Ruby client for Zerobounce.net API. Developed based on [this version](https://github.com/afrase/zerobounce) by Aaron Frase.
 
+## Requirements
+
+Ruby 3.0 or newer (`required_ruby_version >= 3.0` in the gemspec).
+
 
 ## Security
 
@@ -702,11 +706,12 @@ Zerobounce.find_domain(company_name: "Zero Bounce")
 
 ## Errors
 
-- An HTTP error status raises the `RestClient` exception for that status, as it did up to 2.1.8: `RestClient::NotFound`, `RestClient::Forbidden` and so on, all subclasses of `RestClient::ExceptionWithResponse` and of `RuntimeError`. `#http_code` gives the status. The message is the API's own short error text (up to 2.1.8 it was RestClient's, such as `404 Not Found`); an HTML error page is reduced to its title.
+- An HTTP error status raises `Zerobounce::ApiResponseError` (a `RuntimeError`) with that status in `#status_code`. The message is the API's own short error text; an HTML error page is reduced to its title. **Behaviour change:** up to 3.0.1 the validation client raised `RestClient::NotFound`, `RestClient::Forbidden` and so on (`#http_code`); the SDK no longer depends on rest-client, so those classes are gone.
+- A transport failure - connection refused or reset, DNS, a read or open timeout (open 30 s, read 120 s), a TLS error, or a response body shorter than its `Content-Length` or a chunked body cut off - raises `Zerobounce::ApiResponseError` with `#status_code` 0 and a message with the API key removed, on every call including Warmup. Responses are requested uncompressed (`Accept-Encoding: identity`) so a body cut short is always detected.
 - An error reported with an HTTP 200 - an `error` field, an `Error` or `error_message` field without `success`, `{"success": false}`, or an account-level `validate_batch` failure - raises `Zerobounce::ApiResponseError` (a `RuntimeError`) with the API's message; `#status_code` is the HTTP status, usually 200. `find_email`, `find_domain` and `guessformat` also raise for a body made only of message fields (such as `{"Message": "Invalid API key or your account ran out of credits"}`).
 - `validate`'s greylist answer, `{"Message": "Greylist validation still in progress..."}`, is a result: the Hash is returned with its `Message`.
 - Invalid arguments, a boolean option that is not `true`/`false`, `'true'`/`'false'` or `1`/`0`, an API key with surrounding whitespace or control characters, and a base URL that is not `https://` raise `ArgumentError` before any request is sent.
-- Redirects are not followed; a 3xx raises its `RestClient` exception (for example `RestClient::Found`).
+- Redirects are not followed; a 3xx raises `Zerobounce::ApiResponseError` with its status.
 - The Warmup client raises `Zerobounce::ApiResponseError`, whose `#status_code` gives the HTTP status.
 
 The API key is removed from every error message.
@@ -714,13 +719,13 @@ The API key is removed from every error message.
 ```ruby
 begin
   Zerobounce.validate_file_check("00000000-0000-0000-0000-000000000000")
-rescue RestClient::ExceptionWithResponse => e
-  e.http_code # => 404, for example
-  e.message   # => the API's error text
-rescue RuntimeError => e
-  e.message   # => e.g. "File cannot be found."
+rescue Zerobounce::ApiResponseError => e
+  e.status_code # => 404 for an HTTP status, 200 for an error on a 200, 0 for a transport failure
+  e.message     # => the API's error text, e.g. "File cannot be found."
 end
 ```
+
+The SDK uses Ruby's built-in `Net::HTTP` and does no HTTP logging: it never turns on `Net::HTTP`'s debug output, and the `RESTCLIENT_LOG` environment variable has no effect.
 
 ## Warmup API
 

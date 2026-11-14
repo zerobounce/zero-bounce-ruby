@@ -395,7 +395,7 @@ module Zerobounce
     # @option [Boolean] :allow_phase_2 When set, sends allow_phase_2 (validation bulk only).
     # @return [Hash] same as validate_file_send
     def validate_file_send_stream(io, file_name, **opts)
-      content = io.respond_to?(:read) ? io.read : io.to_s
+      content = BaseRequest.read_stream(io)
       # Uploaded from memory: a Tempfile in Dir.tmpdir failed the check that
       # keeps file paths under the current directory (2.0.1 to 3.0.1).
       validate_file_send(BaseRequest::Upload.new(content, file_name), **opts)
@@ -496,7 +496,7 @@ module Zerobounce
     # @option [String] :return_url
     # @return [Hash] same as scoring_file_send
     def scoring_file_send_stream(io, file_name, **opts)
-      content = io.respond_to?(:read) ? io.read : io.to_s
+      content = BaseRequest.read_stream(io)
       # Uploaded from memory: a Tempfile in Dir.tmpdir failed the check that
       # keeps file paths under the current directory (2.0.1 to 3.0.1).
       scoring_file_send(BaseRequest::Upload.new(content, file_name), **opts)

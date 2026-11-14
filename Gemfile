@@ -9,5 +9,5 @@ gemspec
 
 # Transitive dependency floors (security advisories: REXML DoS/ReDoS, Addressable ReDoS).
 gem 'rexml', '>= 3.4.4'
-gem 'addressable', '>= 2.8.10'
+gem 'addressable', '>= 2.9.1'
 
