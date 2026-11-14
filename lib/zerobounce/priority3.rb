@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
+require 'date'
 require 'erb'
+require 'uri'
 require 'zerobounce/strict_bool'
 require 'zerobounce/response_shape'
 
@@ -15,64 +17,78 @@ module Zerobounce
     INBOX_PLACEMENT_PAGE_SIZE_MIN = 1
     INBOX_PLACEMENT_PAGE_SIZE_MAX = 100
 
+    INBOX_PLACEMENT_STATUSES = %w[running finished].freeze
+    IPT_CREATE_OPTIONS = %i[test_type sender_email provider_ids seed_ids providers webhook_url].freeze
+    IPT_LIST_OPTIONS = %i[status created_after created_before page page_size].freeze
+    FILE_JOB_OPTIONS = %i[return_url remove_duplicates].freeze
+    # The custom filters' documented values (as the Python SDK checks them).
+    FILTER_RULES = %w[allow block].freeze
+    FILTER_TARGETS = %w[email domain mx tld].freeze
+
     def zb_request
       Zerobounce.class_variable_get(:@@request)
     end
 
     def send_email_finder_file(filepath, domain_column:, first_name_column: nil, last_name_column: nil,
                                middle_name_column: nil, full_name_column: nil, has_header_row: nil)
-      raise ArgumentError, 'domain_column is required' if domain_column.nil? || domain_column.to_i < 1
+      params = { domain_column: __column__(domain_column, 'domain_column') }
+      {
+        first_name_column: first_name_column, last_name_column: last_name_column,
+        middle_name_column: middle_name_column, full_name_column: full_name_column
+      }.each do |name, value|
+        # A blank name column is "not given", so the one-of check below speaks.
+        next if value.nil? || (value.is_a?(String) && value.strip.empty?)
+
+        params[name] = __column__(value, name.to_s)
+      end
       # One of the two name columns tells the finder what to look for; with
       # neither there is nothing to build a local part from.
-      if __blank__(first_name_column) && __blank__(full_name_column)
+      if params[:first_name_column].nil? && params[:full_name_column].nil?
         raise ArgumentError, 'first_name_column or full_name_column is required'
       end
 
-      params = { domain_column: domain_column }
       params[:has_header_row] = __wire_bool__(has_header_row, 'has_header_row') unless has_header_row.nil?
-      params[:first_name_column] = first_name_column unless first_name_column.nil?
-      params[:last_name_column] = last_name_column unless last_name_column.nil?
-      params[:middle_name_column] = middle_name_column unless middle_name_column.nil?
-      params[:full_name_column] = full_name_column unless full_name_column.nil?
       zb_request.bulk_root_post("#{EMAIL_FINDER_BULK_BASE}/sendfile", params, 'multipart/form-data', filepath)
     end
 
     def email_finder_file_status(file_id)
+      __require_text__(file_id, 'file_id')
       zb_request.bulk_root_get("#{EMAIL_FINDER_BULK_BASE}/filestatus", { file_id: file_id })
     end
 
     def email_finder_file_get(file_id)
+      __require_text__(file_id, 'file_id')
       zb_request.bulk_root_getfile("#{EMAIL_FINDER_BULK_BASE}/getfile", { file_id: file_id })
     end
 
     def email_finder_file_delete(file_id)
+      __require_text__(file_id, 'file_id')
       zb_request.bulk_root_get("#{EMAIL_FINDER_BULK_BASE}/deletefile", { file_id: file_id })
     end
 
     def send_domain_search_file(filepath, domain_column:, has_header_row: nil)
-      raise ArgumentError, 'domain_column is required' if domain_column.nil? || domain_column.to_i < 1
-
-      params = { domain_column: domain_column }
+      params = { domain_column: __column__(domain_column, 'domain_column') }
       params[:has_header_row] = __wire_bool__(has_header_row, 'has_header_row') unless has_header_row.nil?
       zb_request.bulk_root_post("#{DOMAIN_SEARCH_BULK_BASE}/sendfile", params, 'multipart/form-data', filepath)
     end
 
     def domain_search_file_status(file_id)
+      __require_text__(file_id, 'file_id')
       zb_request.bulk_root_get("#{DOMAIN_SEARCH_BULK_BASE}/filestatus", { file_id: file_id })
     end
 
     def domain_search_file_get(file_id)
+      __require_text__(file_id, 'file_id')
       zb_request.bulk_root_getfile("#{DOMAIN_SEARCH_BULK_BASE}/getfile", { file_id: file_id })
     end
 
     def domain_search_file_delete(file_id)
+      __require_text__(file_id, 'file_id')
       zb_request.bulk_root_get("#{DOMAIN_SEARCH_BULK_BASE}/deletefile", { file_id: file_id })
     end
 
     def send_list_evaluator_file(filepath, email_address_column:)
-      raise ArgumentError, 'email_address_column is required' if email_address_column.nil? || email_address_column.to_i < 1
-
-      params = { email_address_column: email_address_column }
+      params = { email_address_column: __column__(email_address_column, 'email_address_column') }
       # The same base URL as get_list_evaluator_result, not the bulk one. The
       # endpoint is the base URL itself, with its trailing slash.
       ResponseShape.check!(
@@ -113,11 +129,12 @@ module Zerobounce
     end
 
     def add_filter(rule:, target:, value:)
+      __check_filter__(rule, target, value)
       zb_request.post('filters/add', { rule: rule, target: target, value: value }, 'application/x-www-form-urlencoded')
     end
 
     def list_filters(use_post: false)
-      if use_post
+      if __strict_bool__(use_post, 'use_post')
         zb_request.post('filters/list', {}, 'application/x-www-form-urlencoded')
       else
         zb_request.get('filters/list', {})
@@ -125,13 +142,16 @@ module Zerobounce
     end
 
     def delete_filter(rule:, target:, value:)
+      __check_filter__(rule, target, value)
       zb_request.post('filters/delete', { rule: rule, target: target, value: value }, 'application/x-www-form-urlencoded')
     end
 
     def list_s3_files(bucket: nil, search: nil)
       params = {}
-      params[:bucket] = bucket unless bucket.nil? || bucket.to_s.empty?
-      params[:search] = search unless search.nil? || search.to_s.empty?
+      bucket = __omit_blank__(bucket, 'bucket')
+      search = __omit_blank__(search, 'search')
+      params[:bucket] = bucket unless bucket.nil?
+      params[:search] = search unless search.nil?
       # The S3 listing lives on the bulkapi ROOT, like the jobs below it, not
       # under /v2 - bulk_get would send it to /v2/listS3files, which is a 404.
       zb_request.bulk_root_get('listS3files', params)
@@ -150,11 +170,12 @@ module Zerobounce
     # export_bucket is optional: omit it and the export goes to the bucket in
     # your ZeroBounce settings, the way export_sftp_file's export_path does.
     def export_s3_file(file_id:, export_bucket: nil)
-      raise ArgumentError, 'file_id is required' if file_id.nil? || file_id.to_s.strip.empty?
-
+      __require_text__(file_id, 'file_id')
       if !export_bucket.nil? && export_bucket.to_s.strip.empty?
         raise ArgumentError, 'export_bucket is required'
       end
+
+      __require_text__(export_bucket, 'export_bucket') unless export_bucket.nil?
 
       params = { file_id: file_id }
       params[:export_bucket] = export_bucket unless export_bucket.nil?
@@ -198,11 +219,12 @@ module Zerobounce
     # Note the field name: this endpoint takes export_path, not the
     # export_bucket that export_s3_file sends. Omit it to use your settings.
     def export_sftp_file(file_id:, export_path: nil)
-      raise ArgumentError, 'file_id is required' if file_id.nil? || file_id.to_s.strip.empty?
-
+      __require_text__(file_id, 'file_id')
       if !export_path.nil? && export_path.to_s.strip.empty?
         raise ArgumentError, 'export_path is required'
       end
+
+      __require_text__(export_path, 'export_path') unless export_path.nil?
 
       params = { file_id: file_id }
       params[:export_path] = export_path unless export_path.nil?
@@ -227,7 +249,10 @@ module Zerobounce
     # three are rejected by the API, so they are caught before a request that
     # would spend inbox-test credits.
     def create_inbox_placement_test(name, **options)
+      __check_options__(options, IPT_CREATE_OPTIONS)
       raise ArgumentError, 'name is required' if name.nil? || name.to_s.strip.empty?
+
+      __require_text__(name, 'name')
       raise ArgumentError, 'name must be 64 characters or fewer' if name.to_s.strip.length > INBOX_PLACEMENT_NAME_MAX
 
       if options.key?(:test_type)
@@ -235,6 +260,13 @@ module Zerobounce
         if test_type == 1 && __blank__(options[:sender_email])
           raise ArgumentError, 'sender_email is required when test_type is 1'
         end
+      end
+      __require_text__(options[:sender_email], 'sender_email') if options.key?(:sender_email)
+      __https_url__(options[:webhook_url], 'webhook_url') if options.key?(:webhook_url)
+      %i[provider_ids seed_ids providers].each do |key|
+        next unless options.key?(key)
+
+        raise ArgumentError, "Invalid parameter: #{key} must be an array" unless options[key].is_a?(Array)
       end
 
       body = { 'name' => name }
@@ -246,6 +278,7 @@ module Zerobounce
         providers: 'providers',
         webhook_url: 'webhookUrl'
       }.each { |key, wire| body[wire] = options[key] if options.key?(key) }
+      body['testType'] = test_type if options.key?(:test_type)
 
       zb_request.ipt_request(:post, 'test', {}, json: body)
     end
@@ -255,14 +288,28 @@ module Zerobounce
     end
 
     def list_inbox_placement_tests(**options)
+      __check_options__(options, IPT_LIST_OPTIONS)
       params = {}
-      params[:status] = options[:status] if options.key?(:status)
-      params[:createdAfter] = options[:created_after] if options.key?(:created_after)
-      params[:createdBefore] = options[:created_before] if options.key?(:created_before)
-      params[:page] = options[:page] if options.key?(:page)
+      if options.key?(:status)
+        status = options[:status]
+        raise ArgumentError, 'status must be running or finished' unless INBOX_PLACEMENT_STATUSES.include?(status)
+
+        params[:status] = status
+      end
+      { created_after: :createdAfter, created_before: :createdBefore }.each do |key, wire|
+        params[wire] = __iso_date__(options[key], key.to_s) if options.key?(key)
+      end
+      if options.key?(:page)
+        page = options[:page]
+        raise ArgumentError, 'Invalid parameter: page must be an integer' unless page.is_a?(Integer)
+        raise ArgumentError, 'Invalid parameter: page (must be 1 or more)' if page < 1
+
+        params[:page] = page
+      end
       if options.key?(:page_size)
         page_size = options[:page_size]
-        unless (INBOX_PLACEMENT_PAGE_SIZE_MIN..INBOX_PLACEMENT_PAGE_SIZE_MAX).cover?(page_size.to_i)
+        unless page_size.is_a?(Integer) &&
+               (INBOX_PLACEMENT_PAGE_SIZE_MIN..INBOX_PLACEMENT_PAGE_SIZE_MAX).cover?(page_size)
           raise ArgumentError,
                 "page_size must be between #{INBOX_PLACEMENT_PAGE_SIZE_MIN} and #{INBOX_PLACEMENT_PAGE_SIZE_MAX}"
         end
@@ -287,6 +334,7 @@ module Zerobounce
     def set_inbox_placement_webhook(webhook_url)
       raise ArgumentError, 'webhook_url is required' if webhook_url.nil? || webhook_url.to_s.strip.empty?
 
+      __https_url__(webhook_url, 'webhook_url')
       zb_request.ipt_request(:put, 'webhook', {}, json: { 'webhookUrl' => webhook_url })
     end
 
@@ -344,13 +392,14 @@ module Zerobounce
       __strict_bool__(value, name) ? 'true' : 'false'
     end
 
+    # An Integer, or a String of digits only ("2"), as callers have passed it; "2x" is refused.
     def __inbox_placement_test_type__(value)
-      test_type = value.is_a?(Integer) ? value : value.to_s.strip.to_i
-      unless INBOX_PLACEMENT_TEST_TYPES.include?(test_type)
+      value = value.to_i if value.is_a?(String) && value.match?(/\A\d+\z/)
+      unless value.is_a?(Integer) && INBOX_PLACEMENT_TEST_TYPES.include?(value)
         raise ArgumentError, "test_type must be one of #{INBOX_PLACEMENT_TEST_TYPES.join(', ')}"
       end
 
-      test_type
+      value
     end
 
     # POSTs one of the eight documented S3 / SFTP file jobs on the bulkapi root.
@@ -362,10 +411,12 @@ module Zerobounce
     # docs list both as optional. Without either the API answers "This field is
     # required".
     def bulk_root_file_job(path, file_name, has_header_row, **options)
+      __check_options__(options, FILE_JOB_OPTIONS)
       raise ArgumentError, 'file_name is required' if __blank__(file_name)
       raise ArgumentError, 'return_url is required' if __blank__(options[:return_url])
 
-      return_url = options[:return_url]
+      __require_text__(file_name, 'file_name')
+      return_url = __http_url__(options[:return_url], 'return_url')
 
       params = {
         has_header_row: __wire_bool__(has_header_row, 'has_header_row'),
@@ -377,6 +428,59 @@ module Zerobounce
       end
 
       zb_request.bulk_root_form_post(path, params)
+    end
+
+    # Unknown option keys are a typo, never silently dropped.
+    def __check_options__(options, known)
+      unknown = options.keys - known
+      return if unknown.empty?
+
+      raise ArgumentError, "Unknown option#{'s' if unknown.length > 1}: #{unknown.join(', ')} " \
+                           "(known: #{known.join(', ')})"
+    end
+
+    def __check_filter__(rule, target, value)
+      if [rule, target, value].any? { |item| !item.is_a?(String) || item.strip.empty? }
+        raise ArgumentError, 'Empty parameter: rule, target, and value are required'
+      end
+      raise ArgumentError, 'Invalid parameter: rule (must be allow or block)' unless FILTER_RULES.include?(rule)
+      return if FILTER_TARGETS.include?(target)
+
+      raise ArgumentError, 'Invalid parameter: target (must be email, domain, mx or tld)'
+    end
+
+    # An http(s) URL with a host, as a String.
+    def __http_url__(value, name, schemes = %w[http https])
+      __require_text__(value, name)
+      uri = begin
+        URI.parse(value.strip)
+      rescue URI::InvalidURIError
+        nil
+      end
+      unless uri && schemes.include?(uri.scheme.to_s.downcase) && !uri.host.to_s.empty?
+        raise ArgumentError, "Invalid parameter: #{name} must be #{schemes.map { |x| "#{x}://" }.join(' or ')} URL"
+      end
+
+      value
+    end
+
+    def __https_url__(value, name)
+      __http_url__(value, name, %w[https])
+    end
+
+    # A strict YYYY-MM-DD date (or a Date/Time), as a string for the wire.
+    def __iso_date__(value, name)
+      return value.strftime('%Y-%m-%d') if value.is_a?(Date) || value.is_a?(Time)
+
+      if value.is_a?(String) && value.match?(/\A\d{4}-\d{2}-\d{2}\z/)
+        begin
+          Date.strptime(value, '%Y-%m-%d')
+          return value
+        rescue ArgumentError
+          nil
+        end
+      end
+      raise ArgumentError, "Invalid parameter: #{name} must be a YYYY-MM-DD date"
     end
 
     def inbox_placement_test_segment(test_id)

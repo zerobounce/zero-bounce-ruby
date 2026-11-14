@@ -242,6 +242,51 @@ describe 'Transport guards on every request path' do
     end
   end
 
+  # The same sweep for a chunked body that ends mid-chunk (no Content-Length to
+  # compare against).
+  describe 'a chunked body cut mid-chunk after its 200 header' do
+    server = nil
+    before(:all) do
+      WebMock.disable!
+      server = RawSocketServer.new do |request_line|
+        file = request_line.include?('getfile') || request_line.include?('/download')
+        type = file ? 'application/octet-stream' : 'application/json'
+        "HTTP/1.1 200 OK\r\nContent-Type: #{type}\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n" \
+          "3e8\r\n{\"Credits\":\"5\""
+      end
+    end
+
+    after(:all) do
+      server.close
+      WebMock.enable!
+    end
+
+    before do
+      allow(Zerobounce::ApiUrls).to receive(:check!) { |url, *| url }
+      TransportSweep.configure(api_key, server.url)
+    end
+
+    def expect_failure(&call)
+      expect(&call).to raise_error(Zerobounce::ApiResponseError) { |error|
+        expect(error.status_code).to eq(0)
+        expect(error.full_message(highlight: false)).not_to include(api_key)
+      }
+    end
+
+    TransportSweep::CALLS.each do |name, call|
+      it "raises for #{name}" do
+        expect_failure { call.call }
+      end
+    end
+
+    TransportSweep::WARMUP_CALLS.each do |name, call|
+      it "raises for Warmup##{name}" do
+        warmup = TransportSweep.warmup(api_key, server.url)
+        expect_failure { call.call(warmup) }
+      end
+    end
+  end
+
   # A 3xx WITH a Location header: a client that followed redirects would
   # reach the second host, carrying the key.
   describe 'redirects' do
@@ -285,7 +330,7 @@ describe 'Transport guards on every request path' do
   end
 
   # Every request is sent on a real Net::HTTP client with the SDK's timeouts
-  # (open 30 s, read 120 s), read off the client the public API builds.
+  # (open 30 s, read 120 s, write 120 s, no automatic retry), read off the client the public API builds.
   describe 'timeouts' do
     let(:sent) { [] }
 
@@ -293,9 +338,10 @@ describe 'Transport guards on every request path' do
       TransportSweep.configure(api_key, 'https://first.example')
       stub_request(:any, %r{\Ahttps://first\.example/})
         .to_return(status: 200, body: '{"success":true}', headers: { 'Content-Type' => 'application/json' })
-      allow(Net::HTTP).to receive(:start).and_wrap_original do |original, *args, **kwargs, &block|
-        original.call(*args, **kwargs) do |http|
-          sent << { open: http.open_timeout, read: http.read_timeout }
+      allow_any_instance_of(Net::HTTP).to receive(:start).and_wrap_original do |original, &block|
+        original.call do |http|
+          sent << { open: http.open_timeout, read: http.read_timeout, write: http.write_timeout,
+                    retries: http.max_retries }
           block.call(http)
         end
       end
@@ -308,7 +354,8 @@ describe 'Transport guards on every request path' do
         nil # Only the options the request went out with matter here.
       end
       expect(sent).not_to be_empty, "#{name} sent no request"
-      sent.each { |t| expect(t).to eq(open: 30, read: 120), "#{name} was sent without its timeouts" }
+      expected = { open: 30, read: 120, write: 120, retries: 0 }
+      sent.each { |t| expect(t).to eq(expected), "#{name} was sent without its timeouts" }
     end
 
     TransportSweep::CALLS.each do |name, call|

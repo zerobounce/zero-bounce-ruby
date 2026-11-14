@@ -89,6 +89,8 @@ module Zerobounce
     # (+weekdays_only+, +timezone+, +timezone_offset+ -11 to 14,
     # +warmup_start_date+); a 200 means accepted, and the mailbox is
     # provisioned afterwards. Other keys are not sent and draw a warning.
+    ADD_ACCOUNT_OPTIONS = %w[engagement_rule_id ignore_conflict email_content managed_sending].freeze
+
     def add_sending_account(from_address, onboarding_model, **options)
       require_value(from_address, 'from_address')
       unless ONBOARDING_MODELS.include?(onboarding_model.to_s)
@@ -104,6 +106,12 @@ module Zerobounce
         if options.key?(:email_content) || options.key?(:managed_sending)
           raise ArgumentError, 'email_content and managed_sending are for zb_managed'
         end
+      end
+      extra = options.keys.map(&:to_s) - ADD_ACCOUNT_OPTIONS
+      unless extra.empty?
+        warn "Zerobounce::Warmup#add_sending_account: #{extra.join(', ')} " \
+             "#{extra.length == 1 ? 'is not an option' : 'are not options'} and not sent; " \
+             "the options are #{ADD_ACCOUNT_OPTIONS.join(', ')}"
       end
       unless options[:ignore_conflict].nil?
         # Parsed strictly, as the client's boolean options are: 'false' is false.
@@ -334,6 +342,7 @@ module Zerobounce
 
     def require_value(value, name)
       raise ArgumentError, "#{name} is required" if value.nil? || value.to_s.strip.empty?
+      raise ArgumentError, "#{name} must be a string" unless value.is_a?(String)
 
       value
     end
@@ -349,7 +358,15 @@ module Zerobounce
     # A date for the API: a Date/Time or a YYYY-MM-DD string.
     def api_date(value, name)
       return value.strftime('%Y-%m-%d') if value.respond_to?(:strftime)
-      return value if value.is_a?(String) && value.match?(/\A\d{4}-\d{2}-\d{2}\z/)
+
+      if value.is_a?(String) && value.match?(/\A\d{4}-\d{2}-\d{2}\z/)
+        begin
+          Date.strptime(value, '%Y-%m-%d')
+          return value
+        rescue ArgumentError
+          raise ArgumentError, "#{name} must be YYYY-MM-DD"
+        end
+      end
 
       raise ArgumentError, "#{name} must be YYYY-MM-DD"
     end

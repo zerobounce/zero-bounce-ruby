@@ -94,30 +94,56 @@ module Zerobounce
     def redact(text, secrets)
       value = text.to_s.b
       secrets = secrets.compact.map(&:to_s).reject { |secret| secret.strip.empty? }
-      secrets.each { |secret| value = value.gsub(secret_pattern(secret_forms(secret), secret), '***'.b) }
+      secrets.each { |secret| value = mask(value, secret) }
       value = value.force_encoding(Encoding::UTF_8).scrub
       return CREDENTIAL_OMITTED_MESSAGE if holds_secret?(value, secrets)
 
       value
     end
 
-    # One case-insensitive pattern over the forms (bytes, so it also matches
-    # text that is not valid UTF-8); a short secret must stand as a whole token.
-    def secret_pattern(forms, secret)
-      body = forms.map { |form| Regexp.escape(form.b) }.join('|')
-      body = "(?<![A-Za-z0-9])(?:#{body})(?![A-Za-z0-9])" if secret.length < WHOLE_TOKEN_BELOW
-      Regexp.new(body.b, Regexp::IGNORECASE)
+    # Masks one secret in the bytes: first as Unicode text when the bytes are
+    # valid UTF-8 (so letter case folds for non-ASCII letters too), then on
+    # the bytes themselves (so text that is not valid UTF-8 is covered).
+    def mask(bytes, secret)
+      forms = secret_forms(secret)
+      unicode = bytes.dup.force_encoding(Encoding::UTF_8)
+      if unicode.valid_encoding? && secret.valid_encoding?
+        bytes = unicode.gsub(secret_pattern(forms, secret, unicode: true), '***').b
+      end
+      bytes.gsub(secret_pattern(forms, secret), '***'.b)
+    end
+
+    # One case-insensitive pattern over the forms; unicode: true matches
+    # UTF-8 text with Unicode case folding, otherwise bytes. A short secret
+    # must stand as a whole token: the boundary applies at each end of the
+    # secret that is a letter or digit (a secret that starts or ends with
+    # punctuation is masked next to letters).
+    def secret_pattern(forms, secret, unicode: false) # rubocop:disable Metrics/CyclomaticComplexity
+      alnum = unicode ? '[[:alnum:]]' : '[A-Za-z0-9]'
+      body = forms.map { |form| Regexp.escape(unicode ? form : form.b) }.join('|')
+      if secret.length < WHOLE_TOKEN_BELOW
+        before = secret.match?(/\A[[:alnum:]]/) ? "(?<!#{alnum})" : ''
+        after = secret.match?(/[[:alnum:]]\z/) ? "(?!#{alnum})" : ''
+        body = "#{before}(?:#{body})#{after}"
+      end
+      unicode ? Regexp.new(body, Regexp::IGNORECASE) : Regexp.new(body.b, Regexp::IGNORECASE)
     end
 
     # Whether any decoded view of the text contains one of the secrets, in any
-    # letter case. Compared as bytes, so text that decodes to invalid UTF-8 is
-    # still checked.
+    # letter case (Unicode-aware on valid UTF-8, and always on the bytes).
     def holds_secret?(text, secrets)
       return false if secrets.empty?
 
       views = decoded_views(text)
-      patterns = secrets.map { |secret| secret_pattern([secret], secret) }
-      patterns.any? { |pattern| views.any? { |view| view.match?(pattern) } }
+      secrets.any? { |secret| views.any? { |view| view_holds?(view, secret) } }
+    end
+
+    def view_holds?(view, secret)
+      forms = secret_forms(secret)
+      return true if view.match?(secret_pattern(forms, secret))
+
+      unicode = view.dup.force_encoding(Encoding::UTF_8)
+      unicode.valid_encoding? && secret.valid_encoding? && unicode.match?(secret_pattern(forms, secret, unicode: true))
     end
 
     # How many layers of encoding the check undoes: the SDK's own request

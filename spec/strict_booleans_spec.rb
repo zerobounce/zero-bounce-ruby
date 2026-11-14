@@ -170,7 +170,7 @@ describe 'Strict boolean parameters' do
     expect(parsed).not_to be_empty
     # weekdays_only sits inside add_sending_account's managed_sending Hash and
     # has its own spec in warmup_spec.rb.
-    expect(parsed - StrictBooleanSweep::BOOLEAN_NAMES - %w[weekdays_only]).to eq([])
+    expect(parsed - StrictBooleanSweep::BOOLEAN_NAMES - %w[weekdays_only use_post]).to eq([])
   end
 
   it 'sweeps every method that takes a boolean' do

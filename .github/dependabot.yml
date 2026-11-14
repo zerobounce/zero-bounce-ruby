@@ -1,5 +1,6 @@
 # Dependabot: security updates only (no version-update PRs) for bundler and github-actions; the Docker
 # entry below keeps the base-image digest current with version updates.
+# The /gemfiles entry covers the Ruby 3.0 lock, which must be relocked on Ruby 3.0 before merging.
 # Grouped security PRs open weekly on Tuesday morning (Europe/Bucharest).
 # Auto-merge: .github/workflows/dependabot-auto-merge.yml (on PR + Tuesday cron).
 # https://docs.github.com/en/code-security/dependabot/dependabot-security-updates
@@ -19,6 +20,25 @@ updates:
       - "ruby dependencies"
     groups:
       bundler-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  # gemfiles/ruby_3.0.gemfile.lock is the lock for the Ruby 3.0 CI job. Dependabot resolves it on a
+  # newer Ruby, so an update there must be relocked on Ruby 3.0 (see gemfiles/ruby_3.0.gemfile).
+  - package-ecosystem: "bundler"
+    directory: "/gemfiles"
+    schedule:
+      interval: weekly
+      day: tuesday
+      time: "06:00"
+      timezone: Europe/Bucharest
+    open-pull-requests-limit: 0
+    labels:
+      - "dependabot-security"
+      - "ruby dependencies"
+    groups:
+      bundler-gemfiles-security:
         applies-to: security-updates
         patterns:
           - "*"

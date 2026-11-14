@@ -219,12 +219,17 @@ module Zerobounce
     #   "end_date": "12/12/2023"
     # }
     def api_usage(start_date, end_date)
-      begin
-        start_date_f = start_date.strftime('%Y-%m-%d')
-        end_date_f = end_date.strftime('%Y-%m-%d')
-      rescue NoMethodError => e
-        raise ArgumentError.new('strftime method not found for provided arguments')
+      [['start_date', start_date], ['end_date', end_date]].each do |name, value|
+        raise ArgumentError, "Empty parameter: #{name}" if value.nil?
+        unless value.is_a?(Date) || value.is_a?(Time)
+          raise ArgumentError, "Invalid parameter: #{name} must be a date"
+        end
       end
+      if start_date.to_date > end_date.to_date
+        raise ArgumentError, 'Invalid parameter: start_date must not be after end_date'
+      end
+      start_date_f = start_date.strftime('%Y-%m-%d')
+      end_date_f = end_date.strftime('%Y-%m-%d')
       params = {start_date: start_date_f, end_date: end_date_f}
       @@request.get('getapiusage', params)
     end

@@ -668,7 +668,7 @@ module RequestPayloads
     'list_inbox_placement_tests' => [
       lambda {
         Zerobounce.list_inbox_placement_tests(
-          status: 'done', created_after: '2026-01-01', created_before: '2026-02-01', page: 2, page_size: 10
+          status: 'finished', created_after: '2026-01-01', created_before: '2026-02-01', page: 2, page_size: 10
         )
       },
       {
@@ -679,7 +679,7 @@ module RequestPayloads
           'createdBefore' => '2026-02-01',
           'page' => '2',
           'page_size' => '10',
-          'status' => 'done'
+          'status' => 'finished'
         },
         body: nil
       }

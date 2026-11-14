@@ -103,9 +103,10 @@ jobs:
           bundler-cache: false
 
       # bundler-cache is off here on purpose (no cache restore in a release
-      # workflow), so the bundle has to be installed explicitly.
+      # workflow), so the bundle has to be installed explicitly. Deployment mode
+      # installs exactly Gemfile.lock (it fails if the lock is out of date).
       - name: Install dependencies
-        run: bundle install --jobs 4
+        run: bundle config set --local deployment true && bundle install --jobs 4
 
       - name: Run specs
         run: bundle exec rspec

@@ -270,8 +270,10 @@ module Zerobounce
       # LIVE: the Inbox Placement Tester authenticates with a Bearer header.
       # Sent as an api_key parameter the request is rejected as unauthorized.
       response = __execute_with_method__(method, url, params, json: json, bearer: true)
-      # Empty means zero bytes: a blank body is not JSON, and is an error.
-      return nil if response.body.to_s.empty?
+      # Only a DELETE may answer with nothing (zero bytes) and succeed. On
+      # every other call an empty body is an "Empty response" error, with the
+      # HTTP status, from the parse below.
+      return nil if method == :delete && response.body.to_s.empty?
 
       __parse_json_response__(response, nil, strict: false)
     end

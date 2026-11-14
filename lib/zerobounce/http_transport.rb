@@ -98,9 +98,16 @@ module Zerobounce
     end
 
     def perform(uri, request, redact)
-      options = { use_ssl: uri.scheme == 'https', open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT }
-      options[:write_timeout] = WRITE_TIMEOUT
-      Net::HTTP.start(uri.host, uri.port, **options) do |http|
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = uri.scheme == 'https'
+      http.open_timeout = OPEN_TIMEOUT
+      http.read_timeout = READ_TIMEOUT
+      http.write_timeout = WRITE_TIMEOUT
+      # No silent second send: Net::HTTP would otherwise re-send an idempotent
+      # request (GET, PUT, DELETE) once after an EOF or reset, and a validation
+      # GET is billable.
+      http.max_retries = 0
+      http.start do
         http.request(request) { |res| return wrap(res, redact) }
       end
     end
@@ -115,29 +122,51 @@ module Zerobounce
     end
 
     # Fewer bytes than Content-Length is a failure, status 0 (a connection
-    # that closes mid-body must not read as a complete response).
+    # that closes mid-body must not read as a complete response). A list-form
+    # header ("50, 50") counts as its value when every entry agrees; entries
+    # that differ are a failure too.
     def check_length!(res, raw, redact)
-      expected = res['content-length'].to_s
-      return unless expected.match?(/\A\d+\z/)
-      return if [204, 304].include?(res.code.to_i) || raw.bytesize >= expected.to_i
+      return if [204, 304].include?(res.code.to_i)
+
+      lengths = res['content-length'].to_s.split(',').map(&:strip)
+      return if lengths.empty? || lengths.any? { |length| !length.match?(/\A\d+\z/) }
+
+      if lengths.uniq.size > 1
+        raise ApiResponseError.new(
+          redact.call("The response from ZeroBounce had conflicting Content-Length values (#{lengths.join(', ')})."), 0
+        )
+      end
+      return unless raw.bytesize < lengths.first.to_i
 
       raise ApiResponseError.new(
-        redact.call("The response from ZeroBounce was cut short: #{raw.bytesize} of #{expected} " \
+        redact.call("The response from ZeroBounce was cut short: #{raw.bytesize} of #{lengths.first} " \
                     'bytes arrived before the connection closed.'), 0
       )
     end
 
+    # Identity is requested, so a compressed body is unexpected; if a server
+    # sends one anyway it must be a complete stream (a gzip body without its
+    # trailer is a body cut short).
     def decode(res, raw, redact)
       case res['content-encoding'].to_s.downcase
       when 'gzip', 'x-gzip'
-        Zlib::GzipReader.new(StringIO.new(raw)).read.to_s
+        gunzip(raw)
       when 'deflate'
         Zlib::Inflate.inflate(raw)
       else
         raw
       end
     rescue Zlib::Error
-      raise ApiResponseError.new(redact.call('The response from ZeroBounce could not be decoded.'), 0)
+      # cause: nil, so the Zlib error (whose message can quote the raw body)
+      # is not carried along.
+      raise ApiResponseError.new(redact.call('The response from ZeroBounce could not be decoded.'), 0), cause: nil
+    end
+
+    def gunzip(raw)
+      reader = Zlib::GzipReader.new(StringIO.new(raw))
+      text = reader.read.to_s
+      reader.finish # raises Zlib::GzipFile::Error unless the stream (with its trailer) was complete
+      text
     end
 
     def with_charset(body, content_type)

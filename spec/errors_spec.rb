@@ -94,10 +94,11 @@ describe 'Errors and argument checks' do
 
     it 'keeps the filters calls raw' do
       answer('{"Message":"Filter successfully added"}')
-      expect(Zerobounce.add_filter(rule: 'a', target: 'b', value: 'c')).to eq('Message' => 'Filter successfully added')
-      expect(Zerobounce.delete_filter(rule: 'a', target: 'b', value: 'c')).to be_a(Hash)
+      expect(Zerobounce.add_filter(rule: 'allow', target: 'domain', value: 'c'))
+        .to eq('Message' => 'Filter successfully added')
+      expect(Zerobounce.delete_filter(rule: 'allow', target: 'domain', value: 'c')).to be_a(Hash)
       answer('{}')
-      expect(Zerobounce.add_filter(rule: 'a', target: 'b', value: 'c')).to eq({})
+      expect(Zerobounce.add_filter(rule: 'allow', target: 'domain', value: 'c')).to eq({})
     end
 
     it 'keeps the list evaluator result a result' do

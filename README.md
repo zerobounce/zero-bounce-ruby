@@ -414,7 +414,7 @@ Zerobounce.validate_file_send(validate_file_path)
 #   last_name_column: 3,
 #   gender_column: 4,
 #   ip_address_column: 5,
-#   has_header_row: true,      # the default
+#   has_header_row: true,      # sent only when given (no default)
 #   remove_duplicate: false,   # sent only when given; the API removes duplicates by default
 #   return_url: nil,        # results callback url
 #   allow_phase_2: true     # optional; validation bulk sendfile only (omit or nil to skip)
@@ -484,7 +484,7 @@ Zerobounce.scoring_file_send(scoring_file_path)
 # file_id will be required for the next steps
 # optional named parameters
 #   email_address_column: 1,
-#   has_header_row: true,
+#   has_header_row: false,     # the default; pass true if the file has a header row
 #   remove_duplicate: false, # sent only when given
 #   return_url: nil         # results callback url
 Zerobounce.scoring_file_send(scoring_file_path, email_address_column: 1)

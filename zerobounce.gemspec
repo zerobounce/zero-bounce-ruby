@@ -34,7 +34,7 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.add_development_dependency 'base64' # stdlib gem on Ruby 3.4+
   spec.add_development_dependency 'bigdecimal' # required by crack (webmock) on Ruby 3.4+
   spec.add_development_dependency 'ostruct' # stdlib gem on Ruby 3.5+ (json/simplecov load chain)
-  spec.add_development_dependency 'logger' # stdlib gem on Ruby 3.4+ (mime-types load chain)
+  spec.add_development_dependency 'logger' # stdlib gem on Ruby 3.5+ (simplecov/rubocop/webmock load chain)
   spec.add_development_dependency 'racc' # bundled gem on Ruby 3.4+ (parser / rubocop load chain)
   spec.add_development_dependency 'benchmark' # bundled gem on Ruby 4.0+ (rubocop load chain)
   spec.add_development_dependency 'bundler', '~> 2.4.6'

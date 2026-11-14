@@ -98,17 +98,136 @@ describe Zerobounce::HttpTransport do
     end
   end
 
-  it 'sets the real client timeouts: open 30 s, read 120 s' do
+  it 'sets the real client timeouts (open 30 s, read 120 s, write 120 s) and no automatic retry' do
     stub_request(:any, %r{\Ahttps://api\.zerobounce\.net/}).to_return(status: 200, body: '{}')
     seen = []
-    allow(Net::HTTP).to receive(:start).and_wrap_original do |original, *args, **kwargs, &block|
-      original.call(*args, **kwargs) do |http|
-        seen << [http.open_timeout, http.read_timeout]
+    allow_any_instance_of(Net::HTTP).to receive(:start).and_wrap_original do |original, &block|
+      original.call do |http|
+        seen << [http.open_timeout, http.read_timeout, http.write_timeout, http.max_retries]
         block.call(http)
       end
     end
     described_class.execute(method: :get, url: 'https://api.zerobounce.net/v2/getcredits')
-    expect(seen).to eq([[30, 120]])
+    expect(seen).to eq([[30, 120, 120, 0]])
+  end
+
+  # A connection that closes (or resets) before any response: Net::HTTP re-sends
+  # an idempotent request once unless max_retries is 0, and a validation GET is
+  # billable.
+  describe 'a connection closed before any response' do
+    %i[get put delete post].each do |verb|
+      it "is sent once by #{verb.upcase}" do
+        server = TCPServer.new('127.0.0.1', 0)
+        hits = 0
+        thread = Thread.new do
+          loop do
+            client = server.accept
+            hits += 1
+            client.readpartial(65_536)
+            client.close
+          rescue StandardError
+            break
+          end
+        end
+        error = begin
+          described_class.execute(method: verb, url: "http://127.0.0.1:#{server.addr[1]}/v2/validate",
+                                  body: verb == :post ? 'x' : nil)
+        rescue StandardError => e
+          e
+        end
+        sleep 0.2
+        server.close
+        thread.kill
+        expect(error).to be_a(Zerobounce::ApiResponseError)
+        expect(error.status_code).to eq(0)
+        expect(hits).to eq(1)
+      end
+    end
+  end
+
+  describe 'Content-Length checks' do
+    def length_response(code, length, body)
+      "HTTP/1.1 #{code} X\r\nContent-Length: #{length}\r\nConnection: close\r\n\r\n#{body}"
+    end
+
+    it 'fails when the body is exactly one byte short' do
+      response, = run(length_response(200, 10, '123456789'))
+      expect(response).to be_a(Zerobounce::ApiResponseError)
+      expect(response.message).to include('9 of 10 bytes')
+    end
+
+    it 'accepts a body of exactly the length' do
+      response, = run(length_response(200, 10, '1234567890'))
+      expect(response.body).to eq('1234567890')
+    end
+
+    [204, 304].each do |code|
+      it "accepts a #{code} with a Content-Length and no body" do
+        response, = run(length_response(code, 5, ''))
+        expect(response).to be_a(Zerobounce::HttpTransport::Response)
+        expect([response.code, response.body]).to eq([code, ''])
+      end
+    end
+
+    it 'checks a list-form Content-Length whose entries agree' do
+      response, = run(length_response(200, '50, 50', 'x' * 20))
+      expect(response).to be_a(Zerobounce::ApiResponseError)
+      expect(response.message).to include('20 of 50 bytes')
+    end
+
+    it 'fails a list-form Content-Length whose entries differ' do
+      response, = run(length_response(200, '5, 7', 'x' * 7))
+      expect(response).to be_a(Zerobounce::ApiResponseError)
+      expect(response.status_code).to eq(0)
+      expect(response.message).to include('conflicting Content-Length')
+    end
+
+    it 'accepts a complete list-form Content-Length' do
+      response, = run(length_response(200, '5, 5', 'abcde'))
+      expect(response.body).to eq('abcde')
+    end
+  end
+
+  describe 'a gzip body a server sends anyway' do
+    it 'fails when the gzip trailer is missing' do
+      gz = Zlib.gzip('{"a":1}')
+      cut = gz.byteslice(0, gz.bytesize - 8)
+      response, = run("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: #{cut.bytesize}\r\n\r\n".b + cut)
+      expect(response).to be_a(Zerobounce::ApiResponseError)
+      expect([response.status_code, response.message]).to eq([0, 'The response from ZeroBounce could not be decoded.'])
+    end
+
+    it 'carries no cause when the gzip stream is invalid, so the raw body is not quoted' do
+      Zerobounce.config.apikey = 'SECRETKEY123'
+      response, = run("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: 20\r\n\r\nInvalid SECRETKEY123",
+                      redact: ->(text) { Zerobounce::ApiKey.redact(text, ['SECRETKEY123']) })
+      expect(response).to be_a(Zerobounce::ApiResponseError)
+      expect(response.cause).to be_nil
+      expect(response.full_message(highlight: false)).not_to include('SECRETKEY123')
+    end
+  end
+
+  it 'redacts a transport failure message that quotes the secret (the redact hook is applied)' do
+    error = begin
+      described_class.execute(method: :get, url: 'http://127.0.0.1:1/x', headers: { 'X-Bad' => "v\nSMTPSECRET-9" },
+                              redact: ->(text) { Zerobounce::ApiKey.redact(text, ['SMTPSECRET-9']) })
+    rescue StandardError => e
+      e
+    end
+    expect(error).to be_a(Zerobounce::ApiResponseError)
+    expect(error.message).to include('The request to ZeroBounce failed')
+    expect(error.message).not_to include('SMTPSECRET-9')
+  end
+
+  it 'redacts a refused-connection message that quotes the secret' do
+    allow(Net::HTTP).to receive(:new).and_raise(SocketError, 'getaddrinfo for host-SMTPSECRET-9 failed')
+    error = begin
+      described_class.execute(method: :get, url: 'http://example.test/x',
+                              redact: ->(text) { Zerobounce::ApiKey.redact(text, ['SMTPSECRET-9']) })
+    rescue StandardError => e
+      e
+    end
+    expect(error.message).to eq('The request to ZeroBounce failed (SocketError): getaddrinfo for host-*** failed')
   end
 
   describe 'multipart' do
@@ -170,6 +289,29 @@ describe Zerobounce::HttpTransport do
       end
       expect(out.string + err.string).not_to include(api_key)
       expect(out.string + err.string).to eq('')
+    end
+  end
+
+  describe 'Unicode and punctuation edges' do
+    let(:redact) { Zerobounce::ApiKey.method(:redact) }
+
+    it 'masks a non-ASCII secret in any letter case' do
+      expect(redact.call('bad É9 here', ['é9'])).to eq('bad *** here')
+      expect(redact.call('bad é9 here', ['É9'])).to eq('bad *** here')
+      expect(redact.call('x %C3%899 y', ['é9'])).to eq(Zerobounce::ApiKey::CREDENTIAL_OMITTED_MESSAGE)
+      expect(redact.call('pass=ÉCLAIR-secret', ['éclair-secret'])).to eq('pass=***')
+    end
+
+    it 'still masks bytes that are not valid UTF-8 around a secret' do
+      expect(redact.call("\xFF dummy-offline-key \xFE".b, ['DUMMY-OFFLINE-KEY'])).to eq("\uFFFD *** \uFFFD")
+    end
+
+    it 'applies the whole-token boundary only at alphanumeric edges of a short secret' do
+      expect(redact.call('key!ab', ['!ab'])).to eq('key***')
+      expect(redact.call('x!ab z', ['!ab'])).to eq('x*** z')
+      expect(redact.call('ab!c', ['ab!'])).to eq('***c')
+      expect(redact.call('xab!c', ['ab!'])).to eq('xab!c')
+      expect(redact.call('Failed to open', ['p'])).to eq('Failed to open')
     end
   end
 end
