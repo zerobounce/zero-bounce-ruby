@@ -5,6 +5,7 @@ require 'erb'
 require 'json'
 require 'zerobounce/http_transport'
 
+require 'zerobounce/api_urls'
 require 'zerobounce/api_key'
 require 'zerobounce/strict_json'
 require 'zerobounce/error'
@@ -53,9 +54,7 @@ module Zerobounce
       # A key with surrounding whitespace or control characters would be
       # quoted, unredacted, in the HTTP library's own error.
       ApiKey.check!(api_key)
-      unless base_url.to_s.downcase.start_with?('https://')
-        raise ArgumentError, 'base_url must be an https:// URL'
-      end
+      ApiUrls.check!(base_url, 'base_url')
 
       @api_key = ApiKey::Secret.new(api_key)
       root = base_url.to_s
@@ -456,6 +455,13 @@ module Zerobounce
     end
 
     def send_request(method, path, params, body, secrets)
+      # Re-checked on every send (the key goes in a header to this URL), outside
+      # the rescue below, so it is the caller's ArgumentError.
+      ApiUrls.check!("#{root}#{path}", 'base_url')
+      deliver(method, path, params, body, secrets)
+    end
+
+    def deliver(method, path, params, body, secrets)
       headers = { 'API-Key' => api_key, 'Accept' => 'application/json' }
       headers['Content-Type'] = 'application/json' if body
       response = HttpTransport.execute(

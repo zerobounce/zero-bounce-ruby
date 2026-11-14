@@ -6,18 +6,24 @@ require 'uri'
 
 module Zerobounce
   # Checks an API key before it is sent.
-  module ApiKey
+  module ApiKey # rubocop:disable Metrics/ModuleLength
     module_function
 
-    # The key, unchanged, or an ArgumentError when it has surrounding
-    # whitespace or control characters (a key read from a file with its
-    # newline). Such a key would fail at the API, and the HTTP library's own
+    CHARACTERS_PROBLEM = 'api_key has whitespace, control or invisible characters'
+    HEADER_PROBLEM = 'api_key has characters that cannot be sent in an HTTP header'
+    UNSAFE_CHARACTERS = /[[:space:][:cntrl:]\p{Cf}\p{Zs}\p{Zl}\p{Zp}\u180e]/
+
+    # The key, unchanged, or an ArgumentError when it holds whitespace of any
+    # kind (NBSP, U+0085, U+2028, U+3000), control or Unicode format characters
+    # (U+200B, U+FEFF, U+180E) anywhere, or anything outside printable ASCII
+    # (a key read from a file with its newline, or pasted with an invisible
+    # character). Such a key would fail at the API, and the HTTP library's own
     # error could quote it unredacted.
     def check!(api_key)
       key = api_key.to_s
-      if key != key.strip || key.match?(/[\u0000-\u001f\u007f]/)
-        raise ArgumentError, 'api_key has surrounding whitespace or control characters'
-      end
+      raise ArgumentError, HEADER_PROBLEM unless key.valid_encoding?
+      raise ArgumentError, CHARACTERS_PROBLEM if key.match?(UNSAFE_CHARACTERS)
+      raise ArgumentError, HEADER_PROBLEM if key.match?(/[^\x21-\x7e]/)
 
       api_key
     end
@@ -72,29 +78,46 @@ module Zerobounce
     CREDENTIAL_OMITTED_MESSAGE =
       'ZeroBounce returned an error; the response body was omitted because it contained a credential.'
 
-    # The text with every form of every secret replaced by ***. Then closed
-    # under encoding: if any decoded view of what is left (URL-decoding, "+"
-    # as a space, JSON unescaping incl. "\/" and \uXXXX, up to four layers
-    # in any order) still holds a secret, the whole text is replaced by
+    # A secret shorter than this is masked only as a whole token (not touching
+    # a letter or digit), so a one-character password does not turn "Failed to
+    # open" into "Failed to o***en". From this length a secret is masked
+    # wherever it occurs; a password of 8 characters or more never appears in
+    # an ordinary word by chance.
+    WHOLE_TOKEN_BELOW = 8
+
+    # The text with every form of every secret replaced by ***, whatever the
+    # letter case. Then closed under encoding: if any decoded view of what is
+    # left (URL-decoding, "+" as a space, JSON unescaping incl. "\/" and
+    # \uXXXX, HTML entities, "\'" and "\"", up to four layers in any order)
+    # still holds a secret, the whole text is replaced by
     # CREDENTIAL_OMITTED_MESSAGE.
     def redact(text, secrets)
-      value = text.to_s
+      value = text.to_s.b
       secrets = secrets.compact.map(&:to_s).reject { |secret| secret.strip.empty? }
-      secrets.each do |secret|
-        secret_forms(secret).each { |form| value = value.gsub(form, '***') }
-      end
+      secrets.each { |secret| value = value.gsub(secret_pattern(secret_forms(secret), secret), '***'.b) }
+      value = value.force_encoding(Encoding::UTF_8).scrub
       return CREDENTIAL_OMITTED_MESSAGE if holds_secret?(value, secrets)
 
       value
     end
 
-    # Whether any decoded view of the text contains one of the secrets.
-    # Compared as bytes, so text that decodes to invalid UTF-8 is still checked.
+    # One case-insensitive pattern over the forms (bytes, so it also matches
+    # text that is not valid UTF-8); a short secret must stand as a whole token.
+    def secret_pattern(forms, secret)
+      body = forms.map { |form| Regexp.escape(form.b) }.join('|')
+      body = "(?<![A-Za-z0-9])(?:#{body})(?![A-Za-z0-9])" if secret.length < WHOLE_TOKEN_BELOW
+      Regexp.new(body.b, Regexp::IGNORECASE)
+    end
+
+    # Whether any decoded view of the text contains one of the secrets, in any
+    # letter case. Compared as bytes, so text that decodes to invalid UTF-8 is
+    # still checked.
     def holds_secret?(text, secrets)
       return false if secrets.empty?
 
       views = decoded_views(text)
-      secrets.any? { |secret| views.any? { |view| view.include?(secret.b) } }
+      patterns = secrets.map { |secret| secret_pattern([secret], secret) }
+      patterns.any? { |pattern| views.any? { |view| view.match?(pattern) } }
     end
 
     # How many layers of encoding the check undoes: the SDK's own request
@@ -135,11 +158,35 @@ module Zerobounce
       end
     end
 
+    HTML_ENTITY = /&(?:#(\d{1,7});?|#[xX]([0-9a-fA-F]{1,6});?|(amp|lt|gt|quot|apos);)/n
+    NAMED_ENTITIES = { 'amp' => '&', 'lt' => '<', 'gt' => '>', 'quot' => '"', 'apos' => "'" }.freeze
+
+    # HTML entities decoded: &#100; &#x64; &#39; &quot; &amp; ...
+    def html_unescape(bytes) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+      bytes.gsub(HTML_ENTITY) do
+        match = Regexp.last_match
+        code = match[1]&.to_i || match[2]&.hex
+        if code.nil?
+          NAMED_ENTITIES.fetch(match[3]).b
+        elsif code.positive? && code <= 0x10FFFF && !code.between?(0xD800, 0xDFFF)
+          [code].pack('U').b
+        else
+          match[0]
+        end
+      end
+    end
+
+    def unescape_quotes(bytes)
+      bytes.gsub(/\\(['"])/n, '\1')
+    end
+
     DECODERS = [
       ->(bytes) { url_decode(bytes) },
       ->(bytes) { url_decode(bytes.tr('+', ' ')) },
       ->(bytes) { bytes.tr('+', ' ') },
-      ->(bytes) { json_unescape(bytes) }
+      ->(bytes) { json_unescape(bytes) },
+      ->(bytes) { html_unescape(bytes) },
+      ->(bytes) { unescape_quotes(bytes) }
     ].freeze
 
     # Refuses Marshal and YAML serialisation of an object that holds an API

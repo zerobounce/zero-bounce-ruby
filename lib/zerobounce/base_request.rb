@@ -72,10 +72,7 @@ module Zerobounce
     end
 
     def self.__require_https__(url)
-      unless url.to_s.downcase.start_with?('https://')
-        raise ArgumentError, 'API URL must be an https:// URL'
-      end
-      url
+      ApiUrls.check!(url, 'API URL')
     end
 
     # Removes the API key from error text. The key the request actually used
@@ -130,6 +127,13 @@ module Zerobounce
     # never followed) raises ApiResponseError with that status; a transport
     # failure raises it with status 0. Messages are redacted of the API key.
     def self.__execute_request__(method:, url:, query: nil, headers: {}, body: nil)
+      # Re-checked on every send, whichever entry point built the URL; outside
+      # the rescue below, so it is the caller's ArgumentError.
+      __require_https__(url)
+      __send_checked__(method: method, url: url, query: query, headers: headers, body: body)
+    end
+
+    def self.__send_checked__(method:, url:, query:, headers:, body:)
       user_agent = Zerobounce.config.headers && Zerobounce.config.headers[:user_agent]
       headers = headers.merge(user_agent: user_agent) if user_agent
       response = HttpTransport.execute(
@@ -256,7 +260,7 @@ module Zerobounce
     # evaluator, which has its own host.
     def self.root_request(method, root, path, params, form: nil)
       url = "#{__root_without_trailing_slashes__(root)}/#{path.to_s.sub(%r{\A/}, '')}"
-      __parse_json_response__(__execute_with_method__(method, url, params, form: form))
+      __parse_json_response__(__execute_with_method__(method, url, params, form: form), nil, strict: false)
     end
 
     # One Inbox Placement Tester call.
@@ -269,7 +273,7 @@ module Zerobounce
       # Empty means zero bytes: a blank body is not JSON, and is an error.
       return nil if response.body.to_s.empty?
 
-      __parse_json_response__(response)
+      __parse_json_response__(response, nil, strict: false)
     end
 
     # Whether a Content-Type names a JSON body.
@@ -300,12 +304,12 @@ module Zerobounce
       __root_without_trailing_slashes__(derived)
     end
 
-    # Whether a "success" field means failure. The API sends it as a JSON
-    # false, "false" or "False" depending on the endpoint.
+    # Whether a "success" field means failure: every value the strict boolean
+    # reads as false (false, 0, "false", "False", "0", whitespace ignored).
     def self.__success_means_failure__(value)
-      return !value if value == true || value == false
+      return true if value == false || (value.is_a?(Integer) && value.zero?)
 
-      value.is_a?(String) && value.strip.casecmp('false').zero?
+      value.is_a?(String) && %w[false 0].include?(value.strip.downcase)
     end
 
     # LIVE: {"success": false} on an HTTP 200 is a failure, not a result. The
@@ -320,11 +324,6 @@ module Zerobounce
       )
     end
 
-    # A value that reads as an error: a non-blank String.
-    def self.__error_text__(value)
-      value.is_a?(String) && !value.strip.empty?
-    end
-
     # An "error" value that means failure: anything but nil or a blank String.
     def self.__error_value__(value)
       !value.nil? && !(value.is_a?(String) && value.strip.empty?)
@@ -333,21 +332,37 @@ module Zerobounce
     # The keys a message-only body is made of.
     MESSAGE_KEYS = %w[error message error_message Message Error detail].freeze
 
-    # A body made only of message keys (no "success"), for the calls whose
-    # result is never a bare message.
-    def self.__raise_if_message_only__(response, parsed)
-      return if parsed.empty? || parsed.key?('success')
-      return unless parsed.keys.all? { |key| MESSAGE_KEYS.include?(key) }
+    # The paths whose answer may be a bare message or an empty object: the
+    # filters calls, whose documented success is {"Message": "Filter has been
+    # added."}.
+    RAW_JSON_PATHS = %w[filters/add filters/list filters/delete].freeze
 
-      # A message that is null, blank or not text still makes the body a rejection.
-      text = MESSAGE_KEYS.filter_map { |key| __message_text__(parsed[key]) }.first || 'Request failed'
-      raise ApiResponseError.new(ResponseError.strip_prefix(text), response.code)
+    # A typed call never answers with an empty object or a body made only of
+    # message keys (no "success"): either is how the API reports a rejected
+    # request, so it is an error with the HTTP status. The exceptions are
+    # validate's greylist answer {"Message": "..."} (a result), the raw-JSON
+    # filters calls, and the list evaluator and Inbox Placement Tester calls
+    # (which never reach this check).
+    def self.__raise_if_untyped_answer__(response, parsed, path)
+      return if RAW_JSON_PATHS.include?(path)
+
+      if parsed.empty?
+        raise ApiResponseError.new('ZeroBounce returned JSON of an unexpected shape: an empty object.',
+                                   response.code)
+      end
+      return if parsed.key?('success') || !parsed.keys.all? { |key| MESSAGE_KEYS.include?(key) }
+      return if path == 'validate' && ResponseError.text_of(parsed['Message'])
+
+      text = MESSAGE_KEYS.filter_map { |key| __message_text__(parsed[key]) }.first
+      if text.nil? && MESSAGE_KEYS.any? { |key| ResponseError.non_text?(parsed[key]) }
+        text = ResponseError::NO_MESSAGE_TEXT
+      end
+      raise ApiResponseError.new(ResponseError.strip_prefix(text || 'Request failed'), response.code)
     end
 
-    # The text of a message value: a non-blank String, or the first non-blank String of an Array.
+    # The text of a message value: a non-blank String, or the non-blank Strings of an Array joined with "\n".
     def self.__message_text__(value)
-      value = value.find { |item| __error_text__(item) } if value.is_a?(Array)
-      __error_text__(value) ? value : nil
+      ResponseError.text_of(value)
     end
 
     # A dead or invalid key on an HTTP 200: no "success" field and a non-empty
@@ -356,7 +371,7 @@ module Zerobounce
       return if parsed.key?('success')
 
       %w[Error error_message].each do |key|
-        next unless __error_text__(parsed[key])
+        next unless __message_text__(parsed[key])
 
         raise ApiResponseError.new(ResponseError.strip_prefix(parsed[key]), response.code)
       end
@@ -410,7 +425,7 @@ module Zerobounce
                                  response.code)
     end
 
-    def self.__parse_json_response__(response, path = nil)
+    def self.__parse_json_response__(response, path = nil, strict: true)
       parsed = __parse_json_body__(response)
       code = response.code
       return __require_shape__(response, parsed, path) unless parsed.is_a?(Hash)
@@ -427,6 +442,7 @@ module Zerobounce
       if parsed.key?('errors') && parsed['errors'].is_a?(Array) && !parsed['errors'].empty?
         raise ApiResponseError.new(ResponseError.strip_prefix(__first_error__(response, parsed['errors'])), code)
       end
+      __raise_if_untyped_answer__(response, parsed, path) if strict
       __require_shape__(response, parsed, path)
     end
 

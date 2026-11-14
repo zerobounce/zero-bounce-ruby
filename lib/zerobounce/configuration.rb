@@ -32,8 +32,22 @@ module Zerobounce
   class Configuration
     include ApiKey::RefusesDump
 
-    attr_accessor :headers, :apikey, :api_root_url, :bulk_api_root_url, :bulk_root_url,
-                  :list_evaluator_root_url, :inbox_placement_root_url, :valid_statuses, :mock
+    attr_accessor :headers, :apikey, :valid_statuses, :mock
+    attr_reader :api_root_url, :bulk_api_root_url, :bulk_root_url, :list_evaluator_root_url, :inbox_placement_root_url
+
+    # The base URLs are refused at configuration unless they are a valid
+    # https:// URL (ApiUrls.check!): every request carries the API key.
+    # bulk_root_url may also be nil or blank, which derives it from
+    # bulk_api_root_url.
+    %i[api_root_url bulk_api_root_url list_evaluator_root_url inbox_placement_root_url].each do |name|
+      define_method(:"#{name}=") do |url|
+        instance_variable_set(:"@#{name}", ApiUrls.check!(url, name.to_s))
+      end
+    end
+
+    def bulk_root_url=(url)
+      @bulk_root_url = url.to_s.strip.empty? ? url : ApiUrls.check!(url, 'bulk_root_url')
+    end
 
     def initialize(mock = false)
       self.apikey = ENV['ZEROBOUNCE_API_KEY']

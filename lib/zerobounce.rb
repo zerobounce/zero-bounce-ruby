@@ -96,18 +96,15 @@ module Zerobounce
     # }
     def validate(email, ip_address=nil, timeout: nil, activity_data: nil, verify_plus: nil,
                  domain_info: nil, greylist_processing: nil, callback_url: nil, use_post: false)
-      unless timeout.nil?
-        timeout_i = Integer(timeout)
-        if timeout_i < 3 || timeout_i > 60
-          raise ArgumentError, 'Invalid parameter: timeout (must be between 3 and 60 seconds)'
-        end
-      end
+      __require_text__(email, 'email')
+      ip_address = __omit_blank__(ip_address, 'ip_address')
+      __whole_seconds__(timeout, 'timeout', 3, 60) unless timeout.nil?
       activity_data = __strict_bool__(activity_data, 'activity_data') unless activity_data.nil?
       verify_plus = __strict_bool__(verify_plus, 'verify_plus') unless verify_plus.nil?
       domain_info = __strict_bool__(domain_info, 'domain_info') unless domain_info.nil?
       greylist_processing = __strict_bool__(greylist_processing, 'greylist_processing') unless greylist_processing.nil?
       unless callback_url.nil?
-        raise ArgumentError, 'Empty parameter: callback_url' if callback_url.to_s.strip.empty?
+        __require_text__(callback_url, 'callback_url')
 
         # The callback is where the greylist retry posts its result, so it is
         # meaningless - and rejected by the API - without the retry itself.
@@ -118,7 +115,7 @@ module Zerobounce
       params = {email: email}
       # Sent only when given, as in the other SDKs: a nil value went out as a
       # bare "ip_address" parameter.
-      params[:ip_address] = ip_address unless ip_address.nil? || ip_address.to_s.empty?
+      params[:ip_address] = ip_address unless ip_address.nil?
       params[:timeout] = timeout unless timeout.nil?
       unless activity_data.nil?
         params[:activity_data] = activity_data ? 'true' : 'false'
@@ -242,6 +239,7 @@ module Zerobounce
     #   "active_in_days": "180"
     # }
     def activity(email)
+      __require_text__(email, 'email')
       params = {email: email}
       @@request.get('activity', params)
     end
@@ -253,6 +251,7 @@ module Zerobounce
     #
     # @return [Hash] e.g. {"email"=>"mark@gmail.com", "score"=>10}
     def score_email(email, use_post: false)
+      __require_text__(email, 'email')
       params = { email: email }
       if use_post
         @@request.post('scoring', params, 'application/x-www-form-urlencoded')
@@ -303,24 +302,20 @@ module Zerobounce
     #   "errors": []
     # }
     def validate_batch(emails, ip_addresses=[], timeout: nil, activity_data: nil, verify_plus: nil)
-      unless timeout.nil?
-        timeout_i = Integer(timeout)
-        if timeout_i < 10 || timeout_i > 120
-          raise ArgumentError, 'Invalid parameter: timeout (must be between 10 and 120 seconds)'
-        end
-      end
+      __whole_seconds__(timeout, 'timeout', 10, 120) unless timeout.nil?
 
-      raise ArgumentError.new if emails.class != Array
-      emails.each do |email|
-        raise ArgumentError if email.class != String
-      end
+      raise ArgumentError, 'Invalid parameter: emails must be an Array of Strings' unless emails.is_a?(Array)
+      raise ArgumentError, 'Empty parameter: emails' if emails.empty?
 
-      email_batch = []
-      emails.each_index do |i|
-        email_batch.push({
-          email_address: emails[i],
-          ip_address: ip_addresses[i]
-        })
+      ip_addresses = [] if ip_addresses.nil?
+      raise ArgumentError, 'Invalid parameter: ip_addresses must be an Array of Strings' unless ip_addresses.is_a?(Array)
+
+      email_batch = emails.each_with_index.map do |email, i|
+        entry = { email_address: __require_text__(email, 'emails') }
+        # Omitted, not sent as null, when no IP was given for the address.
+        ip = __omit_blank__(ip_addresses[i], 'ip_addresses')
+        entry[:ip_address] = ip unless ip.nil?
+        entry
       end
       params = {email_batch: email_batch}
       # LIVE: validatebatch takes timeout as a JSON *string*. Sent as a number
@@ -340,7 +335,7 @@ module Zerobounce
     # @option [Int] :last_name_column Specify which column the last name is on
     # @option [Int] :gender_column Specify which column the gender is on
     # @option [Int] :ip_address_column Specify which column the signup IP address is on
-    # @option [Boolean] :has_header_row Specify whether the file includes a header row or not
+    # @option [Boolean] :has_header_row Whether the file includes a header row; sent only when given
     # @option [Boolean] :remove_duplicate Whether the API removes duplicate emails (the API's default is true)
     # @option [String] :return_url Specify a callback URL (if nil, no callback will be performed)
     #
@@ -361,19 +356,20 @@ module Zerobounce
         last_name_column: nil,
         gender_column: nil,
         ip_address_column: nil,
-        has_header_row: true,
+        has_header_row: nil,
         remove_duplicate: nil,
         return_url: nil,
         allow_phase_2: nil
       )
-      params = { email_address_column: email_address_column }
+      params = { email_address_column: __column__(email_address_column, 'email_address_column') }
       params[:has_header_row] = __wire_bool__(has_header_row, 'has_header_row') unless has_header_row.nil?
-      params[:first_name_column] = first_name_column unless first_name_column.nil?
-      params[:last_name_column] = last_name_column unless last_name_column.nil?
-      params[:gender_column] = gender_column unless gender_column.nil?
-      params[:ip_address_column] = ip_address_column unless ip_address_column.nil?
+      params[:first_name_column] = __column__(first_name_column, 'first_name_column') unless first_name_column.nil?
+      params[:last_name_column] = __column__(last_name_column, 'last_name_column') unless last_name_column.nil?
+      params[:gender_column] = __column__(gender_column, 'gender_column') unless gender_column.nil?
+      params[:ip_address_column] = __column__(ip_address_column, 'ip_address_column') unless ip_address_column.nil?
       params[:remove_duplicate] = __wire_bool__(remove_duplicate, 'remove_duplicate') unless remove_duplicate.nil?
-      params[:return_url] = return_url unless return_url.nil? || return_url.to_s.empty?
+      return_url = __omit_blank__(return_url, 'return_url')
+      params[:return_url] = return_url unless return_url.nil?
       unless allow_phase_2.nil?
         params[:allow_phase_2] = __wire_bool__(allow_phase_2, 'allow_phase_2')
       end
@@ -395,7 +391,7 @@ module Zerobounce
     # @option [Boolean] :allow_phase_2 When set, sends allow_phase_2 (validation bulk only).
     # @return [Hash] same as validate_file_send
     def validate_file_send_stream(io, file_name, **opts)
-      content = BaseRequest.read_stream(io)
+      content = __stream_content__(io, file_name)
       # Uploaded from memory: a Tempfile in Dir.tmpdir failed the check that
       # keeps file paths under the current directory (2.0.1 to 3.0.1).
       validate_file_send(BaseRequest::Upload.new(content, file_name), **opts)
@@ -417,7 +413,7 @@ module Zerobounce
     #     "return_url": null
     # }
     def validate_file_check(file_id)
-      # todo:
+      __require_text__(file_id, 'file_id')
       params = {file_id: file_id}
       @@request.bulk_get('filestatus', params)
     end
@@ -430,6 +426,7 @@ module Zerobounce
     # @return [String] file body on success
     # @raise [RuntimeError] on API/JSON error responses
     def validate_file_get(file_id, options = nil)
+      __require_text__(file_id, 'file_id')
       params = { file_id: file_id }
       if options
         params[:download_type] = options.download_type if options.download_type
@@ -452,7 +449,7 @@ module Zerobounce
     #   "file_id": "6d44a908-7283-42a9-aa5f-9e57b16f84bd"
     # }
     def validate_file_delete(file_id)
-      # todo:
+      __require_text__(file_id, 'file_id')
       params = {file_id: file_id}
       @@request.bulk_get('deletefile', params)
     end
@@ -461,7 +458,7 @@ module Zerobounce
     #
     # @param [String] :filepath Path to the file to be uploaded
     # @option [Int] :email_address_column Specify which column the email address is on
-    # @option [Boolean] :has_header_row Specify whether the file includes a header row or not
+    # @option [Boolean] :has_header_row Whether the file includes a header row (default false)
     # @option [Boolean] :remove_duplicate Whether the API removes duplicate emails; sent only when given
     # @option [String] :return_url Specify a callback URL (if nil, no callback will be performed)
     #
@@ -475,14 +472,15 @@ module Zerobounce
     def scoring_file_send(
         filepath,
         email_address_column: 1,
-        has_header_row: true,
+        has_header_row: false,
         remove_duplicate: nil,
         return_url: nil
       )
-      params = { email_address_column: email_address_column }
+      params = { email_address_column: __column__(email_address_column, 'email_address_column') }
       params[:has_header_row] = __wire_bool__(has_header_row, 'has_header_row') unless has_header_row.nil?
       params[:remove_duplicate] = __wire_bool__(remove_duplicate, 'remove_duplicate') unless remove_duplicate.nil?
-      params[:return_url] = return_url if return_url
+      return_url = __omit_blank__(return_url, 'return_url')
+      params[:return_url] = return_url unless return_url.nil?
       @@request.bulk_post('scoring/sendfile', params, 'multipart/form-data', filepath)
     end
 
@@ -496,7 +494,7 @@ module Zerobounce
     # @option [String] :return_url
     # @return [Hash] same as scoring_file_send
     def scoring_file_send_stream(io, file_name, **opts)
-      content = BaseRequest.read_stream(io)
+      content = __stream_content__(io, file_name)
       # Uploaded from memory: a Tempfile in Dir.tmpdir failed the check that
       # keeps file paths under the current directory (2.0.1 to 3.0.1).
       scoring_file_send(BaseRequest::Upload.new(content, file_name), **opts)
@@ -510,6 +508,7 @@ module Zerobounce
     # @return [String] file body on success
     # @raise [RuntimeError] on API/JSON error responses
     def scoring_file_get(file_id, options = nil)
+      __require_text__(file_id, 'file_id')
       params = { file_id: file_id }
       if options && options.download_type
         params[:download_type] = options.download_type
@@ -532,6 +531,7 @@ module Zerobounce
     #   "return_url": null
     # }
     def scoring_file_check(file_id)
+      __require_text__(file_id, 'file_id')
       params = {file_id: file_id}
       @@request.bulk_get('scoring/filestatus', params)
     end
@@ -548,6 +548,7 @@ module Zerobounce
     #   "file_id": "6d44a908-7283-42a9-aa5f-9e57b16f84bd"
     # }
     def scoring_file_delete(file_id)
+      __require_text__(file_id, 'file_id')
       params = {file_id: file_id}
       @@request.bulk_get('scoring/deletefile', params)
     end
@@ -602,10 +603,11 @@ module Zerobounce
     def guessformat(domain, first_name: '', middle_name: '', last_name: '')
       warn "[DEPRECATION] `guessformat` is deprecated and will be removed in a future version.\n" \
            "Please use `find_email` or `find_domain` instead."
-      params = {domain: domain}
-      params[:first_name] = first_name unless first_name.nil? || first_name.empty?
-      params[:middle_name] = middle_name unless middle_name.nil? || middle_name.empty?
-      params[:last_name] = last_name unless last_name.nil? || last_name.empty?  
+      params = { domain: __require_text__(domain, 'domain') }
+      { first_name: first_name, middle_name: middle_name, last_name: last_name }.each do |key, value|
+        value = __omit_blank__(value, key.to_s)
+        params[key] = value unless value.nil?
+      end
       @@request.get('guessformat', params)
     end
 
@@ -632,19 +634,14 @@ module Zerobounce
     # name, and answers the domain's format when no name is given. It stays the
     # first positional argument, so every existing call keeps working.
     def find_email(first_name = nil, domain: '', company_name: '', middle_name: '', last_name: '')
-      # Validate that exactly one of domain or company_name is provided
-      if (domain.nil? || domain.empty?) && (company_name.nil? || company_name.empty?)
-        raise ArgumentError, "Either domain or company_name must be provided"
-      elsif !(domain.nil? || domain.empty?) && !(company_name.nil? || company_name.empty?)
-        raise ArgumentError, "Only one of domain or company_name can be provided"
-      end
+      domain, company_name = __domain_or_company__(domain, company_name)
 
       params = {}
-      params[:first_name] = first_name unless first_name.nil? || first_name.to_s.empty?
-      params[:domain] = domain unless domain.nil? || domain.empty?
-      params[:company_name] = company_name unless company_name.nil? || company_name.empty?
-      params[:middle_name] = middle_name unless middle_name.nil? || middle_name.empty?
-      params[:last_name] = last_name unless last_name.nil? || last_name.empty?
+      { first_name: first_name }.merge(domain: domain, company_name: company_name,
+                                       middle_name: middle_name, last_name: last_name).each do |key, value|
+        value = __omit_blank__(value, key.to_s)
+        params[key] = value unless value.nil?
+      end
 
       @@request.get('guessformat', params)
     end
@@ -708,18 +705,37 @@ module Zerobounce
     #   ]
     # }
     def find_domain(domain: '', company_name: '')
-      # Validate that exactly one of domain or company_name is provided
-      if (domain.nil? || domain.empty?) && (company_name.nil? || company_name.empty?)
-        raise ArgumentError, "Either domain or company_name must be provided"
-      elsif !(domain.nil? || domain.empty?) && !(company_name.nil? || company_name.empty?)
-        raise ArgumentError, "Only one of domain or company_name can be provided"
-      end
+      domain, company_name = __domain_or_company__(domain, company_name)
 
       params = {}
-      params[:domain] = domain unless domain.nil? || domain.empty?
-      params[:company_name] = company_name unless company_name.nil? || company_name.empty?
+      params[:domain] = domain unless domain.nil?
+      params[:company_name] = company_name unless company_name.nil?
 
       @@request.get('guessformat', params)
+    end
+
+    private
+
+    # Exactly one of domain and company_name, each a non-blank String; the
+    # blank one comes back nil.
+    def __domain_or_company__(domain, company_name)
+      domain = __omit_blank__(domain, 'domain')
+      company_name = __omit_blank__(company_name, 'company_name')
+      raise ArgumentError, 'Either domain or company_name must be provided' if domain.nil? && company_name.nil?
+      raise ArgumentError, 'Only one of domain or company_name can be provided' if domain && company_name
+
+      [domain, company_name]
+    end
+
+    # The content of a stream upload: a readable, non-empty one with a name.
+    def __stream_content__(io, file_name)
+      raise ArgumentError, 'Empty parameter: io' if io.nil?
+
+      __require_text__(file_name, 'file_name')
+      content = BaseRequest.read_stream(io)
+      raise ArgumentError, 'Empty parameter: io' if content.empty?
+
+      content
     end
 
   end

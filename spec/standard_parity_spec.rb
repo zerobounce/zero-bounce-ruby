@@ -109,17 +109,18 @@ describe 'Behaviour shared with the other SDKs' do
   end
 
   describe 'API keys' do
+    invisible_re = /whitespace, control or invisible/
     ["key\n", ' key', "ke\ty", "key\u007f"].each do |bad|
       it "rejects #{bad.inspect} before sending anything" do
         Zerobounce.config.apikey = bad
-        expect { Zerobounce.credits }.to raise_error(ArgumentError, /whitespace or control/)
-        expect { Zerobounce.get_list_evaluator_result('f1') }.to raise_error(ArgumentError, /whitespace or control/)
-        expect { Zerobounce.inbox_placement_providers }.to raise_error(ArgumentError, /whitespace or control/)
+        expect { Zerobounce.credits }.to raise_error(ArgumentError, invisible_re)
+        expect { Zerobounce.get_list_evaluator_result('f1') }.to raise_error(ArgumentError, invisible_re)
+        expect { Zerobounce.inbox_placement_providers }.to raise_error(ArgumentError, invisible_re)
         expect(WebMock).not_to have_requested(:any, /.*/)
       end
 
       it "rejects #{bad.inspect} in Zerobounce::Client" do
-        expect { Zerobounce::Client.new(bad) }.to raise_error(ArgumentError, /whitespace or control/)
+        expect { Zerobounce::Client.new(bad) }.to raise_error(ArgumentError, invisible_re)
       end
     end
 
@@ -272,11 +273,12 @@ describe 'Behaviour shared with the other SDKs' do
     before do
       Zerobounce.configure do |c|
         c.apikey = api_key
-        c.api_root_url = 'http://api.example.test/v2'
-        c.bulk_api_root_url = 'http://bulk.example.test/v2'
-        c.bulk_root_url = 'http://bulk.example.test'
-        c.list_evaluator_root_url = 'http://bulk.example.test/v2/listevaluator'
-        c.inbox_placement_root_url = 'http://bulk.example.test/api/ipt'
+        # Set behind the setters (which refuse http), to prove every send re-checks.
+        c.instance_variable_set(:@api_root_url, 'http://api.example.test/v2')
+        c.instance_variable_set(:@bulk_api_root_url, 'http://bulk.example.test/v2')
+        c.instance_variable_set(:@bulk_root_url, 'http://bulk.example.test')
+        c.instance_variable_set(:@list_evaluator_root_url, 'http://bulk.example.test/v2/listevaluator')
+        c.instance_variable_set(:@inbox_placement_root_url, 'http://bulk.example.test/api/ipt')
       end
       allow(Zerobounce).to receive(:warn)
     end

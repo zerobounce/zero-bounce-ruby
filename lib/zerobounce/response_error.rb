@@ -19,7 +19,28 @@ module Zerobounce
         sample.include?('<body')
     end
 
+    # What an error body says when its message key holds nothing that is text.
+    NO_MESSAGE_TEXT = 'ZeroBounce returned an error with no message text.'
+
+    # The text of a message value: a non-blank String, or the non-blank
+    # Strings of an Array joined with a line break; nil for anything else.
+    def text_of(value)
+      value = value.select { |item| item.is_a?(String) && !item.strip.empty? }.join("\n") if value.is_a?(Array)
+      value.is_a?(String) && !value.strip.empty? ? value : nil
+    end
+
+    # Whether a message value is present but is not text (an object, a number).
+    def non_text?(value)
+      return false if value.nil? || value == [] || (value.is_a?(String) && value.strip.empty?)
+
+      text_of(value).nil?
+    end
+
+    # +message+ without any "Error:" prefix. A value that is not a String is
+    # never shown as a Ruby inspect: a list of strings is joined with a line
+    # break, anything else is the fixed no-text message.
     def strip_prefix(message)
+      message = text_of(message) || NO_MESSAGE_TEXT unless message.nil? || message.is_a?(String)
       text = message.to_s.strip
       loop do
         if text.start_with?('Error:')
@@ -78,9 +99,9 @@ module Zerobounce
           end
           %w[error message error_message Message detail].each do |key|
             value = parsed[key]
-            return strip_prefix(value) if value.is_a?(String) && !value.strip.empty?
+            text = text_of(value)
+            return strip_prefix(text) if text
             next unless value.is_a?(Array) && !value.empty?
-            return strip_prefix(value[0]) if value[0].is_a?(String) && !value[0].strip.empty?
 
             # A validation error list: [{"loc" => [...], "msg" => "..."}].
             if value[0].is_a?(Hash) && value[0]['msg']
@@ -89,11 +110,13 @@ module Zerobounce
               return field.empty? ? value[0]['msg'].to_s : "#{field}: #{value[0]['msg']}"
             end
           end
+          # A message key that holds an object or a number: no text to show.
+          return NO_MESSAGE_TEXT if %w[error message error_message Message detail].any? { |key| non_text?(parsed[key]) }
         end
         # A top-level list of strings, e.g. ["In-progress tests cannot be deleted."].
         if parsed.is_a?(Array)
-          first = parsed.find { |item| item.is_a?(String) && !item.strip.empty? }
-          return strip_prefix(first) if first
+          joined = text_of(parsed)
+          return strip_prefix(joined) if joined
         end
         return 'ZeroBounce returned a response that is not valid JSON.' if trimmed.length > 1000
 

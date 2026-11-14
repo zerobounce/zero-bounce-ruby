@@ -8,7 +8,6 @@ VCR.configure do |c|
 	c.cassette_library_dir = 'spec/cassettes'
 	c.hook_into :webmock
 	c.ignore_localhost = true
-	c.filter_sensitive_data('<API_KEY>') { ENV['ZEROBOUNCE_API_KEY'] }
 	c.filter_sensitive_data('<API_KEY>') { 'REDACTED' }
 	# Match requests by method and URI but ignore api_key so cassettes work with any key
 	c.register_request_matcher :uri_ignoring_api_key do |request1, request2|
@@ -23,9 +22,13 @@ VCR.configure do |c|
 	c.default_cassette_options = { match_requests_on: [:uri_ignoring_api_key] }
 end
 
+# The *-cloudflare-block cassettes recorded a Cloudflare 1020 block page (HTTP 403), not the
+# API's own invalid-key answer; they test the Cloudflare path. The real invalid-key shape is
+# covered in errors_spec.rb.
 describe Zerobounce do
 
-	let (:valid_api_key) { ENV['ZEROBOUNCE_API_KEY'] }
+	# An obvious dummy: cassettes replay with any key, and the environment is never read.
+	let (:valid_api_key) { 'dummy-offline-key-for-cassettes' }
 	# Must match the api_key used when recording the "incorrect API key" cassettes
 	let (:invalid_api_key) { 'thiskeyisinvalidorotherwiseincorrect' }
 	let (:test_date) { Date.new(2023,9,4) }
@@ -71,7 +74,7 @@ describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				VCR.use_cassette 'validate-incorrect-api-key' do
+				VCR.use_cassette 'validate-cloudflare-block' do
 				expect{ described_class.validate('valid@example.com') }.to \
 					raise_error(RuntimeError)
 				end
@@ -126,7 +129,7 @@ describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				VCR.use_cassette 'activity-incorrect-api-key' do
+				VCR.use_cassette 'activity-cloudflare-block' do
 				expect{ described_class.activity('ss@gmail.com') }.to \
 					raise_error(RuntimeError)
 				end
@@ -168,7 +171,7 @@ describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise a forbidden error' do
-				VCR.use_cassette 'credits-incorrect-api-key' do
+				VCR.use_cassette 'credits-cloudflare-block' do
 				expect{ described_class.credits }.to raise_error(RuntimeError)
 				end
 			end
@@ -206,7 +209,7 @@ describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise an API key error' do
-				VCR.use_cassette 'api-usage-incorrect-api-key' do
+				VCR.use_cassette 'api-usage-cloudflare-block' do
 				expect{ described_class.api_usage(test_date, test_date) }.to \
 					raise_error(RuntimeError)
 				end
@@ -689,7 +692,7 @@ describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise a forbidden error' do
-				VCR.use_cassette 'guessformat-incorrect-api-key' do
+				VCR.use_cassette 'guessformat-cloudflare-block' do
 				expect{ described_class.guessformat(
 					'example.com',
 					first_name: 'John',
@@ -795,7 +798,7 @@ describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise a forbidden error' do
-				VCR.use_cassette 'find-email-incorrect-api-key' do
+				VCR.use_cassette 'find-email-cloudflare-block' do
 				expect{ described_class.find_email(
 					'John',
 					domain: 'example.com',
@@ -925,7 +928,7 @@ describe Zerobounce do
 				described_class.config.apikey = invalid_api_key
 			end
 			it 'should raise a forbidden error' do
-				VCR.use_cassette 'find-domain-incorrect-api-key' do
+				VCR.use_cassette 'find-domain-cloudflare-block' do
 				expect{ described_class.find_domain(
 					domain: 'example.com')
 				}.to raise_error(RuntimeError)

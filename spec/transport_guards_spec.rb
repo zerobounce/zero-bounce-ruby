@@ -216,7 +216,8 @@ describe 'Transport guards on every request path' do
     end
 
     before do
-      allow(Zerobounce::BaseRequest).to receive(:__require_https__) { |url| url }
+      # The loopback server speaks plain HTTP: lift the https-only check.
+      allow(Zerobounce::ApiUrls).to receive(:check!) { |url, *| url }
       TransportSweep.configure(api_key, server.url)
     end
 
@@ -726,7 +727,9 @@ end
 # the "#{" that Ruby's #inspect escapes and JSON does not.
 describe 'every spelling of a secret echoed in a body' do
   root = 'https://first.example'
-  secrets = [%(a b"/+%&=<>'\\), "pw\u00e9 /\"\#{x}"].freeze
+  # The last is also a valid API key (printable ASCII, no space); the others
+  # can only be an SMTP password.
+  secrets = [%(a b"/+%&=<>'\\), "pw\u00e9 /\"\#{x}", %(a"b/+%&=<>'\\k)].freeze
 
   def self.escapers
     escapers = { 'raw' => ->(text) { text } }
@@ -781,11 +784,13 @@ describe 'every spelling of a secret echoed in a body' do
       end
 
       it "masks secret #{index + 1} written #{label}, as the API key and as the SMTP password" do
-        stub_echo(form)
-        TransportSweep.configure(secret, root)
-        expect { Zerobounce.credits }.to raise_error(Zerobounce::ApiResponseError) { |error|
-          expect(error.message).not_to include(form)
-        }
+        if secret.match?(/\A[\x21-\x7e]+\z/)
+          stub_echo(form)
+          TransportSweep.configure(secret, root)
+          expect { Zerobounce.credits }.to raise_error(Zerobounce::ApiResponseError) { |error|
+            expect(error.message).not_to include(form)
+          }
+        end
 
         stub_echo(form)
         warmup = TransportSweep.warmup('smtp-key', root)

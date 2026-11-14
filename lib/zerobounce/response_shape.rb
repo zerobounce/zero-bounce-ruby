@@ -171,7 +171,7 @@ module Zerobounce
 
     # validate's greylist answer: a bare message, with no address or status.
     def greylist_answer?(result)
-      greylist = result['Message'].is_a?(String) || result['message'].is_a?(String)
+      greylist = result['Message'].is_a?(String)
       greylist && !result.key?('address') && !result.key?('status')
     end
 

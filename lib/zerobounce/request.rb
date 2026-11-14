@@ -8,15 +8,6 @@ module Zerobounce
   # Sends the HTTP request.
   class Request < BaseRequest
 
-    # The email finder and domain search. Their result is never a bare
-    # message, so a body made only of message keys is how they report a
-    # rejected request. LIVE: an invalid or drained key gets an HTTP 200 with
-    # {"Message": "Invalid API key or your account ran out of credits"}.
-    # Everywhere else a bare message is a result: validate's greylist answer
-    # {"Message": "Greylist validation still in progress..."} and the
-    # filters' {"Message": "Filter successfully added"}.
-    MESSAGE_ONLY_ERROR_PATHS = %w[guessformat].freeze
-
     def self.get(path, params, content_type='application/json')
       response = self._get(Zerobounce.configuration.api_root_url, path, params, content_type)
       interpret_json_response(response, path)
@@ -32,10 +23,12 @@ module Zerobounce
           raise ApiResponseError.new(ResponseError.strip_prefix(response_body_json['error']), response.code)
         end
         if response_body_json['errors'].is_a?(Array) && !response_body_json['errors'].empty?
-          raise ApiResponseError.new(__first_error__(response, response_body_json['errors']).to_s, response.code)
+          first = __first_error__(response, response_body_json['errors'])
+          raise ApiResponseError.new(ResponseError.strip_prefix(first), response.code)
         end
         __raise_if_success_false__(response, response_body_json)
         __raise_if_bare_error__(response, response_body_json)
+        __raise_if_untyped_answer__(response, response_body_json, path)
 
         return __require_shape__(response, response_body_json, path)
       else
@@ -107,7 +100,7 @@ module Zerobounce
       end
       __raise_if_success_false__(response, parsed)
       __raise_if_bare_error__(response, parsed)
-      __raise_if_message_only__(response, parsed) if MESSAGE_ONLY_ERROR_PATHS.include?(path)
+      __raise_if_untyped_answer__(response, parsed, path)
       if parsed.key?('errors') && parsed['errors'].is_a?(Array) && !parsed['errors'].empty?
         account = parsed['errors'].find { |item| item.is_a?(Hash) && item['email_address'].to_s.casecmp('all').zero? }
         if account

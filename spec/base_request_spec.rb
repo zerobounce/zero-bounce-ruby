@@ -193,9 +193,13 @@ RSpec.describe 'request errors' do
 
   describe 'API key redaction' do
     before do
-      # A space makes the URL unparseable, so the HTTP library raises before
-      # sending and quotes the whole URL - query string and key included.
-      Zerobounce.configure { |config| config.api_root_url = 'https://bad host.example/v2/' }
+      # A connection that fails with a message quoting the whole URL - query
+      # string and key included.
+      stub_request(:any, %r{api\.zerobounce\.net})
+        .to_raise(SocketError.new('getaddrinfo failed for the request URL'))
+      allow(Zerobounce::HttpTransport).to receive(:perform) do |uri, _request, _redact|
+        raise SocketError, "failed: #{uri}"
+      end
     end
 
     it 'redacts the key of a Zerobounce::Client' do
@@ -228,7 +232,7 @@ RSpec.describe 'request errors' do
     end
 
     it 'redacts a key echoed back in an HTTP error body' do
-      Zerobounce.configure { |config| config.api_root_url = 'https://api.zerobounce.net/v2/' }
+      allow(Zerobounce::HttpTransport).to receive(:perform).and_call_original
       stub_request(:get, %r{api\.zerobounce\.net/v2/validate})
         .to_return(status: 400, headers: json, body: '{"error":"Unknown api_key CLIENTKEY999"}')
       expect { Zerobounce::Client.new('CLIENTKEY999').validate('person@example.com') }

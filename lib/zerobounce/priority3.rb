@@ -298,6 +298,42 @@ module Zerobounce
       value.nil? || value.to_s.strip.empty?
     end
 
+    # A required text argument: a String with something in it, else an
+    # ArgumentError before anything is sent.
+    def __require_text__(value, name)
+      raise ArgumentError, "Empty parameter: #{name}" if value.nil? || (value.is_a?(String) && value.strip.empty?)
+      raise ArgumentError, "Invalid parameter: #{name} must be a string" unless value.is_a?(String)
+
+      value
+    end
+
+    # An optional text argument that is simply left out (nil) when it is nil
+    # or blank, and must be a String otherwise.
+    def __omit_blank__(value, name)
+      return nil if value.nil? || (value.is_a?(String) && value.strip.empty?)
+
+      __require_text__(value, name)
+    end
+
+    # A whole-number option in low..high seconds (nil is left to the caller).
+    def __whole_seconds__(value, name, low, high)
+      unless value.is_a?(Integer)
+        raise ArgumentError, "Invalid parameter: #{name} must be a whole number of seconds"
+      end
+      return value if value >= low && value <= high
+
+      raise ArgumentError, "Invalid parameter: #{name} (must be between #{low} and #{high} seconds)"
+    end
+
+    # A column index: an Integer (not a boolean or a String) of 1 or more.
+    def __column__(value, name)
+      raise ArgumentError, "Empty parameter: #{name}" if value.nil?
+      raise ArgumentError, "Invalid parameter: #{name} must be an integer" unless value.is_a?(Integer)
+      raise ArgumentError, "Invalid parameter: #{name} (must be 1 or more)" if value < 1
+
+      value
+    end
+
     # A boolean option, parsed strictly (see StrictBool).
     def __strict_bool__(value, name)
       StrictBool.parse(value, name)

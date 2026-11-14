@@ -112,7 +112,7 @@ module RequestPayloads
         body: {
           'email_batch' => [
             { 'email_address' => 'a@example.com', 'ip_address' => '1.2.3.4' },
-            { 'email_address' => 'b@example.com', 'ip_address' => nil }
+            { 'email_address' => 'b@example.com' }
           ],
           'timeout' => '30',
           'activity_data' => true,
@@ -156,7 +156,6 @@ module RequestPayloads
         query: {},
         body: {
           'email_address_column' => '1',
-          'has_header_row' => 'true',
           'api_key' => 'payload-key',
           'file' => '<file priority3_finder.csv>'
         }
@@ -175,7 +174,6 @@ module RequestPayloads
         query: {},
         body: {
           'email_address_column' => '2',
-          'has_header_row' => 'true',
           'remove_duplicate' => 'true',
           'api_key' => 'payload-key',
           'file' => '<file f.csv>'
@@ -243,7 +241,7 @@ module RequestPayloads
         query: {},
         body: {
           'email_address_column' => '1',
-          'has_header_row' => 'true',
+          'has_header_row' => 'false',
           'api_key' => 'payload-key',
           'file' => '<file f.csv>'
         }
