@@ -45,15 +45,24 @@ CALLBACK = 'https://example.com/zerobounce-sdk-live-test'
 SANDBOX = 'valid@example.com'
 
 # LIVE: the bulk API refuses to delete a just-uploaded file for far longer than
-# a status of "Complete" suggests -- observed runs have needed anywhere from
-# ~10 to ~50 minutes before the delete was accepted, so "Complete" is not a
-# sufficient precondition. The suite waits this long before giving up, and
-# every file it could not delete is retried once more and named at the end of
-# the run, so a test CSV is never silently left on the live account. Raise it
-# for a slower account:
+# a status of "Complete" suggests, and reports the refusal as "File cannot be
+# found." on an HTTP 200. Measured on this account over seven uploads, the
+# delete was accepted 133s, 133s, 148s, 148s, 148s, 274s and 385s after upload
+# -- so the old 120s ceiling sat below even the fastest case, and "Complete" is
+# not a sufficient precondition (files still reporting "Queued" deleted fine,
+# while the 385s one only went through once it had reached "Processing").
+# Slower runs than any of
+# these have been seen on this API, so the window is an educated ceiling rather
+# than a guarantee: the check retries until it is spent and then FAILS, naming
+# the file. Raise it for a slower account:
 #
-#   ZEROBOUNCE_LIVE_DELETE_SECONDS=3000
+#   ZEROBOUNCE_LIVE_DELETE_SECONDS=1800
 DELETE_WINDOW = [ENV.fetch('ZEROBOUNCE_LIVE_DELETE_SECONDS', '600').to_i, 0].max
+# Whatever the check gave up on is swept again at the end of the run, where the
+# rest of the suite has already bought it several more minutes. Keeping that
+# budget separate is what lets the check fail at a sane 10 minutes without the
+# run leaving a CSV behind on the live account.
+SWEEP_WINDOW = 300
 DELETE_INTERVAL = 10
 
 @passed = 0
@@ -91,12 +100,11 @@ def skip(name, reason)
   puts "  - SKIP #{name} (#{reason})"
 end
 
-# Deletes an uploaded bulk file, retrying until DELETE_WINDOW is spent. Hands
-# back nil once the API accepts the delete, or a message naming the file that
-# is still on the account. Anything it gives up on is swept again at the end of
-# the run.
-def delete_uploaded_file(file_id)
-  deadline = Time.now + DELETE_WINDOW
+# Deletes an uploaded bulk file, retrying until +window+ seconds are spent and
+# returning as soon as the API accepts it. Hands back nil on success, or a
+# message naming the file that is still on the account.
+def delete_uploaded_file(file_id, window)
+  deadline = Time.now + window
   last = ''
   loop do
     begin
@@ -109,8 +117,7 @@ def delete_uploaded_file(file_id)
 
     sleep DELETE_INTERVAL
   end
-  @leftovers << file_id
-  "could not delete #{file_id} after retrying for #{DELETE_WINDOW}s: #{last}"
+  "could not delete #{file_id} after retrying for #{window}s: #{last}"
 end
 
 # Runs a call that must fail, and hands back nil when it did.
@@ -325,8 +332,12 @@ def validation_spend
     check('the uploaded validation job is deleted again') do
       # LIVE: a just-accepted job answers "File cannot be found" for a long
       # while, so the delete is retried rather than leaving the job behind.
-      # Returning the message is what makes this check able to fail at all.
-      delete_uploaded_file(file_id)
+      # Returning that message is what makes this check able to fail at all:
+      # it used to end in `last.empty? ? nil : nil`, which reports a pass down
+      # both branches, so a delete that never succeeded still read as green.
+      problem = delete_uploaded_file(file_id, DELETE_WINDOW)
+      @leftovers << file_id if problem
+      problem
     end
   end
 end
@@ -485,11 +496,11 @@ end
 unless @leftovers.empty?
   puts "\nLeftover uploaded files"
   @leftovers.each do |id|
-    begin
-      Zerobounce.validate_file_delete(id)
+    problem = delete_uploaded_file(id, SWEEP_WINDOW)
+    if problem
+      puts "  ! #{id} is STILL on the live account, delete it by hand: #{problem}"
+    else
       puts "  + #{id} deleted on a later attempt"
-    rescue StandardError => e
-      puts "  ! #{id} is STILL on the account, delete it by hand: #{redact(e.message)}"
     end
   end
 end
